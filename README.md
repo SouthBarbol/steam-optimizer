@@ -1,4 +1,4 @@
-## Steam Optimizer
+# Steam Optimizer
 
 Web app en Python (Flask) que analiza tu librería de Steam y recomienda
 a qué jugar y qué comprar según tus géneros y horas jugadas.
@@ -19,4 +19,4 @@ No almacenamos ningún dato. Solo consultamos tu perfil público de Steam.
 
 ## Estado
 
-🚧 En desarrollo
+En desarrollo
