@@ -10,13 +10,14 @@ a trabajar con Claude Code.
 ## Cómo quiero que trabajes
 
 * Responde en español.
-* Soy principiante en Python y estoy algo oxidado con Git. Explica cada concepto nuevo con brevedad.
+* Soy principiante en Python y estoy algo oxidado con Git. Explica cada concepto nuevo con brevedad. Justifica tu decisión con cada paso que vayamos a dar
 * Antes de modificar archivos, cuéntame qué vas a cambiar y por qué.
 * Avanza en pasos pequeños, uno cada vez. No hagas varias tareas a la vez.
 * No reescribas archivos enteros si basta con un cambio puntual.
 * Si hay varias formas de hacer algo, propón la más simple.
 * No añadas librerías nuevas sin preguntarme.
 * Optimiza el uso de tokens
+* Añade comentarios al código explicando que hace cada linea, función,método, ...
 
 ## Entorno
 
@@ -87,8 +88,32 @@ Evolución prevista:
 Fase 1 completada: repo en GitHub, clonado, venv, dependencias instaladas,
 `.gitignore`, `README.md`, `SECURITY\_CHECKLIST.md`.
 
-Fase 2 (siguiente): crear `.env` y `.env.example`, conectar con la Steam Web API
-(`GetOwnedGames`) en `steam\_service.py` y mostrar la librería de un usuario.
+Fase 2 (en curso): conectar con la Steam Web API (`GetOwnedGames`) y mostrar
+la librería de un usuario.
+* Hecho: `.env` y `.env.example` creados; `steam\_service.py` con
+  `get\_owned_games(steam_id)`.
+* Hecho también: `steam\_service.py` captura los errores sin exponer la API key
+  y está comentado línea a línea; `app.py` creado (ruta `/?steam_id=...`,
+  valida 17 dígitos, muestra juegos ordenados por horas).
+* Hecho además: plantilla `templates/index.html` (Jinja2) y estilo gamer en
+  `static/css/style.css` (fuente Press Start 2P de Google Fonts). Ruta temporal
+  `/demo` con juegos inventados para ver la página sin API key (probada, se ve bien);
+  BORRARLA antes de publicar. `SECURITY\_CHECKLIST.md` actualizado.
+* Pendiente (en este orden):
+  1. Resolver el problema de la API key (ver "Aviso" abajo).
+  2. Probar `steam\_service.py` y `app.py` con un Steam ID de 17 dígitos
+     (NO la API key) y perfil público, con la ruta `/?steam_id=...`.
+  3. Decidir qué hacer con Google Fonts (ver `SECURITY\_CHECKLIST.md`).
+* Aviso (PENDIENTE DE RESOLVER): la API key se expuso en una conversación, así
+  que hay que revocarla y generar otra. Al probar `get_owned_games`, Steam
+  devolvió HTTP 401 (la key actual no se acepta; el formato en `.env` es
+  correcto: 32 hex, sin comillas ni espacios). Al intentar entrar en
+  https://steamcommunity.com/dev/apikey para revocar/regenerar, Steam mostró
+  "demasiadas solicitudes recientemente" (límite temporal, esperar horas).
+  Cuando se levante: revocar la key, generar otra, pegarla en `.env`
+  (`STEAM_API_KEY=`, sin comillas, sin pasarla por el chat) y repetir la prueba.
+* Sugerir cambiar a Opus al llegar al análisis de géneros/horas y
+  recomendaciones.
 
 ## Después
 

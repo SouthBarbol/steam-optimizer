@@ -1,0 +1,128 @@
+/* Variables de color reutilizables (se usan con var(--nombre)) */
+:root {
+    --fondo: #0b0b1a;          /* azul casi negro */
+    --panel: #14142b;          /* fondo de tarjetas y tabla */
+    --cian: #00f0ff;           /* neón cian */
+    --magenta: #ff2bd6;        /* neón magenta */
+    --texto: #e6e6ff;          /* texto claro */
+    --error: #ff4d6d;          /* rojo para errores */
+}
+
+/* Estilo base de toda la página */
+body {
+    margin: 0;                                    /* quita el margen por defecto */
+    padding: 2rem 1rem;                           /* aire alrededor del contenido */
+    background: var(--fondo);                     /* fondo oscuro */
+    background-image: radial-gradient(circle at top, #2a0f4d 0%, var(--fondo) 60%);  /* halo morado arriba */
+    color: var(--texto);
+    font-family: "Press Start 2P", monospace;     /* fuente arcade; monospace si no carga */
+    font-size: 0.7rem;
+    line-height: 1.8;                             /* separación entre líneas */
+    min-height: 100vh;                            /* ocupa al menos toda la pantalla */
+}
+
+/* Título principal con brillo neón */
+h1 {
+    text-align: center;
+    color: var(--cian);
+    font-size: 1.6rem;
+    text-shadow: 0 0 8px var(--cian), 0 0 24px var(--cian), 3px 3px 0 var(--magenta);  /* brillo + sombra de color */
+}
+
+h2 {
+    text-align: center;
+    color: var(--magenta);
+    font-size: 0.9rem;
+    text-shadow: 0 0 8px var(--magenta);
+}
+
+/* Formulario centrado en una tarjeta con borde neón */
+form {
+    max-width: 520px;
+    margin: 2rem auto;                            /* auto a los lados = centrado */
+    padding: 1.5rem;
+    background: var(--panel);
+    border: 2px solid var(--cian);
+    border-radius: 8px;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);  /* resplandor */
+    display: flex;
+    flex-direction: column;                       /* elementos uno debajo de otro */
+    gap: 1rem;                                    /* separación entre ellos */
+}
+
+/* Campo de texto */
+input {
+    font-family: inherit;                         /* hereda la fuente arcade */
+    padding: 0.8rem;
+    background: var(--fondo);
+    color: var(--cian);
+    border: 2px solid var(--magenta);
+    border-radius: 4px;
+}
+
+input:focus {
+    outline: none;                                /* quita el contorno por defecto... */
+    box-shadow: 0 0 12px var(--magenta);          /* ...y pone un brillo al seleccionar */
+}
+
+/* Botón */
+button {
+    font-family: inherit;
+    padding: 0.9rem;
+    background: var(--magenta);
+    color: var(--fondo);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;  /* animación suave */
+}
+
+button:hover {
+    transform: translateY(-2px);                  /* sube un poco */
+    box-shadow: 0 0 18px var(--magenta);
+}
+
+/* Mensaje de error */
+.error {
+    max-width: 520px;
+    margin: 1rem auto;
+    padding: 1rem;
+    text-align: center;
+    color: var(--error);
+    border: 2px dashed var(--error);
+    border-radius: 4px;
+}
+
+/* Tabla de juegos */
+table {
+    width: 100%;
+    max-width: 720px;
+    margin: 1.5rem auto;
+    border-collapse: collapse;                    /* bordes de celdas unidos */
+    background: var(--panel);
+    box-shadow: 0 0 16px rgba(255, 43, 214, 0.35);
+}
+
+th {
+    color: var(--cian);
+    text-align: left;
+    padding: 0.8rem;
+    border-bottom: 2px solid var(--cian);
+}
+
+td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #2a2a4d;
+}
+
+/* Resalta la fila al pasar el ratón */
+tbody tr:hover {
+    background: rgba(0, 240, 255, 0.12);
+    color: var(--cian);
+}
+
+/* Móvil: texto un poco más pequeño en pantallas estrechas */
+@media (max-width: 600px) {
+    h1 { font-size: 1.1rem; }
+    body { font-size: 0.6rem; }
+}

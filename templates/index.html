@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- Declara que es un documento HTML5 -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">  <!-- codificación: permite tildes y ñ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">  <!-- adaptado a móvil -->
+    <title>Steam Optimizer</title>  <!-- título de la pestaña -->
+    <!-- Google Fonts: preconnect acelera la conexión; luego se pide la fuente arcade -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    {# url_for genera la ruta correcta al archivo dentro de static/ #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Steam Optimizer</h1>
+
+    {# Comentario de Jinja2: no llega al navegador. Formulario GET: añade ?steam_id=... a la URL #}
+    <form method="get" action="/">
+        <label for="steam_id">Tu Steam ID (17 dígitos):</label>
+        <!-- pattern y maxlength validan en el navegador, pero la validación real está en app.py -->
+        <input type="text" id="steam_id" name="steam_id" pattern="\d{17}" maxlength="17" required>
+        <button type="submit">Analizar</button>
+    </form>
+
+    {# Si app.py envió un mensaje de error, lo mostramos. {{ }} escapa el texto automáticamente #}
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {# Si hay juegos, dibujamos la tabla #}
+    {% if juegos %}
+        <h2>Tu librería ({{ juegos|length }} juegos)</h2>  {# |length cuenta los elementos #}
+        <table>
+            <thead>
+                <tr><th>Juego</th><th>Horas jugadas</th></tr>
+            </thead>
+            <tbody>
+                {# Bucle: una fila por cada juego de la lista #}
+                {% for juego in juegos %}
+                    <tr>
+                        <td>{{ juego.nombre }}</td>
+                        <td>{{ juego.horas }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</body>
+</html>
