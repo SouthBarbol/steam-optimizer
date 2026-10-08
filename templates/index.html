@@ -39,7 +39,8 @@
                 {# Bucle: una fila por cada juego de la lista #}
                 {% for juego in juegos %}
                     <tr>
-                        <td>{{ juego.nombre }}</td>
+                        {# Si el juego no está en tu librería (prestado por familia), añadimos una etiqueta #}
+                        <td>{{ juego.nombre }}{% if not juego.propio %} <span class="etiqueta">Familia</span>{% endif %}</td>
                         <td>{{ juego.horas }}</td>
                     </tr>
                 {% endfor %}

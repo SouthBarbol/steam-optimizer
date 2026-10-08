@@ -115,6 +115,17 @@ td {
     border-bottom: 1px solid #2a2a4d;
 }
 
+/* Etiqueta "Familia" junto a los juegos que no son tuyos */
+.etiqueta {
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;                            /* más pequeña que el texto de la fila */
+    color: var(--cian);
+    border: 1px solid var(--cian);
+    border-radius: 4px;
+    white-space: nowrap;                          /* evita que la etiqueta se parta en dos líneas */
+}
+
 /* Resalta la fila al pasar el ratón */
 tbody tr:hover {
     background: rgba(0, 240, 255, 0.12);

@@ -2,7 +2,7 @@ import re  # módulo de expresiones regulares, para validar el Steam ID
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
-from steam_service import get_owned_games  # nuestra función que habla con la Steam API
+from steam_service import get_owned_games, get_recently_played_games, unir_juegos  # funciones de steam_service.py
 
 app = Flask(__name__)  # crea la aplicación web
 
@@ -19,7 +19,9 @@ def index():
         return render_template("index.html", error="Steam ID no válido: deben ser 17 dígitos."), 400
 
     try:  # intentamos pedir la librería a Steam
-        juegos = get_owned_games(steam_id)
+        propios = get_owned_games(steam_id)  # librería propia (+ gratuitos jugados)
+        recientes = get_recently_played_games(steam_id)  # jugados en 2 semanas (incluye prestados)
+        juegos = unir_juegos(propios, recientes)  # lista única, con la marca "propio"
     except RuntimeError as e:  # nuestro error limpio (sin la API key)
         return render_template("index.html", error=str(e)), 502  # 502 = fallo del servicio externo
 
@@ -34,7 +36,11 @@ def preparar_juegos(juegos):
     # Ordenamos de más a menos horas jugadas (playtime_forever está en minutos)
     ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever", 0), reverse=True)
     return [  # un diccionario por juego, con solo lo que necesita la plantilla
-        {"nombre": j.get("name", "?"), "horas": j.get("playtime_forever", 0) // 60}
+        {
+            "nombre": j.get("name", "?"),
+            "horas": j.get("playtime_forever", 0) // 60,
+            "propio": j.get("propio", True),  # True por defecto (la ruta /demo no trae este campo)
+        }
         for j in ordenados
     ]
 

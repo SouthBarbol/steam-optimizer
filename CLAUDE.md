@@ -99,19 +99,21 @@ la librería de un usuario.
   `static/css/style.css` (fuente Press Start 2P de Google Fonts). Ruta temporal
   `/demo` con juegos inventados para ver la página sin API key (probada, se ve bien);
   BORRARLA antes de publicar. `SECURITY\_CHECKLIST.md` actualizado.
+* Hecho: API key nueva generada y puesta en `.env`; el problema del 401 está
+  resuelto. Probado `get_owned_games` desde terminal (95 juegos) y `app.py` en
+  el navegador (`/?steam_id=...`, incluida la validación): funciona.
+* Hecho: juegos de biblioteca familiar. `get_owned_games` usa
+  `include_played_free_games=1` (95 -> 102 juegos), se añadió
+  `get_recently_played_games` y `unir_juegos` (sin duplicados, marca
+  `propio`), y `index.html` muestra la etiqueta "Familia" en los no propios.
+* LIMITACIÓN conocida: la API oficial solo expone los juegos prestados
+  (biblioteca familiar) si se han jugado en las últimas 2 semanas
+  (`GetRecentlyPlayedGames`); no hay historial completo. La vía no oficial
+  (`IFamilyGroupsService`) exige un token de sesión personal y se descartó
+  por seguridad. Documentar también en el README.
 * Pendiente (en este orden):
-  1. Resolver el problema de la API key (ver "Aviso" abajo).
-  2. Probar `steam\_service.py` y `app.py` con un Steam ID de 17 dígitos
-     (NO la API key) y perfil público, con la ruta `/?steam_id=...`.
-  3. Decidir qué hacer con Google Fonts (ver `SECURITY\_CHECKLIST.md`).
-* Aviso (PENDIENTE DE RESOLVER): la API key se expuso en una conversación, así
-  que hay que revocarla y generar otra. Al probar `get_owned_games`, Steam
-  devolvió HTTP 401 (la key actual no se acepta; el formato en `.env` es
-  correcto: 32 hex, sin comillas ni espacios). Al intentar entrar en
-  https://steamcommunity.com/dev/apikey para revocar/regenerar, Steam mostró
-  "demasiadas solicitudes recientemente" (límite temporal, esperar horas).
-  Cuando se levante: revocar la key, generar otra, pegarla en `.env`
-  (`STEAM_API_KEY=`, sin comillas, sin pasarla por el chat) y repetir la prueba.
+  1. Decidir qué hacer con Google Fonts (ver `SECURITY\_CHECKLIST.md`).
+  2. Borrar la ruta `/demo` antes de publicar.
 * Sugerir cambiar a Opus al llegar al análisis de géneros/horas y
   recomendaciones.
 

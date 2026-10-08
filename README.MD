@@ -9,6 +9,13 @@ a qué jugar y qué comprar según tus géneros y horas jugadas.
 
 No almacenamos ningún dato. Solo consultamos tu perfil público de Steam.
 
+## Limitaciones
+
+- Solo funciona con perfiles y detalles de juegos **públicos**.
+- Los juegos de la biblioteca familiar (prestados) solo aparecen si los has
+  jugado en las **últimas 2 semanas**, porque la API oficial de Steam no
+  expone un historial completo. Se marcan con la etiqueta "Familia".
+
 ## Instalación
 
 1. Clona el repositorio
