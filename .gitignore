@@ -1,0 +1,15 @@
+# Entorno virtual
+venv/
+
+# Secretos (API key de Steam)
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor y sistema
+.vscode/
+.idea/
+.DS_Store
