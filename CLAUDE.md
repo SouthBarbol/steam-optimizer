@@ -55,6 +55,33 @@ Principio: los datos que no se guardan no se pueden filtrar.
 * `debug=False` y HTTPS antes de publicar.
 * Sigue y actualiza `SECURITY\_CHECKLIST.md` según avancemos.
 
+## Arquitectura
+
+Monolito sencillo por capas, renderizado en el servidor, sin base de datos.
+(Sujeta a cambios futuros según necesitemos.)
+
+Flujo:
+Navegador (formulario con Steam ID)
+  -> Capa de presentación: rutas de Flask y plantillas Jinja2.
+     Valida la entrada y muestra el resultado.
+  -> Capa de lógica: análisis de horas, géneros y recomendaciones.
+     Funciones puras: reciben datos y devuelven datos, sin Flask ni red.
+  -> Capa de integración: cliente de la Steam Web API (requests).
+  -> Steam Web API
+
+Transversal: configuración (.env leído con python-dotenv).
+
+Reglas:
+- La lógica no importa Flask ni hace peticiones HTTP.
+- Solo la capa de integración conoce la API key y las URLs de Steam.
+- La validación de la entrada ocurre en la capa de presentación.
+- No se guardan datos de usuarios. No hay base de datos.
+- No se registran (log/print) Steam IDs ni librerías de usuarios.
+
+Evolución prevista:
+- Fase 2: todo en steam_service.py.
+- Al crecer: separar steam_client.py (habla con Steam) y analysis.py (calcula).
+
 ## Estado actual
 
 Fase 1 completada: repo en GitHub, clonado, venv, dependencias instaladas,
