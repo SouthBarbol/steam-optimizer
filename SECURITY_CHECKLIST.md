@@ -21,8 +21,8 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Se mantiene el escapado automático de Jinja2 (no usar `|safe` con datos externos)
 - [x] Mensajes de error genéricos, sin detalles internos
 - [ ] Revisar la ruta temporal `/demo` y borrarla antes de publicar
-- [ ] Google Fonts: el navegador del visitante pide la fuente a Google (decidir si se acepta,
-  se alojan los archivos de la fuente en `static/`, o se usa una fuente del sistema)
+- [x] Google Fonts: la fuente Press Start 2P se aloja en `static/fonts/` y se carga con
+  `@font-face`; el navegador del visitante ya no contacta con Google
 
 ## Antes de publicar
 - [ ] `debug=False` en producción

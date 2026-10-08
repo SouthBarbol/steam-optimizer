@@ -111,9 +111,10 @@ la librería de un usuario.
   (`GetRecentlyPlayedGames`); no hay historial completo. La vía no oficial
   (`IFamilyGroupsService`) exige un token de sesión personal y se descartó
   por seguridad. Documentar también en el README.
-* Pendiente (en este orden):
-  1. Decidir qué hacer con Google Fonts (ver `SECURITY\_CHECKLIST.md`).
-  2. Borrar la ruta `/demo` antes de publicar.
+* Hecho: Google Fonts resuelto. La fuente Press Start 2P se aloja en
+  `static/fonts/` (`@font-face` en `style.css`); ya no hay peticiones a Google.
+* Pendiente: borrar la ruta `/demo` antes de publicar. (Opcional: añadir
+  un favicon; hoy `favicon.ico` da 404, es inofensivo.)
 * Sugerir cambiar a Opus al llegar al análisis de géneros/horas y
   recomendaciones.
 

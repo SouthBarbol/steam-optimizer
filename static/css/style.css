@@ -1,3 +1,12 @@
+/* Fuente arcade alojada en nuestro servidor (así el navegador no contacta con Google) */
+@font-face {
+    font-family: "Press Start 2P";                          /* nombre que usamos en font-family */
+    src: url("../fonts/press-start-2p.woff2") format("woff2");  /* ruta relativa a este CSS */
+    font-weight: 400;                                       /* grosor normal */
+    font-style: normal;                                     /* sin cursiva */
+    font-display: swap;                                     /* muestra texto de respaldo mientras carga */
+}
+
 /* Variables de color reutilizables (se usan con var(--nombre)) */
 :root {
     --fondo: #0b0b1a;          /* azul casi negro */

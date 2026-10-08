@@ -24,6 +24,11 @@ No almacenamos ningún dato. Solo consultamos tu perfil público de Steam.
 3. Instala las dependencias: `pip install -r requirements.txt`
 4. Copia `.env.example` a `.env` y añade tu API key de Steam
 
+## Créditos
+
+Fuente [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P),
+con licencia SIL Open Font License (OFL), alojada en `static/fonts/`.
+
 ## Estado
 
 En desarrollo
