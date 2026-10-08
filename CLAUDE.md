@@ -118,7 +118,45 @@ la librería de un usuario.
 * Sugerir cambiar a Opus al llegar al análisis de géneros/horas y
   recomendaciones.
 
+## Fase 3 (plan acordado, por empezar)
+
+Idea central: de la enorme librería (gran parte es de la familia), recomendar
+qué jugar. Lo más importante es el sistema de recomendaciones; debe basarse
+en hechos (horas, géneros, datos reales), no en suposiciones. Se irá validando
+si la lógica es correcta según se construya. Sugerir cambiar a Opus aquí.
+
+Recomendaciones: dos estilos, **mainstream** (populares, afines a tus géneros)
+y **bizarras** (raras o poco convencionales pero relacionadas con tus gustos).
+
+Biblioteca familiar: la librería familiar = unión de las librerías de los
+miembros. El formulario pedirá el Steam ID propio y, opcionalmente, los de
+familiares (hasta ~5, separados por comas; se escriben cada vez, no se guardan).
+Cada miembro necesita perfil y detalles de juegos públicos. Se marca de quién
+es cada juego. Limitación: no se sabe qué juegos el editor excluye del
+préstamo. Se descartó el endpoint no oficial con token de sesión (seguridad).
+
+Orden de trabajo (un paso cada vez):
+0. Biblioteca familiar con varios IDs en el formulario (validar cada ID).
+1. Estadísticas con datos ya disponibles: Pile of Shame (% con 0 h), juegos
+   abandonados (<2 h), horas en perspectiva, juego sorpresa (aleatorio entre
+   pendientes) y duelo familiar (ranking de juegos y horas).
+2. Carátulas en la tabla (URL pública a partir del `appid`).
+3. Géneros con caché en memoria (por `appid`, datos del juego, no del usuario),
+   gráfico de horas por género y perfil gamer. Solo pedir el top por horas.
+4. Qué jugar: puntuación por géneros y horas, con pendientes.
+5. Qué comprar: mainstream y bizarras, con precio y descuentos.
+Probablemente separar `steam_client.py` y `analysis.py` al llegar al paso 3.
+
+Fuentes de datos: Steam Store `appdetails` (no oficial, una llamada por juego,
+con límite de peticiones) y/o SteamSpy (etiquetas). Aceptamos usar APIs no
+documentadas, vigilando límites de velocidad y posibles cambios.
+
+Descartado: logros completados (coste de recursos: una llamada por juego),
+aceptar nombre de perfil y comparar con un amigo. Reconsiderar los logros solo
+si sobran recursos.
+
 ## Después
 
-Análisis de géneros y horas, recomendaciones, formulario web y publicación.
+Formulario más cómodo para los IDs familiares (idea futura), borrar `/demo`
+y publicación.
 
