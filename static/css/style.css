@@ -125,14 +125,53 @@ td {
 }
 
 /* Panel de estadísticas: mismo fondo y brillo que la tabla */
+/* Rejilla que coloca las tarjetas: varias por fila si caben, una si la pantalla es estrecha */
+.stats-rejilla {
+    display: grid;
+    /* columnas de mínimo 380px (o el 100% en móvil) que se reparten el espacio sobrante (1fr) */
+    grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+    gap: 1rem;                                    /* separación entre tarjetas */
+    max-width: 900px;                             /* algo más ancho que la tabla (720px), sin llegar a los bordes */
+    margin: 1.5rem auto;                          /* auto a los lados = centrado horizontal */
+}
+
+/* Cada tarjeta; su color (borde y título) viene de la clase dueno-N */
 .stats {
+    box-sizing: border-box;                       /* el ancho incluye relleno y borde (si no, sobresaldría) */
     background: var(--panel);
-    border: 2px solid var(--magenta);
+    border: 2px solid currentColor;               /* borde del color del dueño */
     border-radius: 8px;
     padding: 1rem;
-    margin: 1.5rem 0;
     font-size: 0.7rem;
     line-height: 1.8;                             /* más espacio entre líneas: la fuente pixel se lee mejor */
+}
+
+/* Título de la tarjeta: hereda el color del dueño en vez del magenta general de h2 */
+.stats h2 {
+    color: inherit;
+    text-shadow: 0 0 8px currentColor;
+}
+
+/* El texto de la lista vuelve al color claro normal para leerse bien */
+.stats ul {
+    color: var(--texto);
+}
+
+/* Cuadro del juego sorpresa: mismo estilo que las tarjetas, centrado y en magenta */
+.sorpresa {
+    max-width: 900px;                             /* mismo ancho que la rejilla de estadísticas */
+    margin: 1.5rem auto;                          /* centrado */
+    color: var(--magenta);                        /* color del borde y del título */
+    text-align: center;
+}
+
+.sorpresa p {
+    color: var(--texto);                          /* el texto en color claro, como en las tarjetas */
+}
+
+/* Separación entre cada punto de la lista de estadísticas */
+.stats li {
+    margin-bottom: 0.8rem;
 }
 
 /* Etiqueta con el nombre de cada dueño del juego */

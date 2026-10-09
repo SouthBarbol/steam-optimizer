@@ -2,7 +2,7 @@ import re  # módulo de expresiones regulares, para validar el Steam ID
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
-from analysis import estadisticas  # capa de lógica: cálculos sin red ni Flask
+from analysis import candidatos_sorpresa, estadisticas  # capa de lógica: cálculos sin red ni Flask
 from steam_service import get_owned_games, get_recently_played_games, unir_juegos, unir_familia, get_player_names  # funciones de steam_service.py
 
 app = Flask(__name__)  # crea la aplicación web
@@ -48,13 +48,23 @@ def index():
     for n, (etiqueta, _) in enumerate(librerias, start=1):  # "_" = valor que no usamos (los juegos)
         colores[etiqueta] = n  # cada familiar recibe el siguiente número
 
-    # pasamos juegos, avisos (familiares que fallaron), colores y estadísticas a la plantilla
+    # Una tarjeta de estadísticas por persona: primero tú, luego cada familiar con librería
+    # (usamos la lista original: preparar_juegos quita el campo "propio")
+    tarjetas = [{"nombre": yo, "color": 0, "stats": estadisticas(juegos)}]
+    for etiqueta, lista in librerias:
+        if lista:  # sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
+            # para el familiar todos sus juegos son "propios" y las horas son las suyas
+            propios_f = [{**j, "propio": True} for j in lista]
+            tarjetas.append({"nombre": etiqueta, "color": colores[etiqueta], "stats": estadisticas(propios_f)})
+
+    # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
         "index.html",
         juegos=preparar_juegos(juegos),
         avisos=avisos,
         colores=colores,
-        stats=estadisticas(juegos),  # usa la lista original (preparar_juegos quita el campo "propio")
+        tarjetas=tarjetas,
+        candidatos=candidatos_sorpresa(juegos),  # juegos posibles para el "juego sorpresa"
     )
 
 

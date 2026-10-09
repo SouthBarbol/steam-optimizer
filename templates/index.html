@@ -36,17 +36,57 @@
         </ul>
     {% endif %}
 
-    {# Panel de estadísticas (solo si app.py las envía; /demo no las envía) #}
-    {% if stats %}
-        <section class="stats">
-            <h2>Tus estadísticas</h2>
+    {# Rejilla con una tarjeta de estadísticas por persona (solo si app.py las envía; /demo no) #}
+    {% if tarjetas %}
+    {# Lista de títulos para el Pile of Shame (uno por tarjeta, en este orden) #}
+    {% set titulos_pile = [
+        "¿No te da verwenza, niño?",
+        "Como ese preservativo tan especial...",
+        "HALF LIFE 3 SINDROME:",
+        "Comprado en rebajas, olvidado en la estantería:",
+        "Backlog del purgatorio:",
+    ] %}
+    <div class="stats-rejilla">
+    {% for t in tarjetas %}
+        {% set stats = t.stats %}  {# alias corto: el contenido de la tarjeta usa "stats" #}
+        {# dueno-N da a la tarjeta el color de su dueño (el mismo que su etiqueta en la tabla) #}
+        <section class="stats dueno-{{ t.color }}">
+            <h2>{{ t.nombre }}</h2>
             <ul>
                 {# |string|replace(".", ",") muestra los decimales con coma #}
-                <li>Pile of Shame: {{ stats.pile_pct|string|replace(".", ",") }}% ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
-                <li>Abandonados (menos de 2 h): {{ stats.abandonados }}</li>
-                <li>Has jugado {{ stats.horas }} h = {{ stats.dias|string|replace(".", ",") }} días seguidos
-                    ({{ stats.pct_anio|string|replace(".", ",") }}% de un año), o {{ stats.peliculas }} películas de 2 h</li>
+                {# Pile of Shame: % de juegos sin estrenar. Título distinto por tarjeta;
+                   loop.index0 % 4 = resto de dividir la posición entre 4 -> 0,1,2,3,0,1... (se repiten) #}
+                <li>{{ titulos_pile[loop.index0 % titulos_pile|length] }} {{ stats.pile_pct|string|replace(".", ",") }}% ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
+                {# X/Total: se ve de un vistazo cuántos abandonados hay respecto al total #}
+                <li>Abandonados (menos de 2 h): {{ stats.abandonados }}/{{ stats.total_propios }}</li>
+                <li>{{ stats.horas }} h jugadas ={{ stats.dias|string|replace(".", ",") }} días seguidos
+                    ({{ stats.pct_anio|string|replace(".", ",") }}% de un año).
+                    {# Sublista con las comparaciones bizarras (cambian en cada carga); con 0 h no hay ninguna #}
+                    {% if stats.comparaciones %}
+                        O lo que es lo mismo:
+                        <ul>
+                            {% for frase in stats.comparaciones %}
+                                <li>{{ frase }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </li>
             </ul>
+        </section>
+    {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Juego sorpresa: el primero lo sortea Jinja2 (|random); "Otro" sortea en el navegador sin llamar a Steam #}
+    {% if candidatos %}
+        {% set s = candidatos|random %}  {# |random elige un elemento al azar de la lista #}
+        {# |tojson convierte la lista a JSON escapando caracteres peligrosos (forma segura de pasar datos a JS) #}
+        <section id="sorpresa" class="stats sorpresa" data-candidatos='{{ candidatos|tojson }}'>
+            <h2>Juego sorpresa</h2>
+            <p><strong id="sorpresa-nombre">{{ s.nombre }}</strong></p>
+            {# Nota solo si tus horas son desconocidas (juego de la familia) #}
+            <p id="sorpresa-nota">{% if s.desconocido %}(de {{ s.duenos|join(", ") }}, puede que ya lo hayas probado){% endif %}</p>
+            <button type="button" id="sorpresa-otro">Otro</button>  {# type="button": no envía el formulario #}
         </section>
     {% endif %}
 
@@ -71,5 +111,8 @@
             </tbody>
         </table>
     {% endif %}
+
+    {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
+    <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
 </body>
 </html>

@@ -1,5 +1,57 @@
 # Capa de lógica: funciones puras (reciben datos y devuelven datos).
 # Aquí NO se importa Flask ni se hacen peticiones a Steam.
+import random  # módulo estándar de Python para elegir al azar
+
+# Duraciones de referencia: (texto tras la cifra, dato que se muestra entre paréntesis, segundos)
+# OJO: las tres últimas son bromas internas; quitarlas o generalizarlas antes de publicar.
+COMPARACIONES = [
+    ("veces lo que tarda la luz del Sol en llegar a la Tierra", "8 min 20 s", 500),
+    ("récords de Usain Bolt en los 100 m", "9,58 s", 9.58),
+    ('veces "Never Gonna Give You Up" seguidas', "3 min 33 s", 213),
+    ('veces "Bohemian Rhapsody" seguidas', "5 min 55 s", 355),
+    ("vueltas de la Estación Espacial a la Tierra", "~92 min", 92 * 60),
+    ("maratones de El Señor de los Anillos (versión extendida)", "~11 h 26 min", 686 * 60),
+    ("viajes del Apolo 11 hasta la órbita lunar", "~76 h", 76 * 3600),
+    ("años en Mercurio", "88 días", 88 * 86400),
+    ("días en Venus", "una rotación = 243 días terrestres", 243 * 86400),
+    ("gestaciones de elefante", "~22 meses", 22 * 30.4 * 86400),
+    ("veces domando a Calero", "5 s", 5),
+    ("veces que Mauri llega a la pota", "2 cervezas × 20 min", 2 * 20 * 60),
+    ("lustros ardiendo en el caldero de Satán", "1 día con Navarro = 5 lustros", 86400 / 5),
+]
+
+
+def formatear(numero):
+    """Formato español: 14447423 -> "14.447.423"; 2.35 -> "2,4"."""
+    if numero >= 10:  # cifras grandes: sin decimales, con puntos de millar
+        return f"{round(numero):,}".replace(",", ".")  # ":," pone comas de millar; las cambiamos por puntos
+    return f"{numero:.1f}".replace(".", ",")  # ":.1f" = un decimal; coma decimal
+
+
+def comparaciones(horas, cantidad=2):
+    """Elige al azar 'cantidad' comparaciones bizarras (con datos reales) para tus horas jugadas."""
+    segundos = horas * 3600  # pasamos tus horas a segundos
+    # Solo las que salen al menos 1 vez (evita cosas como "0,0 gestaciones de elefante")
+    validas = [c for c in COMPARACIONES if segundos / c[2] >= 1]
+    elegidas = random.sample(validas, min(cantidad, len(validas)))  # sample: elementos distintos al azar
+    # Frase final, p. ej. "1.234 veces domando a Calero (5 s)"
+    return [f"{formatear(segundos / seg)} {texto} ({dato})" for texto, dato, seg in elegidas]
+
+
+def candidatos_sorpresa(juegos):
+    """Juegos que (probablemente) no has jugado: tus horas a 0 o desconocidas (préstamos de la familia).
+
+    Devuelve una lista simple para la plantilla y el JavaScript: nombre, dueños y si las horas se desconocen.
+    """
+    return [
+        {
+            "nombre": j.get("name", "?"),
+            "duenos": j.get("duenos", []),
+            "desconocido": j.get("playtime_forever") is None,  # True = "—": puede que ya lo hayas probado
+        }
+        for j in juegos
+        if not j.get("playtime_forever")  # "not" es True tanto para 0 como para None
+    ]
 
 
 def estadisticas(juegos):
@@ -27,5 +79,5 @@ def estadisticas(juegos):
         "horas": round(horas),  # horas enteras
         "dias": round(horas / 24, 1),  # días seguidos jugando
         "pct_anio": round(horas / (365 * 24) * 100, 1),  # porcentaje de un año entero
-        "peliculas": round(horas / 2),  # películas de 2 horas que podrías haber visto
+        "comparaciones": comparaciones(horas),  # 2 frases bizarras elegidas al azar
     }

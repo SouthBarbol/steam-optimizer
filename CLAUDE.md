@@ -174,5 +174,6 @@ si sobran recursos.
 ## Después
 
 Formulario más cómodo para los IDs familiares (idea futura), borrar `/demo`
-y publicación.
+y publicación. Antes de publicar: quitar o generalizar las comparaciones con
+bromas internas sobre personas reales (Calero, Mauri, Navarro) en `analysis.py`.
 
