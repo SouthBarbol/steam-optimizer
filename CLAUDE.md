@@ -111,6 +111,11 @@ la librería de un usuario.
   (`GetRecentlyPlayedGames`); no hay historial completo. La vía no oficial
   (`IFamilyGroupsService`) exige un token de sesión personal y se descartó
   por seguridad. Documentar también en el README.
+  Probado también `IPlayerService/GetSingleGamePlaytime`: da 403 (exige token
+  de sesión del usuario, no basta la API key). Pedir el token se descartó
+  (riesgo de robo de cuenta, parece phishing, términos de Valve). Limitación
+  DEFINITIVA: en juegos prestados no jugados en 2 semanas mostramos "—" (dato
+  desconocido), no 0.
 * Hecho: Google Fonts resuelto. La fuente Press Start 2P se aloja en
   `static/fonts/` (`@font-face` en `style.css`); ya no hay peticiones a Google.
 * Pendiente: borrar la ruta `/demo` antes de publicar. (Opcional: añadir
@@ -149,6 +154,13 @@ Orden de trabajo (un paso cada vez):
 4. Qué jugar: puntuación por géneros y horas, con pendientes.
 5. Qué comprar: mainstream y bizarras, con precio y descuentos.
 Probablemente separar `steam_client.py` y `analysis.py` al llegar al paso 3.
+
+Extra en pasos 4 y 5: además de las recomendaciones razonadas, un juego
+totalmente aleatorio (de la librería en el 4, de la tienda en el 5) con una
+descripción bizarra de por qué se recomienda, generada DESPUÉS de elegir el
+juego. Método decidido: plantillas de frases absurdas con huecos rellenados
+con datos del juego (nombre, género, año...). Sin IA, para evitar costes.
+Distinto del "juego sorpresa" del paso 1 (azar solo entre pendientes, sin texto).
 
 Fuentes de datos: Steam Store `appdetails` (no oficial, una llamada por juego,
 con límite de peticiones) y/o SteamSpy (etiquetas). Aceptamos usar APIs no

@@ -124,16 +124,25 @@ td {
     border-bottom: 1px solid #2a2a4d;
 }
 
-/* Etiqueta "Familia" junto a los juegos que no son tuyos */
+/* Etiqueta con el nombre de cada dueño del juego */
 .etiqueta {
-    margin-left: 0.5rem;
+    display: inline-block;                        /* en fila, pero respetando márgenes verticales */
+    margin: 0.2rem 0 0.2rem 0.5rem;               /* arriba, derecha, abajo, izquierda */
     padding: 0.2rem 0.4rem;
     font-size: 0.6rem;                            /* más pequeña que el texto de la fila */
     color: var(--cian);
-    border: 1px solid var(--cian);
+    border: 1px solid currentColor;               /* currentColor = el mismo color que el texto */
     border-radius: 4px;
     white-space: nowrap;                          /* evita que la etiqueta se parta en dos líneas */
 }
+
+/* Un color neón por dueño (dueno-0 = tú, 1-5 = familiares); el borde lo sigue por currentColor */
+.dueno-0 { color: var(--cian); }
+.dueno-1 { color: var(--magenta); }
+.dueno-2 { color: #39ff14; }                      /* verde neón */
+.dueno-3 { color: #ffe600; }                      /* amarillo */
+.dueno-4 { color: #ff8c00; }                      /* naranja */
+.dueno-5 { color: #b388ff; }                      /* violeta */
 
 /* Resalta la fila al pasar el ratón */
 tbody tr:hover {

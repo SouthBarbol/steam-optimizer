@@ -27,20 +27,31 @@
         <p class="error">{{ error }}</p>
     {% endif %}
 
+    {# Avisos: familiares cuya librería no se pudo leer (no detienen la página) #}
+    {% if avisos %}
+        <ul>
+            {% for aviso in avisos %}
+                <li class="error">{{ aviso }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     {# Si hay juegos, dibujamos la tabla #}
     {% if juegos %}
         <h2>Tu librería ({{ juegos|length }} juegos)</h2>  {# |length cuenta los elementos #}
         <table>
             <thead>
-                <tr><th>Juego</th><th>Horas jugadas</th></tr>
+                <tr><th>Juego</th><th>Tus horas</th><th>Dueños</th></tr>
             </thead>
             <tbody>
                 {# Bucle: una fila por cada juego de la lista #}
                 {% for juego in juegos %}
                     <tr>
-                        {# Si el juego no está en tu librería (prestado por familia), añadimos una etiqueta #}
-                        <td>{{ juego.nombre }}{% if not juego.propio %} <span class="etiqueta">Familia</span>{% endif %}</td>
-                        <td>{{ juego.horas }}</td>
+                        <td>{{ juego.nombre }}</td>
+                        {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}
+                        <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
+                        {# Una etiqueta por dueño; la clase dueno-N le da su color (colores viene de app.py; 0 si no está, p. ej. en /demo) #}
+                        <td>{% for dueno in juego.duenos %}<span class="etiqueta dueno-{{ colores.get(dueno, 0) if colores else 0 }}">{{ dueno }}</span> {% endfor %}</td>
                     </tr>
                 {% endfor %}
             </tbody>

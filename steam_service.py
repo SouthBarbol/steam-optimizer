@@ -52,7 +52,7 @@ def unir_familia(mios, familia):
 
     mios: resultado de unir_juegos (con la marca "propio").
     familia: lista de pares (etiqueta, juegos), p. ej. [("Familiar 1", [...]), ...].
-    Las horas (playtime_forever) son siempre las TUYAS.
+    Las horas (playtime_forever) son siempre las TUYAS; None si Steam no las da.
     """
     # Diccionario {appid: juego}: la clave appid no se repite, así cada juego aparece una sola vez
     juegos = {j["appid"]: {**j, "duenos": ["Tú"] if j["propio"] else []} for j in mios}
@@ -61,8 +61,8 @@ def unir_familia(mios, familia):
             if j["appid"] in juegos:  # el juego ya está en la lista...
                 juegos[j["appid"]]["duenos"].append(etiqueta)  # ...solo añadimos otro dueño
             else:  # juego nuevo: no lo tienes ni lo has jugado recientemente
-                # copiamos sus datos pero con TUS horas a 0 (las del familiar no cuentan para ti)
-                juegos[j["appid"]] = {**j, "playtime_forever": 0, "propio": False, "duenos": [etiqueta]}
+                # copiamos sus datos con TUS horas a None = desconocidas (Steam no las da para préstamos)
+                juegos[j["appid"]] = {**j, "playtime_forever": None, "propio": False, "duenos": [etiqueta]}
     return list(juegos.values())  # devolvemos solo los juegos, sin las claves
 
 

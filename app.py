@@ -36,7 +36,13 @@ def index():
     if not juegos:  # lista vacía: perfil privado o sin juegos
         return render_template("index.html", error="No se encontraron juegos (¿perfil privado?).")
 
-    return render_template("index.html", juegos=preparar_juegos(juegos))  # pasamos los juegos a la plantilla
+    # Número fijo por dueño (Tú = 0, Familiar 1 = 1...) para que cada uno tenga siempre el mismo color
+    colores = {"Tú": 0}  # tú siempre eres el color 0
+    for n, (etiqueta, _) in enumerate(librerias, start=1):  # "_" = valor que no usamos (los juegos)
+        colores[etiqueta] = n  # cada familiar recibe el siguiente número
+
+    # pasamos los juegos, los avisos (familiares que fallaron) y los colores a la plantilla
+    return render_template("index.html", juegos=preparar_juegos(juegos), avisos=avisos, colores=colores)
 
 
 def validar_familia(texto, steam_id):
@@ -68,17 +74,24 @@ def pedir_familia(familia):
 
 
 def preparar_juegos(juegos):
-    """Convierte los datos de Steam en una lista simple (nombre, horas) ordenada por horas."""
-    # Ordenamos de más a menos horas jugadas (playtime_forever está en minutos)
-    ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever", 0), reverse=True)
+    """Convierte los datos de Steam en una lista simple (nombre, horas, dueños) ordenada por horas."""
+    # Ordenamos de más a menos minutos; "or 0" convierte None (desconocido) en 0 para poder comparar
+    ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever") or 0, reverse=True)
     return [  # un diccionario por juego, con solo lo que necesita la plantilla
         {
             "nombre": j.get("name", "?"),
-            "horas": j.get("playtime_forever", 0) // 60,
-            "propio": j.get("propio", True),  # True por defecto (la ruta /demo no trae este campo)
+            "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
+            "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)
         }
         for j in ordenados
     ]
+
+
+def horas_con_decimal(minutos):
+    """Pasa minutos a horas con un decimal; devuelve None si el dato es desconocido."""
+    if minutos is None:  # Steam no nos dio el dato (juego prestado)
+        return None
+    return round(minutos / 60, 1)  # round(x, 1) redondea a un decimal
 
 
 @app.route("/demo")  # RUTA TEMPORAL: ver la página sin API key; borrar al terminar la fase 2
