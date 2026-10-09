@@ -169,6 +169,37 @@ td {
     color: var(--texto);                          /* el texto en color claro, como en las tarjetas */
 }
 
+/* Cuadro del duelo familiar: mismo ancho y centrado que el resto, en amarillo "de trofeo" */
+.duelo {
+    max-width: 900px;
+    margin: 1.5rem auto;
+    color: #ffe600;                               /* color del borde y los títulos */
+}
+
+/* Los dos rankings, uno al lado del otro (o uno debajo de otro en móvil) */
+.duelo-columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 1rem;
+}
+
+.duelo h3 {
+    font-size: 0.75rem;
+}
+
+/* Las listas del duelo sin números automáticos (ya ponemos medallas) y en color claro */
+.duelo ol,
+.duelo ul {
+    list-style: none;
+    padding-left: 0;
+    color: var(--texto);
+}
+
+/* Mensaje de felicitación (Pile of Shame ≤ 5 %): verde neón, para que destaque */
+.stats .felicitacion {
+    color: #39ff14;
+}
+
 /* Separación entre cada punto de la lista de estadísticas */
 .stats li {
     margin-bottom: 0.8rem;

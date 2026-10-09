@@ -149,6 +149,10 @@ Orden de trabajo (un paso cada vez):
 1. Estadísticas con datos ya disponibles: Pile of Shame (% con 0 h), juegos
    abandonados (<2 h), horas en perspectiva, juego sorpresa (aleatorio entre
    pendientes) y duelo familiar (ranking de juegos y horas).
+   HECHO: `analysis.py` (capa de lógica), una tarjeta por persona con su color,
+   comparaciones bizarras, juego sorpresa con botón "Otro" en JS
+   (`static/js/sorpresa.js`, sin llamar a Steam) y duelo familiar (horas,
+   colección, favoritos; incluye recientes de cada familiar).
 2. Carátulas en la tabla (URL pública a partir del `appid`).
 3. Géneros con caché en memoria (por `appid`, datos del juego, no del usuario),
    gráfico de horas por género y perfil gamer. Solo pedir el top por horas.

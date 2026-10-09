@@ -13,7 +13,7 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Todas las llamadas a Steam las hace Flask (servidor), no el navegador
 - [x] No se guarda ningún dato del usuario (sin base de datos, sin logs con Steam IDs)
 - [x] Los errores de `requests` se capturan para que la URL (con la API key) no salga en mensajes
-- [ ] **PENDIENTE:** revocar la API key expuesta en una conversación y generar otra
+- [x] Revocada la API key expuesta en una conversación y generada otra
 
 ## Al crear el formulario
 - [x] Se valida la entrada: Steam ID de 17 dígitos (falta aceptar nombre de perfil, si se añade)
@@ -24,7 +24,21 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Google Fonts: la fuente Press Start 2P se aloja en `static/fonts/` y se carga con
   `@font-face`; el navegador del visitante ya no contacta con Google
 
+## Biblioteca familiar (fase 3)
+- [x] IDs de familiares validados en el servidor: 17 dígitos, máx. 5, sin duplicados ni tu propio ID
+- [x] Mensajes de error y avisos sin IDs: usan el nombre de Steam o "Familiar N"
+- [x] Nunca se piden tokens de sesión de Steam (`GetSingleGamePlaytime` e `IFamilyGroupsService`
+  descartados: exigirían una credencial que da acceso a la cuenta)
+- [x] Los nombres de Steam (dato externo) se muestran con el escapado de Jinja2; el color del
+  dueño usa un número (`dueno-N`), nunca el nombre dentro de una clase o atributo
+
+## JavaScript del navegador
+- [x] El JavaScript no llama a Steam ni a ninguna otra web (solo usa datos ya presentes en la página)
+- [x] Los datos se pasan de Jinja2 a JavaScript solo con `|tojson` (escapa `<`, `>`, `'`, `&`)
+- [x] El JavaScript escribe en la página solo con `textContent`, nunca con `innerHTML`
+
 ## Antes de publicar
+- [ ] Quitar o generalizar las comparaciones con bromas sobre personas reales (`analysis.py`)
 - [ ] `debug=False` en producción
 - [ ] HTTPS activo en el hosting
 - [ ] Dependencias actualizadas (`pip list --outdated`)

@@ -57,6 +57,10 @@
                 {# Pile of Shame: % de juegos sin estrenar. Título distinto por tarjeta;
                    loop.index0 % 4 = resto de dividir la posición entre 4 -> 0,1,2,3,0,1... (se repiten) #}
                 <li>{{ titulos_pile[loop.index0 % titulos_pile|length] }} {{ stats.pile_pct|string|replace(".", ",") }}% ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
+                {# Felicitación si casi no hay juegos sin estrenar (≤ 5 %) y la persona tiene alguno #}
+                {% if stats.total_propios and stats.pile_pct <= 5 %}
+                    <li class="felicitacion">Un tío serio: lo que compra, lo juega. Di que sí, tú sí que sabes darle valor al fruto de tu trabajo.</li>
+                {% endif %}
                 {# X/Total: se ve de un vistazo cuántos abandonados hay respecto al total #}
                 <li>Abandonados (menos de 2 h): {{ stats.abandonados }}/{{ stats.total_propios }}</li>
                 <li>{{ stats.horas }} h jugadas ={{ stats.dias|string|replace(".", ",") }} días seguidos
@@ -75,6 +79,39 @@
         </section>
     {% endfor %}
     </div>
+    {% endif %}
+
+    {# Duelo familiar: solo si hay al menos 2 tarjetas (tú + algún familiar con librería) #}
+    {% if tarjetas and tarjetas|length > 1 %}
+        {% set medallas = ["🥇", "🥈", "🥉"] %}
+        <section class="stats duelo">
+            <h2>Duelo familiar</h2>
+            <div class="duelo-columnas">
+                {# Dos rankings con el mismo código: (título, dato de stats por el que ordenar, unidad) #}
+                {% for titulo, campo, unidad in [("Horas jugadas", "horas", "h"), ("Colección", "total_propios", "juegos")] %}
+                    <div>
+                        <h3>{{ titulo }}</h3>
+                        <ol>
+                            {# |sort ordena las tarjetas por stats.<campo>; reverse=True = de mayor a menor #}
+                            {% for t in tarjetas|sort(attribute="stats." ~ campo, reverse=True) %}
+                                {# medalla para los 3 primeros, número para el resto #}
+                                <li>{{ medallas[loop.index0] if loop.index0 < 3 else loop.index ~ "." }}
+                                    <span class="etiqueta dueno-{{ t.color }}">{{ t.nombre }}</span>
+                                    {{ t.stats[campo] }} {{ unidad }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                {% endfor %}
+            </div>
+            {# Juego más jugado de cada persona #}
+            <h3>Favoritos</h3>
+            <ul>
+                {% for t in tarjetas if t.stats.favorito %}  {# "if" en el for salta quien no tenga favorito #}
+                    <li><span class="etiqueta dueno-{{ t.color }}">{{ t.nombre }}</span>
+                        {{ t.stats.favorito.nombre }} ({{ t.stats.favorito.horas }} h)</li>
+                {% endfor %}
+            </ul>
+        </section>
     {% endif %}
 
     {# Juego sorpresa: el primero lo sortea Jinja2 (|random); "Otro" sortea en el navegador sin llamar a Steam #}

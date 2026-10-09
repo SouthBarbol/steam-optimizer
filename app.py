@@ -37,7 +37,7 @@ def index():
         nombres = {}
     yo = nombres.get(steam_id) or "Tú"  # tu nombre de Steam; "Tú" si no llegó (o vino vacío)
 
-    librerias, avisos = pedir_familia(familia, nombres, yo)  # librerías de los familiares + avisos de los que fallen
+    librerias, jugados, avisos = pedir_familia(familia, nombres, yo)  # ver la explicación en pedir_familia
     juegos = unir_familia(juegos, librerias, yo)  # una fila por juego, con la lista de dueños
 
     if not juegos:  # lista vacía: perfil privado o sin juegos
@@ -51,11 +51,10 @@ def index():
     # Una tarjeta de estadísticas por persona: primero tú, luego cada familiar con librería
     # (usamos la lista original: preparar_juegos quita el campo "propio")
     tarjetas = [{"nombre": yo, "color": 0, "stats": estadisticas(juegos)}]
-    for etiqueta, lista in librerias:
+    for etiqueta, lista in jugados.items():  # .items() da pares (clave, valor) del diccionario
         if lista:  # sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
-            # para el familiar todos sus juegos son "propios" y las horas son las suyas
-            propios_f = [{**j, "propio": True} for j in lista]
-            tarjetas.append({"nombre": etiqueta, "color": colores[etiqueta], "stats": estadisticas(propios_f)})
+            # propios + recientes del familiar, con SUS horas (unir_juegos ya marca "propio")
+            tarjetas.append({"nombre": etiqueta, "color": colores[etiqueta], "stats": estadisticas(lista)})
 
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
@@ -81,11 +80,15 @@ def validar_familia(texto, steam_id):
 
 
 def pedir_familia(familia, nombres, yo):
-    """Pide la librería de cada familiar; devuelve [(etiqueta, juegos), ...] y una lista de avisos.
+    """Pide los juegos de cada familiar. Devuelve tres cosas:
 
+    librerias: [(etiqueta, juegos propios), ...] -> para saber quién es dueño de cada juego.
+    jugados: {etiqueta: propios + recientes} -> solo para sus estadísticas (incluye préstamos jugados).
+    avisos: mensajes de los familiares que fallaron.
     nombres: {steam_id: nombre de Steam}; yo: tu etiqueta (para no repetirla).
     """
     librerias, avisos = [], []  # dos listas vacías que iremos llenando
+    jugados = {}  # diccionario vacío: etiqueta -> lista de juegos para estadísticas
     usadas = {yo}  # conjunto de etiquetas ya asignadas (empezando por la tuya)
     for n, fid in enumerate(familia, start=1):  # enumerate numera desde 1: Familiar 1, 2...
         etiqueta = nombres.get(fid) or f"Familiar {n}"  # su nombre de Steam, o genérico si no hay
@@ -101,7 +104,13 @@ def pedir_familia(familia, nombres, yo):
         if not juegos_f:  # lista vacía: perfil privado o sin juegos
             avisos.append(f"{etiqueta}: perfil privado o sin juegos.")
         librerias.append((etiqueta, juegos_f))  # guardamos el par (etiqueta, juegos)
-    return librerias, avisos
+
+        try:  # sus juegos de las últimas 2 semanas (incluye préstamos): dato complementario
+            recientes_f = get_recently_played_games(fid)  # una llamada más por familiar
+        except RuntimeError:  # si falla, seguimos sin ellos (no hace falta avisar)
+            recientes_f = []
+        jugados[etiqueta] = unir_juegos(juegos_f, recientes_f)  # misma unión que hacemos contigo
+    return librerias, jugados, avisos
 
 
 def preparar_juegos(juegos):

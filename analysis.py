@@ -70,6 +70,12 @@ def estadisticas(juegos):
     minutos = sum(j["playtime_forever"] for j in juegos if j.get("playtime_forever") is not None)
     horas = minutos / 60  # de minutos a horas
 
+    # Juego favorito = el de más minutos (solo entre los que tienen horas conocidas y mayores que 0)
+    jugados = [j for j in juegos if j.get("playtime_forever")]  # descarta 0 y None
+    # max(..., key=...) devuelve el elemento con el valor más alto; default=None si la lista está vacía
+    top = max(jugados, key=lambda j: j["playtime_forever"], default=None)
+    favorito = {"nombre": top.get("name", "?"), "horas": round(top["playtime_forever"] / 60)} if top else None
+
     return {  # diccionario con todo lo que mostrará la plantilla
         "total_propios": total_propios,
         "sin_jugar": sin_jugar,
@@ -80,4 +86,5 @@ def estadisticas(juegos):
         "dias": round(horas / 24, 1),  # días seguidos jugando
         "pct_anio": round(horas / (365 * 24) * 100, 1),  # porcentaje de un año entero
         "comparaciones": comparaciones(horas),  # 2 frases bizarras elegidas al azar
+        "favorito": favorito,  # {"nombre", "horas"} del juego más jugado, o None
     }
