@@ -81,14 +81,16 @@ Reglas:
 
 Evolución prevista:
 - Fase 2: todo en steam_service.py.
-- Al crecer: separar steam_client.py (habla con Steam) y analysis.py (calcula).
+- Fase 3: `analysis.py` (calcula) ya existe. Pendiente separar `steam_client.py`
+  (habla con Steam) de `steam_service.py`, probablemente en el paso 3.
+  (Hoy `unir_juegos` y `unir_familia` siguen en `steam_service.py`.)
 
 ## Estado actual
 
 Fase 1 completada: repo en GitHub, clonado, venv, dependencias instaladas,
 `.gitignore`, `README.md`, `SECURITY\_CHECKLIST.md`.
 
-Fase 2 (en curso): conectar con la Steam Web API (`GetOwnedGames`) y mostrar
+Fase 2 completada: conectar con la Steam Web API (`GetOwnedGames`) y mostrar
 la librería de un usuario.
 * Hecho: `.env` y `.env.example` creados; `steam\_service.py` con
   `get\_owned_games(steam_id)`.
@@ -120,15 +122,27 @@ la librería de un usuario.
   `static/fonts/` (`@font-face` en `style.css`); ya no hay peticiones a Google.
 * Pendiente: borrar la ruta `/demo` antes de publicar. (Opcional: añadir
   un favicon; hoy `favicon.ico` da 404, es inofensivo.)
-* Sugerir cambiar a Opus al llegar al análisis de géneros/horas y
-  recomendaciones.
 
-## Fase 3 (plan acordado, por empezar)
+## Próxima sesión (empezar aquí)
+
+* Fase 3 en curso: pasos 0 y 1 HECHOS y probados por el usuario en el navegador.
+* Siguiente: **paso 2, carátulas** en la tabla. Proponer primero el plan, como siempre.
+* Modelo: Opus. Effort medium basta para el paso 2; AVISAR al usuario para
+  subirlo a high al empezar el paso 3 (géneros, caché) y siguientes.
+* Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
+  cambiar `.py` o plantillas: con `debug=False` Flask no recarga solo (el CSS
+  y el JS sí se ven con Ctrl+F5).
+* Pruebas: con datos falsos sustituyendo `app.get_owned_games`, etc. por
+  lambdas y usando `app.app.test_client()`; scripts de prueba en el scratchpad
+  (no en el repo). Para no ver Steam IDs reales, el usuario prueba con los suyos
+  en el navegador.
+
+## Fase 3 (plan acordado, en curso)
 
 Idea central: de la enorme librería (gran parte es de la familia), recomendar
 qué jugar. Lo más importante es el sistema de recomendaciones; debe basarse
 en hechos (horas, géneros, datos reales), no en suposiciones. Se irá validando
-si la lógica es correcta según se construya. Sugerir cambiar a Opus aquí.
+si la lógica es correcta según se construya.
 
 Recomendaciones: dos estilos, **mainstream** (populares, afines a tus géneros)
 y **bizarras** (raras o poco convencionales pero relacionadas con tus gustos).
@@ -158,7 +172,7 @@ Orden de trabajo (un paso cada vez):
    gráfico de horas por género y perfil gamer. Solo pedir el top por horas.
 4. Qué jugar: puntuación por géneros y horas, con pendientes.
 5. Qué comprar: mainstream y bizarras, con precio y descuentos.
-Probablemente separar `steam_client.py` y `analysis.py` al llegar al paso 3.
+Probablemente separar `steam_client.py` al llegar al paso 3 (`analysis.py` ya existe).
 
 Extra en pasos 4 y 5: además de las recomendaciones razonadas, un juego
 totalmente aleatorio (de la librería en el 4, de la tienda en el 5) con una
