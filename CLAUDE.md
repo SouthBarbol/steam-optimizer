@@ -143,8 +143,9 @@ préstamo. Se descartó el endpoint no oficial con token de sesión (seguridad).
 Orden de trabajo (un paso cada vez):
 0. Biblioteca familiar con varios IDs en el formulario (validar cada ID).
    Sin duplicados: un juego aparece una vez con la lista de todos sus dueños.
-   PENDIENTE (importante): mostrar el nombre de Steam de cada dueño en vez de
-   "Familiar 1, 2…" (una llamada a `GetPlayerSummaries` para todos los IDs).
+   HECHO: dueños con su nombre de Steam (`get_player_names`, una llamada a
+   `GetPlayerSummaries`; si falla, "Tú"/"Familiar N"; nombres repetidos llevan
+   "(N)"), un color por dueño, horas con un decimal y "—" si se desconocen.
 1. Estadísticas con datos ya disponibles: Pile of Shame (% con 0 h), juegos
    abandonados (<2 h), horas en perspectiva, juego sorpresa (aleatorio entre
    pendientes) y duelo familiar (ranking de juegos y horas).

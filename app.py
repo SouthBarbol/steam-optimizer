@@ -2,7 +2,8 @@ import re  # módulo de expresiones regulares, para validar el Steam ID
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
-from steam_service import get_owned_games, get_recently_played_games, unir_juegos, unir_familia  # funciones de steam_service.py
+from analysis import estadisticas  # capa de lógica: cálculos sin red ni Flask
+from steam_service import get_owned_games, get_recently_played_games, unir_juegos, unir_familia, get_player_names  # funciones de steam_service.py
 
 app = Flask(__name__)  # crea la aplicación web
 
@@ -19,7 +20,7 @@ def index():
         return render_template("index.html", error="Steam ID no válido: deben ser 17 dígitos."), 400
 
     try:  # validamos los IDs de familiares (campo opcional)
-        familia = validar_familia(request.args.get("familia", ""), steam_id)  # lista de IDs limpios (aún no se usa: paso 0b)
+        familia = validar_familia(request.args.get("familia", ""), steam_id)  # lista de IDs limpios
     except ValueError as e:  # validar_familia lanza ValueError si algo no cuadra
         return render_template("index.html", error=str(e)), 400  # 400 = petición incorrecta
 
@@ -30,19 +31,31 @@ def index():
     except RuntimeError as e:  # nuestro error limpio (sin la API key)
         return render_template("index.html", error=str(e)), 502  # 502 = fallo del servicio externo
 
-    librerias, avisos = pedir_familia(familia)  # librerías de los familiares + avisos de los que fallen
-    juegos = unir_familia(juegos, librerias)  # una fila por juego, con la lista de dueños
+    try:  # nombres de Steam de todos (tú + familia) en UNA llamada
+        nombres = get_player_names([steam_id] + familia)  # {steam_id: nombre}
+    except RuntimeError:  # el nombre es cosmético: si falla, seguimos con etiquetas genéricas
+        nombres = {}
+    yo = nombres.get(steam_id) or "Tú"  # tu nombre de Steam; "Tú" si no llegó (o vino vacío)
+
+    librerias, avisos = pedir_familia(familia, nombres, yo)  # librerías de los familiares + avisos de los que fallen
+    juegos = unir_familia(juegos, librerias, yo)  # una fila por juego, con la lista de dueños
 
     if not juegos:  # lista vacía: perfil privado o sin juegos
         return render_template("index.html", error="No se encontraron juegos (¿perfil privado?).")
 
-    # Número fijo por dueño (Tú = 0, Familiar 1 = 1...) para que cada uno tenga siempre el mismo color
-    colores = {"Tú": 0}  # tú siempre eres el color 0
+    # Número fijo por dueño (tú = 0, familiar 1 = 1...) para que cada uno tenga siempre el mismo color
+    colores = {yo: 0}  # tú siempre eres el color 0
     for n, (etiqueta, _) in enumerate(librerias, start=1):  # "_" = valor que no usamos (los juegos)
         colores[etiqueta] = n  # cada familiar recibe el siguiente número
 
-    # pasamos los juegos, los avisos (familiares que fallaron) y los colores a la plantilla
-    return render_template("index.html", juegos=preparar_juegos(juegos), avisos=avisos, colores=colores)
+    # pasamos juegos, avisos (familiares que fallaron), colores y estadísticas a la plantilla
+    return render_template(
+        "index.html",
+        juegos=preparar_juegos(juegos),
+        avisos=avisos,
+        colores=colores,
+        stats=estadisticas(juegos),  # usa la lista original (preparar_juegos quita el campo "propio")
+    )
 
 
 def validar_familia(texto, steam_id):
@@ -57,11 +70,19 @@ def validar_familia(texto, steam_id):
     return ids  # lista limpia (puede estar vacía)
 
 
-def pedir_familia(familia):
-    """Pide la librería de cada familiar; devuelve [(etiqueta, juegos), ...] y una lista de avisos."""
+def pedir_familia(familia, nombres, yo):
+    """Pide la librería de cada familiar; devuelve [(etiqueta, juegos), ...] y una lista de avisos.
+
+    nombres: {steam_id: nombre de Steam}; yo: tu etiqueta (para no repetirla).
+    """
     librerias, avisos = [], []  # dos listas vacías que iremos llenando
+    usadas = {yo}  # conjunto de etiquetas ya asignadas (empezando por la tuya)
     for n, fid in enumerate(familia, start=1):  # enumerate numera desde 1: Familiar 1, 2...
-        etiqueta = f"Familiar {n}"  # en los avisos usamos la etiqueta, nunca el ID
+        etiqueta = nombres.get(fid) or f"Familiar {n}"  # su nombre de Steam, o genérico si no hay
+        if etiqueta in usadas:  # nombre repetido: sus juegos y colores se mezclarían...
+            etiqueta = f"{etiqueta} ({n})"  # ...así que le añadimos su número
+        usadas.add(etiqueta)  # la marcamos como usada
+        # en los avisos usamos la etiqueta, nunca el ID
         try:
             juegos_f = get_owned_games(fid)  # una llamada a Steam por familiar
         except RuntimeError:  # si falla, avisamos y seguimos con los demás

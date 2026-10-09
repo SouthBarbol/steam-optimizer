@@ -124,6 +124,17 @@ td {
     border-bottom: 1px solid #2a2a4d;
 }
 
+/* Panel de estadísticas: mismo fondo y brillo que la tabla */
+.stats {
+    background: var(--panel);
+    border: 2px solid var(--magenta);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    font-size: 0.7rem;
+    line-height: 1.8;                             /* más espacio entre líneas: la fuente pixel se lee mejor */
+}
+
 /* Etiqueta con el nombre de cada dueño del juego */
 .etiqueta {
     display: inline-block;                        /* en fila, pero respetando márgenes verticales */

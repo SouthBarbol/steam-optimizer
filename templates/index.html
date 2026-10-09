@@ -36,6 +36,20 @@
         </ul>
     {% endif %}
 
+    {# Panel de estadísticas (solo si app.py las envía; /demo no las envía) #}
+    {% if stats %}
+        <section class="stats">
+            <h2>Tus estadísticas</h2>
+            <ul>
+                {# |string|replace(".", ",") muestra los decimales con coma #}
+                <li>Pile of Shame: {{ stats.pile_pct|string|replace(".", ",") }}% ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
+                <li>Abandonados (menos de 2 h): {{ stats.abandonados }}</li>
+                <li>Has jugado {{ stats.horas }} h = {{ stats.dias|string|replace(".", ",") }} días seguidos
+                    ({{ stats.pct_anio|string|replace(".", ",") }}% de un año), o {{ stats.peliculas }} películas de 2 h</li>
+            </ul>
+        </section>
+    {% endif %}
+
     {# Si hay juegos, dibujamos la tabla #}
     {% if juegos %}
         <h2>Tu librería ({{ juegos|length }} juegos)</h2>  {# |length cuenta los elementos #}
