@@ -47,6 +47,25 @@ def unir_juegos(propios, recientes):
     return resultado  # lista unida
 
 
+def unir_familia(mios, familia):
+    """Une tus juegos con los de la familia sin duplicados; cada juego lleva la lista "duenos".
+
+    mios: resultado de unir_juegos (con la marca "propio").
+    familia: lista de pares (etiqueta, juegos), p. ej. [("Familiar 1", [...]), ...].
+    Las horas (playtime_forever) son siempre las TUYAS.
+    """
+    # Diccionario {appid: juego}: la clave appid no se repite, así cada juego aparece una sola vez
+    juegos = {j["appid"]: {**j, "duenos": ["Tú"] if j["propio"] else []} for j in mios}
+    for etiqueta, lista in familia:  # recorremos la librería de cada familiar
+        for j in lista:  # y cada uno de sus juegos
+            if j["appid"] in juegos:  # el juego ya está en la lista...
+                juegos[j["appid"]]["duenos"].append(etiqueta)  # ...solo añadimos otro dueño
+            else:  # juego nuevo: no lo tienes ni lo has jugado recientemente
+                # copiamos sus datos pero con TUS horas a 0 (las del familiar no cuentan para ti)
+                juegos[j["appid"]] = {**j, "playtime_forever": 0, "propio": False, "duenos": [etiqueta]}
+    return list(juegos.values())  # devolvemos solo los juegos, sin las claves
+
+
 # URL del endpoint de Steam que lista los juegos jugados en las últimas 2 semanas
 RECENT_GAMES_URL = "https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/"
 

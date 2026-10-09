@@ -16,6 +16,9 @@
         <label for="steam_id">Tu Steam ID (17 dígitos):</label>
         <!-- pattern y maxlength validan en el navegador, pero la validación real está en app.py -->
         <input type="text" id="steam_id" name="steam_id" pattern="\d{17}" maxlength="17" required>
+        {# Campo opcional (sin required): IDs de familiares separados por comas; se valida en app.py #}
+        <label for="familia">IDs de familiares (opcional, separados por comas, máx. 5):</label>
+        <input type="text" id="familia" name="familia" maxlength="100">
         <button type="submit">Analizar</button>
     </form>
 
