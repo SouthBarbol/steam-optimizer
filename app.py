@@ -2,8 +2,8 @@ import re  # módulo de expresiones regulares, para validar el Steam ID
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
-from analysis import candidatos_sorpresa, estadisticas  # capa de lógica: cálculos sin red ni Flask
-from steam_service import get_owned_games, get_recently_played_games, unir_juegos, unir_familia, get_player_names  # funciones de steam_service.py
+from analysis import candidatos_sorpresa, estadisticas, unir_juegos, unir_familia  # capa de lógica: cálculos sin red ni Flask
+from steam_client import get_owned_games, get_recently_played_games, get_player_names  # capa de integración: llamadas a Steam
 
 app = Flask(__name__)  # crea la aplicación web
 

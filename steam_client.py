@@ -1,3 +1,5 @@
+# Capa de integración: el ÚNICO módulo que habla con Steam (conoce la API key y las URLs).
+# Aquí no hay cálculos: solo pedir datos y devolverlos (los cálculos van en analysis.py).
 import os  # para leer variables de entorno
 
 import requests  # librería para hacer peticiones HTTP
@@ -35,36 +37,6 @@ def get_owned_games(steam_id):  # recibe el Steam ID de 17 dígitos
     # .json() convierte la respuesta en diccionario; .get(...) evita fallar si falta una clave
     # Si el perfil es privado, "games" no existe y devolvemos una lista vacía
     return respuesta.json().get("response", {}).get("games", [])
-
-
-def unir_juegos(propios, recientes):
-    """Une juegos propios y recientes sin duplicados; marca con propio=False los que no son tuyos."""
-    ids_propios = {j["appid"] for j in propios}  # conjunto con los appid de tu librería (búsqueda rápida)
-    resultado = [{**j, "propio": True} for j in propios]  # copia cada juego propio añadiéndole propio=True
-    resultado += [  # añade los recientes que NO están en tu librería (probablemente de la familia)
-        {**j, "propio": False} for j in recientes if j["appid"] not in ids_propios
-    ]
-    return resultado  # lista unida
-
-
-def unir_familia(mios, familia, yo):
-    """Une tus juegos con los de la familia sin duplicados; cada juego lleva la lista "duenos".
-
-    mios: resultado de unir_juegos (con la marca "propio").
-    familia: lista de pares (etiqueta, juegos), p. ej. [("Familiar 1", [...]), ...].
-    yo: tu etiqueta (tu nombre de Steam, o "Tú" si no se pudo obtener).
-    Las horas (playtime_forever) son siempre las TUYAS; None si Steam no las da.
-    """
-    # Diccionario {appid: juego}: la clave appid no se repite, así cada juego aparece una sola vez
-    juegos = {j["appid"]: {**j, "duenos": [yo] if j["propio"] else []} for j in mios}
-    for etiqueta, lista in familia:  # recorremos la librería de cada familiar
-        for j in lista:  # y cada uno de sus juegos
-            if j["appid"] in juegos:  # el juego ya está en la lista...
-                juegos[j["appid"]]["duenos"].append(etiqueta)  # ...solo añadimos otro dueño
-            else:  # juego nuevo: no lo tienes ni lo has jugado recientemente
-                # copiamos sus datos con TUS horas a None = desconocidas (Steam no las da para préstamos)
-                juegos[j["appid"]] = {**j, "playtime_forever": None, "propio": False, "duenos": [etiqueta]}
-    return list(juegos.values())  # devolvemos solo los juegos, sin las claves
 
 
 # URL del endpoint de Steam que lista los juegos jugados en las últimas 2 semanas

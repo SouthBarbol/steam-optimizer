@@ -32,7 +32,8 @@ sin que yo lo pida.
 ```
 steam-optimizer/
 ├── app.py              # servidor Flask
-├── steam\_service.py    # llamadas a la Steam API y análisis
+├── steam_client.py     # capa de integración: llamadas a Steam (antes steam_service.py)
+├── analysis.py         # capa de lógica: cálculos puros
 ├── templates/          # HTML
 ├── static/css, js/     # estilos y scripts
 ├── .env                # secretos (NO se sube a Git)
@@ -81,9 +82,8 @@ Reglas:
 
 Evolución prevista:
 - Fase 2: todo en steam_service.py.
-- Fase 3: `analysis.py` (calcula) ya existe. Pendiente separar `steam_client.py`
-  (habla con Steam) de `steam_service.py`, probablemente en el paso 3.
-  (Hoy `unir_juegos` y `unir_familia` siguen en `steam_service.py`.)
+- Fase 3 (paso 3.1, HECHO): `steam_service.py` renombrado a `steam_client.py`
+  (solo habla con Steam); `unir_juegos` y `unir_familia` movidas a `analysis.py`.
 
 ## Estado actual
 
@@ -126,7 +126,8 @@ la librería de un usuario.
 ## Próxima sesión (empezar aquí)
 
 * Fase 3 en curso: pasos 0, 1 y 2 HECHOS y probados por el usuario en el navegador.
-* Siguiente: **paso 3, géneros con caché**. Proponer primero el plan, como siempre.
+* Siguiente: **paso 3.2, `get_genres` con caché** (plan del paso 3 acordado, ver
+  "Fase 3"). Proponer primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
   (comprobar que el usuario lo ha subido).
 * Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
@@ -176,7 +177,15 @@ Orden de trabajo (un paso cada vez):
    gráfico de horas por género y perfil gamer. Solo pedir el top por horas.
 4. Qué jugar: puntuación por géneros y horas, con pendientes.
 5. Qué comprar: mainstream y bizarras, con precio y descuentos.
-Probablemente separar `steam_client.py` al llegar al paso 3 (`analysis.py` ya existe).
+Paso 3 acordado: géneros de Steam Store `appdetails` (`l=spanish`, sin key);
+caché en memoria {appid: géneros} sin guardar fallos; horas COMPLETAS de cada juego
+a cada uno de sus géneros (los % no suman 100, avisarlo); gráfico con barras CSS;
+perfil gamer con frases-plantilla. Para TODOS los perfiles (tú y cada familiar),
+top `TOP_GENEROS = 10` por persona, appids sin repetir; mostrar % de horas que cubre
+el top; si Steam limita (429) -> "Sin datos" y aviso.
+Sub-pasos: 3.1 separar `steam_client.py` (HECHO) · 3.2 `get_genres` + caché ·
+3.3 `horas_por_genero` y `perfil_gamer` en `analysis.py` · 3.4 app + plantilla ·
+3.5 `SECURITY_CHECKLIST.md` y `README.md`.
 
 Extra en pasos 4 y 5: además de las recomendaciones razonadas, un juego
 totalmente aleatorio (de la librería en el 4, de la tienda en el 5) con una

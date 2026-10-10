@@ -88,3 +88,33 @@ def estadisticas(juegos):
         "comparaciones": comparaciones(horas),  # 2 frases bizarras elegidas al azar
         "favorito": favorito,  # {"nombre", "horas"} del juego más jugado, o None
     }
+
+
+def unir_juegos(propios, recientes):
+    """Une juegos propios y recientes sin duplicados; marca con propio=False los que no son tuyos."""
+    ids_propios = {j["appid"] for j in propios}  # conjunto con los appid de tu librería (búsqueda rápida)
+    resultado = [{**j, "propio": True} for j in propios]  # copia cada juego propio añadiéndole propio=True
+    resultado += [  # añade los recientes que NO están en tu librería (probablemente de la familia)
+        {**j, "propio": False} for j in recientes if j["appid"] not in ids_propios
+    ]
+    return resultado  # lista unida
+
+
+def unir_familia(mios, familia, yo):
+    """Une tus juegos con los de la familia sin duplicados; cada juego lleva la lista "duenos".
+
+    mios: resultado de unir_juegos (con la marca "propio").
+    familia: lista de pares (etiqueta, juegos), p. ej. [("Familiar 1", [...]), ...].
+    yo: tu etiqueta (tu nombre de Steam, o "Tú" si no se pudo obtener).
+    Las horas (playtime_forever) son siempre las TUYAS; None si Steam no las da.
+    """
+    # Diccionario {appid: juego}: la clave appid no se repite, así cada juego aparece una sola vez
+    juegos = {j["appid"]: {**j, "duenos": [yo] if j["propio"] else []} for j in mios}
+    for etiqueta, lista in familia:  # recorremos la librería de cada familiar
+        for j in lista:  # y cada uno de sus juegos
+            if j["appid"] in juegos:  # el juego ya está en la lista...
+                juegos[j["appid"]]["duenos"].append(etiqueta)  # ...solo añadimos otro dueño
+            else:  # juego nuevo: no lo tienes ni lo has jugado recientemente
+                # copiamos sus datos con TUS horas a None = desconocidas (Steam no las da para préstamos)
+                juegos[j["appid"]] = {**j, "playtime_forever": None, "propio": False, "duenos": [etiqueta]}
+    return list(juegos.values())  # devolvemos solo los juegos, sin las claves
