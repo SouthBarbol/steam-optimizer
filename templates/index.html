@@ -21,6 +21,14 @@
         <input type="text" id="familia" name="familia" maxlength="100">
         <button type="submit">Analizar</button>
     </form>
+    <p class="aviso-carga">Ojo: la primera vez tarda un poco (hasta ~20 s), que le estamos preguntando a Steam juego por juego. Las siguientes van volando.</p>
+
+    {# Caja de espera: oculta (hidden) hasta que carga.js la muestra al enviar el formulario #}
+    <div id="cargando" class="cargando" hidden>
+        {# Tres bloques que saltan (animación CSS); aria-hidden: los lectores de pantalla los ignoran #}
+        <div class="bloques" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p>Rebuscando en tu librería... ve a por un café.</p>
+    </div>
 
     {# Si app.py envió un mensaje de error, lo mostramos. {{ }} escapa el texto automáticamente #}
     {% if error %}
@@ -46,6 +54,19 @@
         "Comprado en rebajas, olvidado en la estantería:",
         "Backlog del purgatorio:",
     ] %}
+    {# Macro = "función" de Jinja2: dibuja la barra de vida de un género. fila = posición (para escalonar la animación) #}
+    {% macro barra(gen, fila) %}
+        <div class="genero" style="--fila: {{ fila }}">  {# --fila: variable CSS con un número nuestro (seguro) #}
+            <span class="genero-nombre">{{ gen.nombre }}</span>
+            {# Bloques encendidos = % redondeado a decenas (91 -> 9); mínimo 1 si tiene alguna hora #}
+            {% set llenos = [1, (gen.pct / 10)|round|int]|max if gen.pct else 0 %}
+            {# aria-hidden: los lectores de pantalla ignoran los cuadraditos; el % ya se lee en el texto de al lado #}
+            <span class="vida" aria-hidden="true">
+                {%- for i in range(10) %}<span class="bloque{% if i < llenos %} lleno{% endif %}" style="--i: {{ i }}"></span>{% endfor -%}
+            </span>
+            <span class="genero-dato">{{ gen.horas }} h · {{ gen.pct }}%</span>
+        </div>
+    {% endmacro %}
     <div class="stats-rejilla">
     {% for t in tarjetas %}
         {% set stats = t.stats %}  {# alias corto: el contenido de la tarjeta usa "stats" #}
@@ -76,6 +97,33 @@
                     {% endif %}
                 </li>
             </ul>
+            {# Perfil gamer: "logro desbloqueado" (estilo C) dentro de un cuadro de diálogo RPG (estilo A) #}
+            {% set g = t.generos %}  {# alias corto #}
+            {% if t.perfil %}  {# None si no hay géneros que definan un estilo #}
+                <div class="logro">  {# las animaciones de entrada están en style.css #}
+                    <p class="logro-cabecera">★ LOGRO DESBLOQUEADO ★</p>
+                    <h3 class="logro-titulo">{{ t.perfil.titulo }}</h3>
+                    <p class="logro-frase">{{ t.perfil.frase }}</p>
+                    {# Sello que "cae" sobre el cuadro si más de la mitad de las horas son Indie #}
+                    {% if t.perfil.indie %}<span class="pegatina-indie sello">INDIE</span>{% endif %}
+                </div>
+            {% endif %}
+            {# Barras de vida por género: 5 a la vista y el resto en un plegable #}
+            {% if g.generos %}
+                {% for gen in g.generos[:5] %}{{ barra(gen, loop.index0) }}{% endfor %}  {# [:5] = los 5 primeros #}
+                {% if g.generos|length > 5 %}
+                    {# <details> + <summary>: bloque plegable nativo de HTML, se abre al pulsar (sin JS) #}
+                    <details>
+                        <summary>Ver {{ g.generos|length - 5 }} géneros más</summary>
+                        {% for gen in g.generos[5:] %}{{ barra(gen, loop.index0) }}{% endfor %}  {# [5:] = del 6.º al final #}
+                    </details>
+                {% endif %}
+                <p class="generos-nota">Tu top {{ g.juegos }} = {{ g.cobertura }}% de tus horas. Un juego cuenta en todos sus géneros, por eso los % no suman 100.</p>
+            {% endif %}
+            {# Aviso si Steam no respondió para algún juego (p. ej. por límite de peticiones) #}
+            {% if g.sin_datos %}
+                <p class="error">Sin datos de {{ g.sin_datos }} juego(s): Steam no respondió. Prueba más tarde.</p>
+            {% endif %}
         </section>
     {% endfor %}
     </div>
@@ -143,6 +191,8 @@
                             {# loading="lazy": el navegador la descarga solo cuando va a verse; alt: texto si no carga #}
                             {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
                             {{ juego.nombre }}
+                            {# Pegatina si el juego es Indie (solo los del top de alguien tienen géneros) #}
+                            {% if juego.indie %}<span class="pegatina-indie">INDIE</span>{% endif %}
                         </td>
                         {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}
                         <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
@@ -156,5 +206,6 @@
 
     {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
     <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
 </body>
 </html>

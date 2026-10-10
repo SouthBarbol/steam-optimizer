@@ -125,9 +125,10 @@ la librería de un usuario.
 
 ## Próxima sesión (empezar aquí)
 
-* Fase 3 en curso: pasos 0, 1 y 2 HECHOS y probados por el usuario en el navegador.
-* Siguiente: **paso 3.2, `get_genres` con caché** (plan del paso 3 acordado, ver
-  "Fase 3"). Proponer primero el código de cada sub-paso, como siempre.
+* Fase 3 en curso: pasos 0, 1, 2 y sub-pasos 3.1-3.4 HECHOS y probados por el usuario en el navegador.
+* Paso 3.5 HECHO (checklist y README al día). Siguiente: **3.6** (capa de personalidad),
+  ver "Fase 3". Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado
+  completo. Proponer primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
   (comprobar que el usuario lo ha subido).
 * Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
@@ -183,8 +184,55 @@ a cada uno de sus géneros (los % no suman 100, avisarlo); gráfico con barras C
 perfil gamer con frases-plantilla. Para TODOS los perfiles (tú y cada familiar),
 top `TOP_GENEROS = 10` por persona, appids sin repetir; mostrar % de horas que cubre
 el top; si Steam limita (429) -> "Sin datos" y aviso.
-Sub-pasos: 3.1 separar `steam_client.py` (HECHO) · 3.2 `get_genres` + caché ·
-3.3 `horas_por_genero` y `perfil_gamer` en `analysis.py` · 3.4 app + plantilla ·
+Sub-pasos: 3.1 separar `steam_client.py` (HECHO) · 3.2 `get_genres(appid)` + caché
+en `steam_client.py` (HECHO; devuelve lista, `[]` si el juego no tiene ficha, `None`
+si falla la consulta, que no se guarda en caché) ·
+3.3 `top_jugados`, `horas_por_genero` y `perfil_gamer` en `analysis.py` (HECHO y
+probado con datos falsos). "Indie" NO decide el perfil (`NO_DEFINEN_PERFIL`), va como
+pegatina: en el perfil si supera `UMBRAL_INDIE` = 50 % de las horas del top, y en la
+tabla en cada juego con género Indie (comprobación pendiente en 3.4) ·
+3.4 app + plantilla (HECHO: `pedir_generos` en `app.py`; pegatina INDIE en tabla y perfil, solo
+en juegos del top de alguien; aviso de carga + bloques animados con `static/js/carga.js`, base de la
+carga 99 % del 3.6; logro en cuadro RPG, sello INDIE y barras de 10 bloques solo CSS con macro
+`barra`, 5 visibles + plegable `<details>`; texto letra a letra, confeti y sonidos pasan al 3.6), con estilo elegido A + C (A: barras "de vida" de 10 bloques que se
+rellenan con "blip" y perfil en cuadro de diálogo RPG con texto letra a letra; C: perfil
+revelado como "logro desbloqueado" con destello, confeti y pegatina Indie como sello).
+Página de muestra con datos inventados (fuera del repo):
+`<scratchpad>/muestra/muestra.html` (si no existe en una sesión nueva, rehacerla) ·
+3.6 (NUEVO) capa de personalidad: `static/js/efectos.js` y `sonido.js` propios (Web
+Audio API, sin archivos ni librerías), botón 🔇 que empieza silenciado,
+`prefers-reduced-motion`, y efectos bizarros elegidos por el usuario de la muestra
+(pato errante, carga 99 %, Pile of Shame con trombón, terremoto, modo caos/Konami,
+pantallazo azul, salvapantallas DVD, logros absurdos, tarjeta cascarrabias, juegos
+olvidados que lloran, título glitch). Los efectos de los pasos 4 y 5, cuando existan.
+Al usuario le gustaron TODOS. Apuntes suyos para el 3.6:
+  - Pato: que pase "de vez en cuando" (p. ej. a intervalos aleatorios), no 1 de cada 10 visitas.
+  - Modo caos: SOLO manual (botón o Konami), nunca automático; es muy intenso.
+  - Carga del 99 %: le encanta. Más énfasis en "preguntando a tu mamá" y añadir "me estoy
+    echando a tu mamá". TONO para TODOS los textos: humano, de colega, tontería entre
+    amigos (ej.: "Tu mamá dice que es tarde", "Vale, ya. Tu mamá te manda saludos").
+  - Logros absurdos: profundizar. Ideas basadas en datos reales (calculados en la visita,
+    NO se guardan; nada de localStorage): Coleccionista de polvo (muchos sin jugar), Fiel
+    hasta la muerte (un juego >50 % de tus horas), Picaflor (muchos <2 h), Toca césped
+    (>1.000 h), Indie hasta la médula, Lobo solitario / Familia numerosa (0 o 5 familiares),
+    Insomne (visita de madrugada, hora del navegador), Ludópata del azar ("Otro" 10 veces),
+    Paciencia infinita (esperar la carga), Susurrador de patos, Esquina perfecta (DVD),
+    Clic compulsivo (cascarrabias), Explorador del abismo (scroll al final). Contador
+    "logros X/N" de la visita.
+  - Referencias a JoJo (idea del usuario), también en el 3.6:
+    · Efectos: ゴゴゴゴ morados flotando alrededor de la tarjeta líder del duelo; "To Be Continued ⟸"
+      con sepia (`filter: sepia()`) al final de la tabla o si Pile of Shame > 50 % ("Tus juegos
+      pendientes... continuarán"); ZA WARUDO como código secreto (congela animaciones, `filter: invert()`,
+      "Toki wo tomare!"); ORA ORA / MUDA MUDA al pulsar "Otro" muchas veces seguidas.
+    · Textos: sorpresa "¿Esperabas una recomendación sensata? ¡Pero era yo, Dio!"; cascarrabias
+      "Yare yare daze..."; carga 99 % "Tu mamá está usando su Stand para frenar la barra".
+    · Estadísticas de Stand (la favorita, datos reales): hexágono con notas A-E en el perfil. Poder =
+      horas totales; Velocidad = juegos abandonados/terminados rápido; Alcance = variedad de géneros;
+      Persistencia = horas del favorito; Precisión = Pile of Shame bajo; Potencial = pendientes.
+      Los umbrales de cada nota se decidirán al implementarlo (cálculo en `analysis.py`).
+    · Logro absurdo "¿Es eso una referencia a JoJo?" al encontrarlas todas.
+    · SIN imágenes, gifs ni música del anime (p. ej. "Roundabout" tiene derechos); sonidos con Web
+      Audio y solo textos/memes ·
 3.5 `SECURITY_CHECKLIST.md` y `README.md`.
 
 Extra en pasos 4 y 5: además de las recomendaciones razonadas, un juego
@@ -206,5 +254,6 @@ si sobran recursos.
 
 Formulario más cómodo para los IDs familiares (idea futura), borrar `/demo`
 y publicación. Antes de publicar: quitar o generalizar las comparaciones con
-bromas internas sobre personas reales (Calero, Mauri, Navarro) en `analysis.py`.
+bromas internas sobre personas reales (Calero, Mauri, Navarro) en `analysis.py`, y
+revisar el tono de las bromas de "tu mamá" (pensadas para amigos) por si se publica.
 

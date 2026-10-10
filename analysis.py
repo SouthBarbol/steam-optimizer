@@ -118,3 +118,85 @@ def unir_familia(mios, familia, yo):
                 # copiamos sus datos con TUS horas a None = desconocidas (Steam no las da para préstamos)
                 juegos[j["appid"]] = {**j, "playtime_forever": None, "propio": False, "duenos": [etiqueta]}
     return list(juegos.values())  # devolvemos solo los juegos, sin las claves
+
+
+# Cuántos juegos (los más jugados de cada persona) se consultan para los géneros
+TOP_GENEROS = 10
+
+# Etiquetas de Steam que no deciden el perfil: no describen CÓMO se juega
+# (modelo de negocio, estado de desarrollo o tamaño del estudio). "Indie" va aparte, como pegatina
+NO_DEFINEN_PERFIL = {"Free to Play", "Acceso anticipado", "Indie"}
+
+# El perfil lleva la pegatina "Indie" si ese género supera este % de las horas del top
+UMBRAL_INDIE = 50
+
+# Perfil gamer según el género con más horas: (título, frase). {horas} se rellena con el dato real
+PERFILES = {
+    "Acción": ("Gatillazo Gatillero Pistolerito", "{horas} h de reflejos, explosiones y cero paciencia para los menús."),
+    "Aventura": ("Willifó", "{horas} h mirando detrás de cada roca por si había un cofre."),
+    "Rol": ("Mega virgin plus", "{horas} h subiendo de nivel; la vida real sigue en nivel 1."),
+    "Estrategia": ("Imperio otomano enjoyer", "{horas} h planeando; seguro que ya tienes un plan para leer esto."),
+    "Simuladores": ("Funambulista a media jornada", "{horas} h trabajando en mundos que no pagan nómina."),
+    "Deportes": ("El pinche cuervo pendejo mamado", "{horas} h de deporte sin sudar una gota."),
+    "Carreras": ("Francesco Virgolini", "{horas} h de la maquina mas veloz de tutti ITALIE."),
+    "Casual": ("Putisimo Chill", "{horas} h de partidas de «solo una más»."),
+    "Multijugador masivo": ("Tauren nivel enseñame media aunque sea carla", "{horas} h con pajilleritos premium."),
+}
+# Para géneros que no están en PERFILES (p. ej. "Sin género" o alguno nuevo de Steam)
+PERFIL_DESCONOCIDO = ("Inclasificable", "{horas} h en géneros que ni Steam sabe nombrar.")
+
+
+def top_jugados(juegos, n=TOP_GENEROS):
+    """Los n juegos con más horas conocidas (mayores que 0), de más a menos."""
+    jugados = [j for j in juegos if j.get("playtime_forever")]  # descarta 0 y None
+    return sorted(jugados, key=lambda j: j["playtime_forever"], reverse=True)[:n]  # [:n] = los n primeros
+
+
+def horas_por_genero(juegos, generos):
+    """Suma las horas de cada juego del top a TODOS sus géneros (por eso los % no suman 100).
+
+    juegos: los juegos de UNA persona, con SUS minutos en "playtime_forever".
+    generos: {appid: lista de géneros, o None si la consulta a Steam falló}.
+    """
+    top = top_jugados(juegos)  # sus juegos más jugados
+    total = sum(j.get("playtime_forever") or 0 for j in juegos)  # todos sus minutos conocidos
+    minutos_top = sum(j["playtime_forever"] for j in top)  # minutos del top
+    acumulado = {}  # {género: minutos}
+    sin_datos = 0  # juegos del top cuyos géneros no se pudieron consultar
+    for j in top:  # recorremos los juegos del top
+        lista = generos.get(j["appid"])  # None si falló o no se pidió
+        if lista is None:  # sin datos de este juego...
+            sin_datos += 1  # ...lo contamos para avisar...
+            continue  # ...y saltamos al siguiente juego
+        for g in lista or ["Sin género"]:  # [] (sin ficha en la tienda) cuenta como "Sin género"
+            acumulado[g] = acumulado.get(g, 0) + j["playtime_forever"]  # .get(g, 0): 0 si es la primera vez
+    ordenados = sorted(acumulado.items(), key=lambda par: par[1], reverse=True)  # de más a menos minutos
+    return {  # diccionario con todo lo que mostrará la plantilla
+        "generos": [  # pct = % de las horas del top; también sirve como ancho de la barra
+            {"nombre": g, "horas": round(m / 60), "pct": round(m / minutos_top * 100)}
+            for g, m in ordenados
+        ],
+        "cobertura": round(minutos_top / total * 100) if total else 0,  # % de sus horas que cubre el top
+        "sin_datos": sin_datos,  # cuántos juegos del top no tienen datos
+        "juegos": len(top),  # puede ser menos de 10 si ha jugado a pocos
+    }
+
+
+def perfil_gamer(generos):
+    """Título y frase según el género con más horas; None si no hay datos suficientes.
+
+    generos: la lista "generos" que devuelve horas_por_genero (ya ordenada de más a menos horas).
+    """
+    estilos = [g for g in generos if g["nombre"] not in NO_DEFINEN_PERFIL]  # quita "Indie", "Free to Play"...
+    if not estilos:  # no queda ningún género que describa su estilo
+        return None  # la plantilla no mostrará perfil
+    principal = estilos[0]  # el primero es el de más horas
+    titulo, frase = PERFILES.get(principal["nombre"], PERFIL_DESCONOCIDO)  # si no está, el genérico
+    # next(...) busca el primer elemento que cumple la condición; 0 si no hay ninguno
+    pct_indie = next((g["pct"] for g in generos if g["nombre"] == "Indie"), 0)
+    return {
+        "titulo": titulo,
+        "frase": frase.format(horas=formatear(principal["horas"])),  # rellena el hueco {horas}
+        "genero": principal["nombre"],  # el género en el que se basa (para mostrarlo)
+        "indie": pct_indie > UMBRAL_INDIE,  # True = mostrar la pegatina "Indie"
+    }

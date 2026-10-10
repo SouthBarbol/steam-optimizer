@@ -244,3 +244,154 @@ tbody tr:hover {
     h1 { font-size: 1.1rem; }
     body { font-size: 0.6rem; }
 }
+
+/* Pegatina "INDIE": sello pequeño y torcido, como pegado a mano */
+.pegatina-indie {
+    display: inline-block;           /* se comporta como texto pero acepta rotación y relleno */
+    padding: 0.15rem 0.35rem;        /* espacio interior: arriba/abajo, izquierda/derecha */
+    margin-left: 0.4rem;             /* separación del nombre del juego */
+    font-size: 0.55rem;              /* más pequeña que el texto normal */
+    color: #39ff14;                  /* verde neón */
+    border: 2px solid #39ff14;       /* borde del mismo color: aspecto de sello */
+    border-radius: 3px;              /* esquinas ligeramente redondeadas */
+    transform: rotate(-6deg);        /* la inclina un poco */
+    vertical-align: middle;          /* alineada con el centro del texto */
+}
+
+/* Aviso bajo el formulario: texto pequeño y apagado */
+.aviso-carga {
+    font-size: 0.6rem;               /* más pequeño que el texto normal */
+    opacity: 0.7;                    /* algo transparente: es información secundaria */
+}
+
+/* Caja de espera (aparece al pulsar "Analizar") */
+.cargando {
+    text-align: center;              /* centra los bloques y el texto */
+    margin: 1.5rem 0;                /* espacio arriba y abajo */
+}
+.cargando[hidden] { display: none; } /* asegura que "hidden" la oculta aunque otra regla diga lo contrario */
+
+/* Tres bloques "pixel" que saltan uno detrás de otro */
+.bloques span {
+    display: inline-block;           /* en fila y con tamaño propio */
+    width: 16px;
+    height: 16px;
+    margin: 0 4px;                   /* separación entre bloques */
+    background: var(--cian);         /* color por defecto (el primero) */
+    animation: saltar 0.6s ease-in-out infinite alternate;  /* sube y baja sin parar */
+}
+.bloques span:nth-child(2) { background: var(--magenta); animation-delay: 0.2s; }  /* el 2.º empieza más tarde */
+.bloques span:nth-child(3) { background: #39ff14; animation-delay: 0.4s; }        /* el 3.º, más tarde aún */
+
+/* @keyframes define los pasos de la animación: de su sitio a 14px más arriba */
+@keyframes saltar {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-14px); }
+}
+
+/* Si el usuario pidió "reducir movimiento" en su sistema, los bloques se quedan quietos */
+@media (prefers-reduced-motion: reduce) {
+    .bloques span { animation: none; }
+}
+
+/* ===== Perfil gamer: logro desbloqueado en cuadro de diálogo RPG (paso 3.4c) ===== */
+.logro {
+    position: relative;              /* referencia para colocar el sello (position: absolute) */
+    margin: 1.5rem 0;                /* espacio arriba y abajo */
+    padding: 0.9rem 1rem;            /* espacio interior */
+    border: 4px double currentColor; /* doble línea con el color del dueño: aspecto de cuadro RPG */
+    background: var(--fondo);        /* algo más oscuro que la tarjeta, para que destaque */
+    box-shadow: 0 0 12px currentColor;  /* halo neón */
+    animation: logro-entra 0.7s ease-out both;  /* entra deslizando con destello; "both" mantiene el estado inicial y final */
+}
+.logro-cabecera {
+    margin: 0 0 0.6rem;
+    font-size: 0.55rem;
+    color: #ffe600;                  /* amarillo "trofeo" */
+}
+.logro-titulo {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    color: inherit;                  /* el color del dueño */
+    text-shadow: 0 0 6px currentColor;  /* brillo neón */
+}
+.logro-frase {
+    margin: 0;
+    font-size: 0.6rem;
+    line-height: 1.7;                /* interlineado amplio: la fuente pixel se lee mejor */
+    color: var(--texto);
+}
+/* El sello INDIE va en la esquina inferior derecha, medio fuera del cuadro */
+.logro .sello {
+    position: absolute;              /* se coloca respecto a .logro */
+    right: 0.8rem;
+    bottom: -0.9rem;
+    font-size: 0.7rem;
+    background: var(--fondo);        /* tapa la línea del borde que pasa por detrás */
+    animation: sello-cae 0.35s ease-in 0.7s both;  /* empieza cuando el logro ya ha entrado (0.7s) */
+}
+
+/* Entrada del logro: aparece desde la izquierda muy brillante (destello) y se apaga a su brillo normal */
+@keyframes logro-entra {
+    0%   { opacity: 0; transform: translateX(-30px); filter: brightness(3); }
+    60%  { opacity: 1; transform: none; filter: brightness(2); }
+    100% { filter: brightness(1); }
+}
+/* El sello cae desde grande y girado hasta su sitio, como un golpe de tampón */
+@keyframes sello-cae {
+    from { opacity: 0; transform: scale(3) rotate(-30deg); }
+    to   { opacity: 1; transform: scale(1) rotate(-6deg); }  /* acaba igual que .pegatina-indie */
+}
+
+/* ===== Barras de vida por género ===== */
+.genero {
+    display: grid;                   /* tres columnas: nombre | barra | horas y % */
+    grid-template-columns: 8rem auto 1fr;
+    gap: 0.6rem;                     /* separación entre columnas */
+    align-items: center;             /* centradas en vertical */
+    margin: 0.5rem 0;
+    font-size: 0.55rem;
+}
+.genero-nombre, .genero-dato {
+    color: var(--texto);             /* el texto en claro; la barra conserva el color del dueño */
+}
+.vida {
+    display: flex;                   /* bloques en fila */
+    gap: 2px;                        /* hueco entre bloques */
+}
+.bloque {
+    width: 10px;
+    height: 12px;
+    border: 1px solid currentColor;  /* bloque vacío: solo el contorno... */
+    opacity: 0.25;                   /* ...y apagado */
+}
+.bloque.lleno {
+    background: currentColor;        /* bloque encendido: relleno con el color del dueño */
+    opacity: 1;
+    /* step-end: cambia de golpe (efecto pixel). Retraso: tras el logro (0.7s), en cadena por bloque y por fila */
+    animation: bloque-llena 0.1s step-end both;
+    animation-delay: calc(0.7s + var(--i) * 60ms + var(--fila) * 120ms);
+}
+@keyframes bloque-llena {
+    from { background: transparent; opacity: 0.25; }  /* empieza vacío... */
+    to   { background: currentColor; opacity: 1; }    /* ...y se enciende */
+}
+
+/* Plegable "Ver N géneros más" */
+.stats summary {
+    margin: 0.5rem 0;
+    font-size: 0.55rem;
+    color: var(--texto);
+    cursor: pointer;                 /* manita al pasar el ratón */
+}
+.generos-nota {
+    font-size: 0.5rem;
+    line-height: 1.6;
+    color: var(--texto);
+    opacity: 0.7;                    /* información secundaria */
+}
+
+/* Si el usuario pidió "reducir movimiento", se muestra todo directamente, sin animaciones */
+@media (prefers-reduced-motion: reduce) {
+    .logro, .logro .sello, .bloque.lleno { animation: none; }
+}

@@ -2,8 +2,12 @@ import re  # módulo de expresiones regulares, para validar el Steam ID
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
-from analysis import candidatos_sorpresa, estadisticas, unir_juegos, unir_familia  # capa de lógica: cálculos sin red ni Flask
-from steam_client import get_owned_games, get_recently_played_games, get_player_names  # capa de integración: llamadas a Steam
+from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntesis = import en varias líneas)
+    candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
+)
+from steam_client import (  # capa de integración: llamadas a Steam
+    get_owned_games, get_recently_played_games, get_player_names, get_genres,
+)
 
 app = Flask(__name__)  # crea la aplicación web
 
@@ -48,18 +52,27 @@ def index():
     for n, (etiqueta, _) in enumerate(librerias, start=1):  # "_" = valor que no usamos (los juegos)
         colores[etiqueta] = n  # cada familiar recibe el siguiente número
 
-    # Una tarjeta de estadísticas por persona: primero tú, luego cada familiar con librería
+    # Personas con tarjeta: (nombre, color, sus juegos). Primero tú, luego cada familiar con juegos
     # (usamos la lista original: preparar_juegos quita el campo "propio")
-    tarjetas = [{"nombre": yo, "color": 0, "stats": estadisticas(juegos)}]
-    for etiqueta, lista in jugados.items():  # .items() da pares (clave, valor) del diccionario
-        if lista:  # sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
-            # propios + recientes del familiar, con SUS horas (unir_juegos ya marca "propio")
-            tarjetas.append({"nombre": etiqueta, "color": colores[etiqueta], "stats": estadisticas(lista)})
+    # "if l": sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
+    personas = [(yo, 0, juegos)] + [(e, colores[e], l) for e, l in jugados.items() if l]
+    generos = pedir_generos([lista for _, _, lista in personas])  # TODAS las consultas de géneros de una vez
+
+    tarjetas = []  # una tarjeta de estadísticas por persona
+    for nombre, color, lista in personas:  # cada tupla se "desempaqueta" en tres variables
+        por_genero = horas_por_genero(lista, generos)  # horas y % por género de su top
+        tarjetas.append({
+            "nombre": nombre,
+            "color": color,
+            "stats": estadisticas(lista),  # Pile of Shame, horas, etc. (paso 1)
+            "generos": por_genero,  # barras de géneros, cobertura y aviso "sin datos"
+            "perfil": perfil_gamer(por_genero["generos"]),  # título y frase (None si no hay datos)
+        })
 
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
         "index.html",
-        juegos=preparar_juegos(juegos),
+        juegos=preparar_juegos(juegos, generos),  # generos: para la pegatina INDIE de la tabla
         avisos=avisos,
         colores=colores,
         tarjetas=tarjetas,
@@ -113,8 +126,16 @@ def pedir_familia(familia, nombres, yo):
     return librerias, jugados, avisos
 
 
-def preparar_juegos(juegos):
-    """Convierte los datos de Steam en una lista simple (appid, nombre, horas, dueños) ordenada por horas."""
+def pedir_generos(listas):
+    """Pide a Steam los géneros del top de cada persona, sin repetir juegos. Devuelve {appid: géneros}."""
+    # Conjunto {...}: como una lista pero sin repetidos (un juego en varios tops se pide una sola vez)
+    appids = {j["appid"] for lista in listas for j in top_jugados(lista)}
+    return {a: get_genres(a) for a in appids}  # una consulta por juego (o la caché, si ya se pidió)
+
+
+def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto (la ruta /demo no lo pasa)
+    """Convierte los datos de Steam en una lista simple (appid, nombre, horas, dueños, indie) ordenada por horas."""
+    generos = generos or {}  # None -> diccionario vacío, para poder usar .get() abajo
     # Ordenamos de más a menos minutos; "or 0" convierte None (desconocido) en 0 para poder comparar
     ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever") or 0, reverse=True)
     return [  # un diccionario por juego, con solo lo que necesita la plantilla
@@ -123,6 +144,9 @@ def preparar_juegos(juegos):
             "nombre": j.get("name", "?"),
             "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
             "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)
+            # True si Steam dice que es Indie; solo sabemos los géneros de los juegos del top de alguien
+            # ("or []": None, consulta fallida o juego no pedido, cuenta como lista vacía)
+            "indie": "Indie" in (generos.get(j.get("appid")) or []),
         }
         for j in ordenados
     ]

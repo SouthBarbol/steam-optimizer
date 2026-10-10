@@ -35,6 +35,16 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Los nombres de Steam (dato externo) se muestran con el escapado de Jinja2; el color del
   dueño usa un número (`dueno-N`), nunca el nombre dentro de una clase o atributo
 
+## Géneros (fase 3)
+- [x] Los géneros se piden a la tienda de Steam (`store.steampowered.com/api/appdetails`, no oficial)
+  desde Flask (servidor), sin API key y con `timeout` de 10 s
+- [x] Caché en memoria solo con datos del JUEGO (`appid` -> géneros), nunca del usuario; se vacía al
+  reiniciar el servidor y las consultas fallidas no se guardan
+- [x] Límite de la tienda (~200 peticiones cada 5 min): solo el top 10 de cada persona, sin repetir
+  juegos; si Steam no responde (p. ej. 429) se muestra "Sin datos", sin detalles internos
+- [x] Los géneros (dato externo) se muestran con el escapado de Jinja2; los `style="--i: N"` de las
+  barras solo llevan números calculados por nosotros, nunca texto externo
+
 ## JavaScript del navegador
 - [x] El JavaScript no llama a Steam ni a ninguna otra web (solo usa datos ya presentes en la página)
 - [x] Los datos se pasan de Jinja2 a JavaScript solo con `|tojson` (escapa `<`, `>`, `'`, `&`)
@@ -42,6 +52,10 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 
 ## Antes de publicar
 - [ ] Quitar o generalizar las comparaciones con bromas sobre personas reales (`analysis.py`)
+- [ ] Revisar el tono de las bromas de "tu mamá" (pensadas para amigos)
+- [ ] Sin imágenes, gifs ni música con derechos de autor (p. ej. referencias a JoJo: solo texto y Web Audio)
+- [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor;
+  valorar acotar peticiones por visita/minuto o el tamaño de la caché
 - [ ] `debug=False` en producción
 - [ ] HTTPS activo en el hosting
 - [ ] Dependencias actualizadas (`pip list --outdated`)

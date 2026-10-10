@@ -96,3 +96,34 @@ def get_player_names(steam_ids):  # recibe una lista de Steam IDs (máx. 100)
     jugadores = respuesta.json().get("response", {}).get("players", [])  # lista de perfiles encontrados
     # Diccionario por comprensión: para cada perfil, su ID -> su nombre visible ("personaname")
     return {p["steamid"]: p.get("personaname", "") for p in jugadores}
+
+
+# URL (no oficial) de la tienda de Steam con los datos de un juego; no necesita API key
+STORE_DETAILS_URL = "https://store.steampowered.com/api/appdetails"
+
+# Caché en memoria: {appid: [géneros]}. Son datos del JUEGO, no del usuario.
+# Vive mientras el servidor está encendido; al reiniciarlo se vacía.
+_cache_generos = {}
+
+
+def get_genres(appid):
+    """Devuelve la lista de géneros (en español) de un juego, o None si no se pudo consultar."""
+    if appid in _cache_generos:  # ¿ya lo pedimos antes?...
+        return _cache_generos[appid]  # ...devolvemos lo guardado, sin llamar a Steam
+
+    params = {"appids": appid, "filters": "genres", "l": "spanish"}  # solo géneros, en español
+    try:  # intenta hacer la petición; si algo falla, salta al except
+        respuesta = requests.get(STORE_DETAILS_URL, params=params, timeout=10)  # GET a la tienda, máx. 10 s
+        respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx (p. ej. 429 = demasiadas peticiones)
+        cuerpo = respuesta.json() or {}  # "or {}": a veces Steam responde "null" cuando le saturamos
+    except (requests.exceptions.RequestException, ValueError):  # red, código de error o JSON inválido
+        return None  # fallo temporal: NO se guarda en caché, así se reintenta la próxima vez
+
+    datos = cuerpo.get(str(appid), {})  # la clave de la respuesta es el appid como texto
+    if datos.get("success"):  # el juego tiene ficha en la tienda
+        info = datos.get("data") or {}  # "or {}": si no tiene géneros, Steam manda una lista vacía
+        generos = [g["description"] for g in info.get("genres", [])]  # solo los nombres
+    else:  # juego retirado o sin ficha: es un dato definitivo, no un fallo
+        generos = []
+    _cache_generos[appid] = generos  # guardamos para no volver a pedirlo
+    return generos
