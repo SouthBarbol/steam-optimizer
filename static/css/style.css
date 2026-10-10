@@ -124,6 +124,14 @@ td {
     border-bottom: 1px solid #2a2a4d;
 }
 
+/* Carátula del juego: pequeña, encima del nombre */
+.caratula {
+    display: block;                               /* ocupa su propia línea; el nombre queda debajo */
+    width: 120px;                                 /* ancho fijo para que todas las filas sean iguales */
+    height: auto;                                 /* alto proporcional: la imagen no se deforma */
+    margin-bottom: 0.4rem;                        /* separación con el nombre */
+}
+
 /* Panel de estadísticas: mismo fondo y brillo que la tabla */
 /* Rejilla que coloca las tarjetas: varias por fila si caben, una si la pantalla es estrecha */
 .stats-rejilla {

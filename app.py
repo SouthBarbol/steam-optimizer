@@ -114,11 +114,12 @@ def pedir_familia(familia, nombres, yo):
 
 
 def preparar_juegos(juegos):
-    """Convierte los datos de Steam en una lista simple (nombre, horas, dueños) ordenada por horas."""
+    """Convierte los datos de Steam en una lista simple (appid, nombre, horas, dueños) ordenada por horas."""
     # Ordenamos de más a menos minutos; "or 0" convierte None (desconocido) en 0 para poder comparar
     ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever") or 0, reverse=True)
     return [  # un diccionario por juego, con solo lo que necesita la plantilla
         {
+            "appid": j.get("appid"),  # número del juego en Steam; sirve para la URL de la carátula (None en /demo)
             "nombre": j.get("name", "?"),
             "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
             "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)

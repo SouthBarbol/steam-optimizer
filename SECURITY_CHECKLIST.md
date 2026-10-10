@@ -23,6 +23,9 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [ ] Revisar la ruta temporal `/demo` y borrarla antes de publicar
 - [x] Google Fonts: la fuente Press Start 2P se aloja en `static/fonts/` y se carga con
   `@font-face`; el navegador del visitante ya no contacta con Google
+- [x] Carátulas (decisión aceptada): el navegador las pide directamente al CDN público de
+  Steam (`cdn.cloudflare.steamstatic.com`). No lleva API key; Valve ve la IP del visitante
+  y qué carátulas se piden. Alternativa más estricta (proxy en Flask) descartada por ahora
 
 ## Biblioteca familiar (fase 3)
 - [x] IDs de familiares validados en el servidor: 17 dígitos, máx. 5, sin duplicados ni tu propio ID

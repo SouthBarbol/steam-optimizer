@@ -138,7 +138,12 @@
                 {# Bucle: una fila por cada juego de la lista #}
                 {% for juego in juegos %}
                     <tr>
-                        <td>{{ juego.nombre }}</td>
+                        <td>
+                            {# Carátula desde el CDN público de Steam (sin API key). Solo si hay appid (en /demo no hay) #}
+                            {# loading="lazy": el navegador la descarga solo cuando va a verse; alt: texto si no carga #}
+                            {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
+                            {{ juego.nombre }}
+                        </td>
                         {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}
                         <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
                         {# Una etiqueta por dueño; la clase dueno-N le da su color (colores viene de app.py; 0 si no está, p. ej. en /demo) #}

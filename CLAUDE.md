@@ -125,10 +125,10 @@ la librería de un usuario.
 
 ## Próxima sesión (empezar aquí)
 
-* Fase 3 en curso: pasos 0 y 1 HECHOS y probados por el usuario en el navegador.
-* Siguiente: **paso 2, carátulas** en la tabla. Proponer primero el plan, como siempre.
-* Modelo: Opus. Effort medium basta para el paso 2; AVISAR al usuario para
-  subirlo a high al empezar el paso 3 (géneros, caché) y siguientes.
+* Fase 3 en curso: pasos 0, 1 y 2 HECHOS y probados por el usuario en el navegador.
+* Siguiente: **paso 3, géneros con caché**. Proponer primero el plan, como siempre.
+* Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
+  (comprobar que el usuario lo ha subido).
 * Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
   cambiar `.py` o plantillas: con `debug=False` Flask no recarga solo (el CSS
   y el JS sí se ven con Ctrl+F5).
@@ -168,6 +168,10 @@ Orden de trabajo (un paso cada vez):
    (`static/js/sorpresa.js`, sin llamar a Steam) y duelo familiar (horas,
    colección, favoritos; incluye recientes de cada familiar).
 2. Carátulas en la tabla (URL pública a partir del `appid`).
+   HECHO: `preparar_juegos` pasa el `appid`; `<img class="caratula">` en la celda
+   "Juego" con `header.jpg` del CDN de Steam (`loading="lazy"`, sin imagen en /demo).
+   El navegador pide las imágenes a Steam directamente (decisión aceptada y
+   anotada en `SECURITY_CHECKLIST.md`; proxy en Flask descartado por ahora).
 3. Géneros con caché en memoria (por `appid`, datos del juego, no del usuario),
    gráfico de horas por género y perfil gamer. Solo pedir el top por horas.
 4. Qué jugar: puntuación por géneros y horas, con pendientes.
