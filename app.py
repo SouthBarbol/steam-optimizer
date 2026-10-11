@@ -1,9 +1,12 @@
+import math  # funciones matemáticas (seno y coseno para el hexágono de Stand)
 import re  # módulo de expresiones regulares, para validar el Steam ID
+import time  # para medir cuánto tarda la página (logro "Paciencia infinita")
 
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
 from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntesis = import en varias líneas)
     candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
+    catalogo_logros, logros_datos, stand,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres,
@@ -14,6 +17,7 @@ app = Flask(__name__)  # crea la aplicación web
 
 @app.route("/")  # esta función responde cuando se visita la raíz: http://127.0.0.1:5000/
 def index():
+    inicio = time.perf_counter()  # "cronómetro": segundos con decimales desde un punto cualquiera
     steam_id = request.args.get("steam_id", "")  # lee ?steam_id=... de la URL ("" si no viene)
 
     if not steam_id:  # si no se ha enviado ningún ID...
@@ -61,10 +65,14 @@ def index():
     tarjetas = []  # una tarjeta de estadísticas por persona
     for nombre, color, lista in personas:  # cada tupla se "desempaqueta" en tres variables
         por_genero = horas_por_genero(lista, generos)  # horas y % por género de su top
+        stats = estadisticas(lista)  # Pile of Shame, horas, etc. (paso 1)
+        ficha = stand(stats, por_genero)  # estadísticas de Stand (notas A-E)
         tarjetas.append({
             "nombre": nombre,
             "color": color,
-            "stats": estadisticas(lista),  # Pile of Shame, horas, etc. (paso 1)
+            "stats": stats,
+            "stand": ficha,
+            "hexagono": hexagono(ficha["notas"]),  # coordenadas para dibujarlo en SVG
             "generos": por_genero,  # barras de géneros, cobertura y aviso "sin datos"
             "perfil": perfil_gamer(por_genero["generos"]),  # título y frase (None si no hay datos)
         })
@@ -77,6 +85,9 @@ def index():
         colores=colores,
         tarjetas=tarjetas,
         candidatos=candidatos_sorpresa(juegos),  # juegos posibles para el "juego sorpresa"
+        logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
+        # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
+        ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),
     )
 
 
@@ -131,6 +142,30 @@ def pedir_generos(listas):
     # Conjunto {...}: como una lista pero sin repetidos (un juego en varios tops se pide una sola vez)
     appids = {j["appid"] for lista in listas for j in top_jugados(lista)}
     return {a: get_genres(a) for a in appids}  # una consulta por juego (o la caché, si ya se pidió)
+
+
+def hexagono(notas, radio=70):
+    """Coordenadas del hexágono de Stand (SVG con el centro en 0,0). Dibujar es cosa de la presentación.
+
+    Devuelve el marco (hexágono completo), la forma (cada punta según su nota: A = borde, E = 1/5)
+    y la posición de cada etiqueta.
+    """
+    valor = {"A": 5, "B": 4, "C": 3, "D": 2, "E": 1}  # nota -> "tamaño" (de 1 a 5)
+    marco, forma, etiquetas = [], [], []
+    for i, n in enumerate(notas):  # 6 notas = 6 puntas
+        angulo = math.radians(-90 + i * 60)  # la primera arriba (-90°) y cada 60° (radians: grados -> radianes)
+        cos, sin = math.cos(angulo), math.sin(angulo)  # dirección de la punta (coseno = x, seno = y)
+        marco.append(f"{radio * cos:.1f},{radio * sin:.1f}")  # punta del hexágono completo
+        r = radio * valor[n["nota"]] / 5  # la nota decide hasta dónde llega
+        forma.append(f"{r * cos:.1f},{r * sin:.1f}")
+        x, y = (radio + 12) * cos, (radio + 12) * sin  # etiqueta un poco por fuera
+        # text-anchor: a la derecha del centro, el texto empieza en x; a la izquierda, acaba en x
+        ancla = "start" if x > 1 else "end" if x < -1 else "middle"
+        etiquetas.append({"x": f"{x:.1f}", "y": f"{y + 3:.1f}", "ancla": ancla,
+                          "ex": f"{radio * cos:.1f}", "ey": f"{radio * sin:.1f}",  # fin del eje
+                          "nombre": n["nombre"], "nota": n["nota"]})
+    # " ".join une los puntos con espacios: el formato que espera el atributo points de SVG
+    return {"marco": " ".join(marco), "forma": " ".join(forma), "etiquetas": etiquetas}
 
 
 def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto (la ruta /demo no lo pasa)

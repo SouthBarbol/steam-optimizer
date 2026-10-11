@@ -200,3 +200,112 @@ def perfil_gamer(generos):
         "genero": principal["nombre"],  # el género en el que se basa (para mostrarlo)
         "indie": pct_indie > UMBRAL_INDIE,  # True = mostrar la pegatina "Indie"
     }
+
+
+# ===================== Logros absurdos (paso 3.6c) =====================
+# Catálogo COMPLETO: id -> (icono, título, texto). Incluye los que da el navegador (logros.js) y los
+# de pasos futuros, para que el contador "X/N" conozca el total. Se calculan en cada visita; no se guardan.
+LOGROS = {
+    "polvo": ("🕸️", "Coleccionista de polvo", "La mitad de tu librería sigue con el plástico puesto."),
+    "fiel": ("💍", "Fiel hasta la muerte", "Un solo juego se lleva más de la mitad de tus horas. Eso es amor."),
+    "picaflor": ("🦋", "Picaflor", "Pruebas, te aburres y a otra cosa. Muchos juegos no pasan de 2 h."),
+    "cesped": ("🌱", "Toca césped", "Más de 1.000 h. Ahí fuera hay un sitio que se llama \"calle\"."),
+    "indie": ("🎨", "Indie hasta la médula", "Más de la mitad de tus horas son de estudios pequeñitos."),
+    "lobo": ("🐺", "Lobo solitario", "Ni un familiar. Tú contra el mundo."),
+    "familia": ("👨‍👩‍👧‍👦", "Familia numerosa", "Cinco familiares. Esto ya es una comuna gamer."),
+    "paciencia": ("⏳", "Paciencia infinita", "Más de 10 s esperando sin cerrar la pestaña. Respeto."),
+    "insomne": ("🦉", "Insomne", "¿Mirando tus horas de Steam a estas horas? Tu mamá te está buscando."),
+    "ludopata": ("🎰", "Ludópata del azar", "10 veces \"Otro\". No te va a salir nada mejor, tío."),
+    "abismo": ("🕳️", "Explorador del abismo", "Has llegado al final de la página. Aquí no hay nada. ¿Contento?"),
+    "patos": ("🦆", "Susurrador de patos", "Los patos te respetan."),  # paso 3.6d
+    "esquina": ("📀", "Esquina perfecta", "Has visto el logo dar en la esquina. Ya puedes morir tranquilo."),  # 3.6e
+    "compulsivo": ("👆", "Clic compulsivo", "La tarjeta te ha pedido que pares. No has parado."),  # 3.6e
+    "konami": ("🎮", "Código Konami", "↑↑↓↓←→←→BA. Tienes una edad. Respeto."),  # 3.6e
+    "jojo": ("⭐", "¿Eso es una JoJo referencia??", "Las has encontrado todas. Yare yare daze."),  # 3.6f
+}
+
+# Umbrales de los logros que dependen de tus datos (ajustables)
+UMBRAL_POLVO = 50  # % de juegos sin estrenar
+UMBRAL_FIEL = 50  # % de tus horas en tu favorito
+UMBRAL_PICAFLOR = 30  # % de juegos abandonados (menos de 2 h)
+UMBRAL_CESPED = 1000  # horas totales
+UMBRAL_PACIENCIA = 10  # segundos que tardó la página
+FAMILIA_NUMEROSA = 5  # familiares (el máximo que admite el formulario)
+
+
+def catalogo_logros():
+    """El catálogo en forma de lista de diccionarios (cómodo para pasarlo a JavaScript con |tojson)."""
+    return [{"id": i, "icono": ic, "titulo": ti, "texto": te} for i, (ic, ti, te) in LOGROS.items()]
+
+
+def logros_datos(stats, perfil, familiares, segundos):
+    """Ids de los logros que se ganan con TUS datos (el resto los da el navegador).
+
+    stats: tu resultado de estadisticas(); perfil: tu perfil_gamer() (puede ser None);
+    familiares: cuántos IDs de familiares se analizaron; segundos: lo que tardó la página.
+    """
+    ganados = []  # lista de ids
+    total = stats["total_propios"]
+    if total and stats["pile_pct"] >= UMBRAL_POLVO:  # "total and": sin juegos no hay logro
+        ganados.append("polvo")
+    fav = stats["favorito"]  # {"nombre", "horas"} o None
+    if fav and stats["horas"] and fav["horas"] / stats["horas"] * 100 > UMBRAL_FIEL:
+        ganados.append("fiel")
+    if total and stats["abandonados"] / total * 100 >= UMBRAL_PICAFLOR:
+        ganados.append("picaflor")
+    if stats["horas"] > UMBRAL_CESPED:
+        ganados.append("cesped")
+    if perfil and perfil["indie"]:  # el perfil ya decide si lleva el sello INDIE
+        ganados.append("indie")
+    if familiares == 0:
+        ganados.append("lobo")
+    elif familiares >= FAMILIA_NUMEROSA:  # elif = "si no, y además..."
+        ganados.append("familia")
+    if segundos > UMBRAL_PACIENCIA:
+        ganados.append("paciencia")
+    return ganados
+
+
+# ===================== Estadísticas de Stand (paso 3.6f, referencia a JoJo) =====================
+# Cada estadística: (umbrales para A, B, C y D; True si "más es mejor", False si "menos es mejor")
+STAND = {
+    "Poder": ([2000, 1000, 500, 100], True),  # horas totales
+    "Velocidad": ([40, 30, 20, 10], True),  # % de juegos abandonados (velocidad para dejarlos)
+    "Alcance": ([8, 6, 4, 2], True),  # géneros distintos en tu top
+    "Persistencia": ([1000, 500, 200, 50], True),  # horas de tu juego favorito
+    "Precisión": ([10, 25, 40, 60], False),  # Pile of Shame: cuanto MÁS BAJO, mejor
+    "Potencial": ([100, 50, 20, 5], True),  # juegos sin estrenar (potencial sin explotar)
+}
+NO_SON_GENERO = {"Sin género", "Free to Play", "Acceso anticipado"}  # no cuentan para el Alcance
+
+
+def nota(valor, umbrales, mas_es_mejor):
+    """Convierte un valor en una nota de la A a la E según sus umbrales."""
+    for letra, umbral in zip("ABCD", umbrales):  # zip empareja: ("A", 2000), ("B", 1000)...
+        # "X if condición else Y": elige la comparación según el sentido de la estadística
+        if (valor >= umbral) if mas_es_mejor else (valor <= umbral):
+            return letra  # el primer umbral que alcanza es su nota
+    return "E"  # no llegó a ninguno
+
+
+def stand(stats, por_genero):
+    """Ficha de Stand de una persona: nombre (su juego favorito) y 6 notas de la A a la E.
+
+    stats: su resultado de estadisticas(); por_genero: su resultado de horas_por_genero().
+    """
+    total = stats["total_propios"]
+    fav = stats["favorito"]  # {"nombre", "horas"} o None
+    valores = {  # el dato real de cada estadística
+        "Poder": stats["horas"],
+        "Velocidad": stats["abandonados"] / total * 100 if total else 0,
+        "Alcance": sum(1 for g in por_genero["generos"] if g["nombre"] not in NO_SON_GENERO),
+        "Persistencia": fav["horas"] if fav else 0,
+        "Precisión": stats["pile_pct"] if total else 100,  # sin juegos: la peor precisión
+        "Potencial": stats["sin_jugar"],
+    }
+    return {
+        "nombre": fav["nombre"].upper() if fav else "SIN NOMBRE",  # .upper() = en mayúsculas
+        "notas": [  # en el orden de STAND (los diccionarios de Python conservan el orden)
+            {"nombre": n, "nota": nota(valores[n], umbrales, sentido)} for n, (umbrales, sentido) in STAND.items()
+        ],
+    }

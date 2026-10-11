@@ -9,7 +9,23 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Steam Optimizer</h1>
+    {# Botón de sonido (empieza silenciado) y lienzo del confeti; los manejan sonido.js y efectos.js #}
+    {# Esquina fija: contador de logros (solo con resultados) y botón de sonido #}
+    <div class="esquina fijo">  {# "fijo": elementos que no tiemblan con el terremoto #}
+        {% if logros %}
+            {# |tojson: forma segura de pasar datos a JS. logros.js lee el catálogo y tus logros por datos #}
+            <div id="trofeos" data-catalogo='{{ logros|tojson }}' data-ganados='{{ ganados|tojson }}'>
+                <button type="button" id="btn-logros" aria-expanded="false">🏆 0/{{ logros|length }}</button>
+                <ol id="lista-logros" hidden></ol>  {# la rellena logros.js #}
+            </div>
+        {% endif %}
+        <button type="button" id="btn-sonido" aria-pressed="false">🔇 SONIDO</button>
+        {# Bocadillo de aviso mientras el sonido está apagado (sonido.js lo muestra y lo oculta) #}
+        <p id="aviso-sonido" class="aviso-sonido" hidden>¡Eh! El sonidito está apagao. Dale aquí ↑</p>
+    </div>
+    <canvas id="confeti" class="fijo" aria-hidden="true"></canvas>
+    {# data-texto: copia del título que usa el CSS para el efecto glitch (efectos.js lo activa) #}
+    <h1 class="glitch" data-texto="Steam Optimizer">Steam Optimizer</h1>
 
     {# Comentario de Jinja2: no llega al navegador. Formulario GET: añade ?steam_id=... a la URL #}
     <form method="get" action="/">
@@ -19,6 +35,8 @@
         {# Campo opcional (sin required): IDs de familiares separados por comas; se valida en app.py #}
         <label for="familia">IDs de familiares (opcional, separados por comas, máx. 5):</label>
         <input type="text" id="familia" name="familia" maxlength="100">
+        {# Campo oculto: sonido.js lo pone a 1 si el sonido está encendido, para mantenerlo tras analizar #}
+        <input type="hidden" id="campo-sonido" name="sonido" value="0">
         <button type="submit">Analizar</button>
     </form>
     <p class="aviso-carga">Ojo: la primera vez tarda un poco (hasta ~20 s), que le estamos preguntando a Steam juego por juego. Las siguientes van volando.</p>
@@ -27,7 +45,9 @@
     <div id="cargando" class="cargando" hidden>
         {# Tres bloques que saltan (animación CSS); aria-hidden: los lectores de pantalla los ignoran #}
         <div class="bloques" aria-hidden="true"><span></span><span></span><span></span></div>
-        <p>Rebuscando en tu librería... ve a por un café.</p>
+        {# carga.js cambia este texto y el ancho de la barra (carga "sospechosa" que se atasca en el 99 %) #}
+        <p id="carga-texto">Rebuscando en tu librería... ve a por un café.</p>
+        <div class="carga-barra" aria-hidden="true"><span id="carga-relleno"></span></div>
     </div>
 
     {# Si app.py envió un mensaje de error, lo mostramos. {{ }} escapa el texto automáticamente #}
@@ -67,17 +87,23 @@
             <span class="genero-dato">{{ gen.horas }} h · {{ gen.pct }}%</span>
         </div>
     {% endmacro %}
+    {# Líder del duelo (más horas): le rodearán los ゴゴゴ al revelar su perfil. |first = el primero de la lista #}
+    {% set lider = (tarjetas|sort(attribute="stats.horas", reverse=True)|first).nombre %}
     <div class="stats-rejilla">
     {% for t in tarjetas %}
         {% set stats = t.stats %}  {# alias corto: el contenido de la tarjeta usa "stats" #}
         {# dueno-N da a la tarjeta el color de su dueño (el mismo que su etiqueta en la tabla) #}
-        <section class="stats dueno-{{ t.color }}">
+        {# data-terremoto: la página tiembla al revelar su perfil si supera 1.000 h (= UMBRAL_CESPED de analysis.py) #}
+        <section class="stats dueno-{{ t.color }}"{% if stats.horas > 1000 %} data-terremoto{% endif %}{% if t.nombre == lider and stats.horas %} data-menacing{% endif %}>
             <h2>{{ t.nombre }}</h2>
             <ul>
                 {# |string|replace(".", ",") muestra los decimales con coma #}
                 {# Pile of Shame: % de juegos sin estrenar. Título distinto por tarjeta;
                    loop.index0 % 4 = resto de dividir la posición entre 4 -> 0,1,2,3,0,1... (se repiten) #}
-                <li>{{ titulos_pile[loop.index0 % titulos_pile|length] }} {{ stats.pile_pct|string|replace(".", ",") }}% ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
+                {# Con más del 50 % sin estrenar, el % es un botón: al pulsarlo sus letras se caen de vergüenza (efectos.js) #}
+                <li>{{ titulos_pile[loop.index0 % titulos_pile|length] }}
+                    {% if stats.pile_pct > 50 %}<button type="button" class="verguenza" title="Pulsa si te atreves">🎺 {{ stats.pile_pct|string|replace(".", ",") }}%</button>
+                    {%- else %}{{ stats.pile_pct|string|replace(".", ",") }}%{% endif %} ({{ stats.sin_jugar }} de {{ stats.total_propios }} juegos sin estrenar)</li>
                 {# Felicitación si casi no hay juegos sin estrenar (≤ 5 %) y la persona tiene alguno #}
                 {% if stats.total_propios and stats.pile_pct <= 5 %}
                     <li class="felicitacion">Un tío serio: lo que compra, lo juega. Di que sí, tú sí que sabes darle valor al fruto de tu trabajo.</li>
@@ -99,6 +125,11 @@
             </ul>
             {# Perfil gamer: "logro desbloqueado" (estilo C) dentro de un cuadro de diálogo RPG (estilo A) #}
             {% set g = t.generos %}  {# alias corto #}
+            {% if t.perfil or g.generos %}  {# solo si hay algo que revelar #}
+            {# Reveal manual: el perfil y las barras están ocultos (hidden) hasta pulsar el botón (efectos.js).
+               Las animaciones CSS empiezan justo cuando el bloque se hace visible #}
+            <button type="button" class="btn-revelar">▶ DESCUBRIR PERFIL GAMER</button>
+            <div class="perfil-oculto" hidden>
             {% if t.perfil %}  {# None si no hay géneros que definan un estilo #}
                 <div class="logro">  {# las animaciones de entrada están en style.css #}
                     <p class="logro-cabecera">★ LOGRO DESBLOQUEADO ★</p>
@@ -108,6 +139,22 @@
                     {% if t.perfil.indie %}<span class="pegatina-indie sello">INDIE</span>{% endif %}
                 </div>
             {% endif %}
+            {# Estadísticas de Stand (referencia a JoJo): hexágono SVG con notas A-E. Puntos calculados en app.py #}
+            {% set h = t.hexagono %}
+            <div class="stand">
+                <p class="stand-nombre">STAND: 「{{ t.stand.nombre }}」</p>
+                {# SVG: dibujo con etiquetas. viewBox = zona visible (x, y, ancho, alto), con el centro en 0,0.
+                   role="img" + aria-label: los lectores de pantalla leen las notas en vez del dibujo #}
+                <svg class="stand-hexagono" viewBox="-165 -100 330 200" role="img"
+                     aria-label="Stand: {% for n in t.stand.notas %}{{ n.nombre }} {{ n.nota }}{{ ', ' if not loop.last }}{% endfor %}">
+                    <polygon class="stand-marco" points="{{ h.marco }}"/>  {# hexágono completo de fondo #}
+                    {% for e in h.etiquetas %}<line class="stand-eje" x1="0" y1="0" x2="{{ e.ex }}" y2="{{ e.ey }}"/>{% endfor %}
+                    <polygon class="stand-forma" points="{{ h.forma }}"/>  {# la forma de sus notas #}
+                    {% for e in h.etiquetas %}
+                        <text x="{{ e.x }}" y="{{ e.y }}" text-anchor="{{ e.ancla }}">{{ e.nombre }} <tspan class="stand-nota">{{ e.nota }}</tspan></text>
+                    {% endfor %}
+                </svg>
+            </div>
             {# Barras de vida por género: 5 a la vista y el resto en un plegable #}
             {% if g.generos %}
                 {% for gen in g.generos[:5] %}{{ barra(gen, loop.index0) }}{% endfor %}  {# [:5] = los 5 primeros #}
@@ -119,6 +166,8 @@
                     </details>
                 {% endif %}
                 <p class="generos-nota">Tu top {{ g.juegos }} = {{ g.cobertura }}% de tus horas. Un juego cuenta en todos sus géneros, por eso los % no suman 100.</p>
+            {% endif %}
+            </div>  {# fin de .perfil-oculto #}
             {% endif %}
             {# Aviso si Steam no respondió para algún juego (p. ej. por límite de peticiones) #}
             {% if g.sin_datos %}
@@ -168,9 +217,14 @@
         {# |tojson convierte la lista a JSON escapando caracteres peligrosos (forma segura de pasar datos a JS) #}
         <section id="sorpresa" class="stats sorpresa" data-candidatos='{{ candidatos|tojson }}'>
             <h2>Juego sorpresa</h2>
+            {# Presentador cascarrabias: cada clic le enfada más (efectos.js); el bocadillo empieza vacío #}
+            <button type="button" id="cascarrabias" class="cascarrabias" aria-label="Presentador cascarrabias">
+                <span class="cara">😐</span><span class="bocadillo"></span>
+            </button>
             <p><strong id="sorpresa-nombre">{{ s.nombre }}</strong></p>
             {# Nota solo si tus horas son desconocidas (juego de la familia) #}
             <p id="sorpresa-nota">{% if s.desconocido %}(de {{ s.duenos|join(", ") }}, puede que ya lo hayas probado){% endif %}</p>
+            <p id="sorpresa-dio" class="sorpresa-dio" aria-live="polite"></p>  {# "¡Pero era yo, Dio!" (efectos.js) #}
             <button type="button" id="sorpresa-otro">Otro</button>  {# type="button": no envía el formulario #}
         </section>
     {% endif %}
@@ -178,6 +232,17 @@
     {# Si hay juegos, dibujamos la tabla #}
     {% if juegos %}
         <h2>Tu librería ({{ juegos|length }} juegos)</h2>  {# |length cuenta los elementos #}
+        {# Reproches de los juegos olvidados (0 h): uno al azar por fila con |random #}
+        {% set penas = [
+            "Me compraste en unas rebajas. Te esperé.",
+            "Tu mamá sí me habría jugado.",
+            "Tengo logros, ¿sabes? Nadie los ha visto.",
+            "Ni el tutorial, tío. Ni el tutorial.",
+            "Sigo aquí, por si te aburres del otro.",
+            "Cada vez que pasas el ratón y no me abres, muere un píxel.",
+            "Me descargaste para nada, ¿eh?",
+            "Mis desarrolladores tenían sueños.",
+        ] %}
         <table>
             <thead>
                 <tr><th>Juego</th><th>Tus horas</th><th>Dueños</th></tr>
@@ -185,8 +250,12 @@
             <tbody>
                 {# Bucle: una fila por cada juego de la lista #}
                 {% for juego in juegos %}
-                    <tr>
-                        <td>
+                    {# Juego olvidado: tuyo y con 0 h ("== 0": los de la familia tienen None y no cuentan) #}
+                    {% set olvidado = juego.horas == 0 %}
+                    <tr{% if olvidado %} class="olvidado"{% endif %}>
+                        {# data-pena: el CSS lo muestra al pasar el ratón con content: attr() (siempre como texto) #}
+                        <td{% if olvidado %} data-pena="{{ penas|random }}"{% endif %}>
+                            {% if olvidado %}<span class="lagrima" aria-hidden="true">💧</span>{% endif %}
                             {# Carátula desde el CDN público de Steam (sin API key). Solo si hay appid (en /demo no hay) #}
                             {# loading="lazy": el navegador la descarga solo cuando va a verse; alt: texto si no carga #}
                             {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
@@ -195,7 +264,12 @@
                             {% if juego.indie %}<span class="pegatina-indie">INDIE</span>{% endif %}
                         </td>
                         {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}
-                        <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
+                        {# Pantallazo azul: en la primera fila (tu juego más jugado), si pasa de 500 h, las horas son un botón #}
+                        {% if loop.first and juego.horas and juego.horas > 500 %}
+                            <td><button type="button" class="bsod-pista" data-juego="{{ juego.nombre }}" data-horas="{{ juego.horas|round|int }}" title="Mejor no lo pulses">⚠ {{ juego.horas|string|replace(".", ",") }}</button></td>
+                        {% else %}
+                            <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
+                        {% endif %}
                         {# Una etiqueta por dueño; la clase dueno-N le da su color (colores viene de app.py; 0 si no está, p. ej. en /demo) #}
                         <td>{% for dueno in juego.duenos %}<span class="etiqueta dueno-{{ colores.get(dueno, 0) if colores else 0 }}">{{ dueno }}</span> {% endfor %}</td>
                     </tr>
@@ -204,8 +278,25 @@
         </table>
     {% endif %}
 
+    {# Pie de página con el botón del modo caos (también se activa con el código Konami) #}
+    <footer class="pie">
+        <button type="button" id="btn-caos">☢ NO PULSAR</button>
+        {# Pista de ZA WARUDO: reloj parado que se despliega al pulsarlo (<details>, sin JS) #}
+        <details class="pista-reloj">
+            <summary title="Un reloj parado...">🕰️</summary>
+            <p>Dicen que si escribes el nombre de cierto Stand, el tiempo se para...</p>
+        </details>
+    </footer>
+
     {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
     <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
     <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
+    {# sonido.js antes que efectos.js: efectos.js usa SFX, que se define en sonido.js #}
+    <script src="{{ url_for('static', filename='js/sonido.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/efectos.js') }}"></script>
+    {# logros.js usa SFX (sonido.js) y espera (efectos.js): va el último #}
+    <script src="{{ url_for('static', filename='js/logros.js') }}"></script>
+    {# Zona de avisos de logro; aria-live: los lectores de pantalla los anuncian al aparecer #}
+    <div id="toasts" class="fijo" aria-live="polite"></div>
 </body>
 </html>

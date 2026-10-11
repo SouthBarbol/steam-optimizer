@@ -39,6 +39,13 @@ para no repetir consultas. Las carátulas las descarga tu navegador del CDN de S
 4. Copia `.env.example` a `.env` y añade tu API key de Steam
 5. Arranca el servidor con `python app.py` y abre http://127.0.0.1:5000
 
+## Sonidos opcionales (uso privado)
+
+Las referencias a JoJo pueden usar clips originales de la serie, que **no se incluyen** (tienen derechos
+de autor). Si los tienes, cópialos en `static/sonidos/` con estos nombres: `za-warudo.mp3`,
+`tiempo-fluye.mp3`, `ora-ora.mp3`, `muda-muda.mp3`, `to-be-continued.mp3`, `kono-dio-da.mp3` y
+`yare-yare.mp3`. Si faltan, suenan efectos sintetizados y la voz del navegador.
+
 ## Créditos
 
 Fuente [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P),

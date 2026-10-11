@@ -49,11 +49,16 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] El JavaScript no llama a Steam ni a ninguna otra web (solo usa datos ya presentes en la página)
 - [x] Los datos se pasan de Jinja2 a JavaScript solo con `|tojson` (escapa `<`, `>`, `'`, `&`)
 - [x] El JavaScript escribe en la página solo con `textContent`, nunca con `innerHTML`
+- [x] El JavaScript no guarda nada (ni `localStorage` ni cookies): sonido, contadores y logros duran solo la visita
+  (el sonido encendido pasa a la siguiente página como `?sonido=1` en la URL; Flask lo ignora)
 
 ## Antes de publicar
 - [ ] Quitar o generalizar las comparaciones con bromas sobre personas reales (`analysis.py`)
 - [ ] Revisar el tono de las bromas de "tu mamá" (pensadas para amigos)
-- [ ] Sin imágenes, gifs ni música con derechos de autor (p. ej. referencias a JoJo: solo texto y Web Audio)
+- [ ] Clips ORIGINALES de JoJo en `static/sonidos/` (decisión del usuario, solo uso privado): tienen derechos
+  de autor. Si la web se publica para uso comercial (o se abre al público), quitarlos y sustituirlos por los
+  respaldos sintetizados o por sonidos con licencia libre. Están en `.gitignore`: no subirlos nunca a un repo
+  público. El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
 - [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor;
   valorar acotar peticiones por visita/minuto o el tamaño de la caché
 - [ ] `debug=False` en producción

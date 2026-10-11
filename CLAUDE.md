@@ -125,10 +125,22 @@ la librería de un usuario.
 
 ## Próxima sesión (empezar aquí)
 
-* Fase 3 en curso: pasos 0, 1, 2 y sub-pasos 3.1-3.4 HECHOS y probados por el usuario en el navegador.
-* Paso 3.5 HECHO (checklist y README al día). Siguiente: **3.6** (capa de personalidad),
-  ver "Fase 3". Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado
-  completo. Proponer primero el código de cada sub-paso, como siempre.
+* Fase 3 en curso: pasos 0, 1, 2 y 3 (3.1-3.6) HECHOS y probados por el usuario en el navegador.
+  Resumen del 3.6 (capa de personalidad, ver detalle en "Fase 3"): sonido.js (SFX sintetizados, botón 🔇,
+  sonido que se mantiene al analizar con `?sonido=1`, cartel "el sonidito está apagao"), efectos.js (reveal
+  manual del perfil, confeti, letra a letra, pato, Pile of Shame con trombón, juegos olvidados, glitch,
+  terremoto, caos manual/Konami con trance ORIGINAL, pantallazo azul, DVD, cascarrabias), carga.js (99 % con
+  excusas de tu mamá), logros.js (16 logros, `desbloquear(id)`), Stand con hexágono SVG y 7 referencias a JoJo
+  (ZA WARUDO acepta "za warudo"/"the world"; ORA/MUDA con una ráfaga a la vez y clips cortados a 3 s).
+* PENDIENTE DEL USUARIO (mañana): descargar a mano de myinstants (Cloudflare bloquea la descarga automática,
+  no saltarla) los clips originales de JoJo y guardarlos en `static/sonidos/` con los nombres del README
+  (za-warudo, tiempo-fluye, ora-ora, muda-muda, to-be-continued, kono-dio-da, yare-yare .mp3). Están en
+  .gitignore; si faltan suenan los respaldos. Comprobar después que suenan bien y que ORA/MUDA no se encolan.
+* Git: había `README.MD` y `README.md` duplicados en el índice (Windows no distingue mayúsculas); se quitó
+  `README.MD` con `git rm --cached` (pendiente de commit del usuario).
+* Siguiente: **paso 4, qué jugar** (puntuación por géneros y horas, con pendientes; ver "Fase 3"), luego el 5.
+  Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado completo. Proponer
+  primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
   (comprobar que el usuario lo ha subido).
 * Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
@@ -139,7 +151,7 @@ la librería de un usuario.
   (no en el repo). Para no ver Steam IDs reales, el usuario prueba con los suyos
   en el navegador.
 
-## Fase 3 (plan acordado, en curso)
+## Fase 3 (plan acordado, en curso: paso 3 HECHO)
 
 Idea central: de la enorme librería (gran parte es de la familia), recomendar
 qué jugar. Lo más importante es el sistema de recomendaciones; debe basarse
@@ -230,7 +242,14 @@ Al usuario le gustaron TODOS. Apuntes suyos para el 3.6:
       horas totales; Velocidad = juegos abandonados/terminados rápido; Alcance = variedad de géneros;
       Persistencia = horas del favorito; Precisión = Pile of Shame bajo; Potencial = pendientes.
       Los umbrales de cada nota se decidirán al implementarlo (cálculo en `analysis.py`).
-    · Logro absurdo "¿Es eso una referencia a JoJo?" al encontrarlas todas.
+    · Logro absurdo "¿Eso es una JoJo referencia??" al encontrar las 7 detectables en la visita (Stand,
+      ゴゴゴ, To Be Continued, ZA WARUDO, ORA, Dio, Yare yare).
+    · Apuntes del usuario (3.6f): ZA WARUDO necesita pistas (reloj 🕰️ en el pie con tooltip, excusa del 99 %
+      "Tu mamá dice que escribas «za warudo»", frase de la cascarrabias); aceptar "zawarudo" y "za warudo".
+      Sonidos "como en la serie": los clips reales tienen derechos (no hay versiones libres de verdad), así que
+      SFX sintetizados que los imitan + voces con `speechSynthesis` del navegador (voz japonesa si existe).
+    · Partido en 3.6f-1 (estadísticas de Stand: notas A-E en analysis.py, hexágono SVG con puntos calculados
+      en app.py, nombre del Stand = juego favorito) y 3.6f-2 (efectos, textos, pistas, sonidos y logro).
     · SIN imágenes, gifs ni música del anime (p. ej. "Roundabout" tiene derechos); sonidos con Web
       Audio y solo textos/memes ·
 3.5 `SECURITY_CHECKLIST.md` y `README.md`.

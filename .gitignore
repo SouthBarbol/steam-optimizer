@@ -13,3 +13,5 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+# Clips originales de JoJo (derechos de autor): solo uso privado, NO se suben (ver SECURITY_CHECKLIST.md)
+static/sonidos/
