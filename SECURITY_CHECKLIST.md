@@ -54,7 +54,8 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   probado con un nombre malicioso (`<script>...`, `onerror=`): sale como texto
 - [x] Enlaces a la tienda con `target="_blank" rel="noopener noreferrer"`: Steam no puede tocar
   nuestra pestaña ni recibe nuestra URL (que lleva los Steam IDs)
-- [x] Las fichas de Steam Match las pinta el servidor; el JavaScript solo mostrará u ocultará
+- [x] Las fichas de Steam Match y de "¿Te atreves?" las pinta el servidor; el JavaScript (`match.js`,
+  `atreverse.js`) solo muestra u oculta; probado con un nombre y una etiqueta maliciosos
 - [x] Etiquetas: API oficial (`IStoreBrowseService/GetItems`, `IStoreService/GetTagList`) desde Flask,
   sin API key, por lotes de 50 con `timeout`; `appid` forzado a número; caché solo de datos del juego;
   un lote fallido no se guarda

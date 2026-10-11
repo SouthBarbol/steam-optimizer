@@ -143,11 +143,12 @@ la librería de un usuario.
   4.3c `static/js/match.js` (probado por el usuario: funciona) · seguridad: logs sin Steam IDs y
   cabeceras (CSP...) en `app.py` · **4.R5 lógica de "territorio inexplorado"** (etiquetas por lotes con
   `get_tags`; los juegos con etiquetas que nunca has jugado, p. ej. Terror, salen del top y van a
-  `recomendacion["atreverse"]`).
+  `recomendacion["atreverse"]`) · **4.R5 interfaz** (tarjeta "🧭 ¿Te atreves?" en `index.html`,
+  frases `BIOS_ATREVIDO` con `poner_retos`, botón "Otro" en `static/js/atreverse.js`).
   SIGUIENTE (en orden, proponer código antes de cada uno):
-  1. **4.R5 interfaz**: tarjeta "🧭 ¿Te atreves?" (1 juego visible + botón "Otro" hasta 3; texto
-     "Nunca has jugado a nada de {etiqueta nueva}", frase bizarra propia; pintada por Jinja, JS solo
-     muestra/oculta). Aún NO hay nada de esto en la plantilla.
+  1. EMPEZAR AQUÍ: preguntar al usuario si ha probado "¿Te atreves?" en el navegador (reiniciar el
+     servidor; tarjeta naranja bajo Steam Match, botón "🎲 Otro" entre 3 juegos) y arreglar lo que salga.
+     Código hecho y probado con datos falsos; aún SIN commit (sugerirlo).
   2. **4.4** 🎲 ruleta del caos: juego al azar de TODA la librería con descripción absurda por plantillas
      (huecos: nombre, etiqueta, horas, dueño, año); "Otra" sortea en el navegador sin llamar a Steam.
   3. **4.5** efectos/sonidos/logros de Steam Match y "¿Te atreves?" + README.
@@ -157,6 +158,8 @@ la librería de un usuario.
 * Pruebas del paso 4: scripts `prueba_*.py` en el scratchpad (se pierden al cerrar la sesión; si hacen
   falta, rehacerlos). Las pruebas de extremo a extremo sustituyen TODAS las funciones de Steam de `app`
   (`get_owned_games`, `get_genres`, `en_cache`, `get_resenas`, `get_valoracion`, `get_tags`...).
+  Ojo: un nombre malicioso escapado contiene el texto "onerror=", así que las comprobaciones de CSP por
+  expresión regular deben quitar antes ese texto (también en su forma `|tojson`, `<img ...`).
   Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado completo. Proponer
   primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high

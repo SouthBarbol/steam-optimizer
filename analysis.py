@@ -672,3 +672,24 @@ def poner_bios(recomendados):
     for r in recomendados:
         r["bio"] = bio(r, usadas)
     return recomendados
+
+
+BIOS_ATREVIDO = [  # "¿Te atreves?": {nueva} = la etiqueta que nunca has jugado; {nombre} = el juego
+    "«{nueva}» te da miedo. Normal. A mí me da miedo el Euríbor.",
+    "Soy {nombre}, tu primera vez en «{nueva}». Seré delicado. O no.",
+    "Sal de tu zona de confort. Total, tu zona de confort es un zulo de 25 m² en Madrid.",
+    "Dicen que «{nueva}» no es lo tuyo. También decían que en Cádiz no subirían los alquileres.",
+    "Un fondo buitre apostó a que nunca jugarías a «{nueva}». Hazle perder dinero.",
+    "Si me juegas, un cangrejo de Cádiz aplaudirá. No sé por qué. Pero lo hará.",
+    "Probar «{nueva}» es como mudarse de Madrid a Cádiz: vértigo al principio y luego no vuelves.",
+    "El pato dice que estás preparado para «{nueva}». El pato nunca se equivoca.",
+]
+
+
+def poner_retos(atrevidos):
+    """Añade a cada juego de "¿Te atreves?" una frase absurda distinta (modifica la lista y la devuelve)."""
+    frases = random.sample(BIOS_ATREVIDO, len(BIOS_ATREVIDO))  # sample: todas, barajadas y sin repetir
+    for i, r in enumerate(atrevidos):  # enumerate: da la posición (i) y el juego (r)
+        # r["nuevas"][0]: su etiqueta nueva más votada; % len: si hubiera más juegos que frases, se repite
+        r["reto"] = frases[i % len(frases)].format(nombre=r["nombre"], nueva=r["nuevas"][0])
+    return atrevidos

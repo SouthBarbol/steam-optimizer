@@ -308,6 +308,34 @@
                 <p class="match-vacio">Aún no hay candidatos con chispa. Vuelve a analizar: cada visita se miran más pendientes.</p>
             {% endif %}
         </section>
+
+        {# ===== ¿Te atreves? (4.R5): pendientes con etiquetas que NUNCA has jugado. Lo pinta Jinja2;
+             atreverse.js solo cambia cuál se ve ===== #}
+        {% if recomendacion.atreverse %}
+            <section id="atreverse" class="stats atreverse">
+                <h2>🧭 ¿Te atreves?</h2>
+                <p class="match-contador">Territorio inexplorado: fuera de tu zona de confort</p>
+                <div class="match">
+                    {% for r in recomendacion.atreverse %}
+                        <article class="ficha reto"{% if not loop.first %} hidden{% endif %}>
+                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ r.appid }}/header.jpg" alt="Carátula de {{ r.nombre }}" loading="lazy">
+                            <h3 class="ficha-nombre">{{ r.nombre }}</h3>
+                            {# [:3]: como mucho 3 etiquetas nuevas #}
+                            <p class="reto-nuevas">Nunca has jugado a nada de:
+                                {% for e in r.nuevas[:3] %}<b>{{ e }}</b>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+                            <div class="pegatinas">{{ pegatinas(r) }}</div>
+                            <p class="ficha-bio">«{{ r.reto }}»</p>
+                            <p>{{ duenos(r) }}</p>
+                            {% if r.desconocido %}<p class="prestamo">Préstamo de la familia: quizá ya lo probaste</p>{% endif %}
+                            <a class="ver-steam" href="https://store.steampowered.com/app/{{ r.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+                            <p class="ficha-posicion">{{ loop.index }} / {{ recomendacion.atreverse|length }}</p>
+                        </article>
+                    {% endfor %}
+                    {# Oculto hasta que atreverse.js lo active (sin JavaScript no haría nada) #}
+                    <p class="centro"><button type="button" id="reto-otro" class="reto-otro" hidden>🎲 Otro</button></p>
+                </div>
+            </section>
+        {% endif %}
     {% endif %}
 
     {# Si hay juegos, dibujamos la tabla #}
@@ -372,6 +400,7 @@
     {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
     <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
     <script src="{{ url_for('static', filename='js/match.js') }}"></script>  {# Steam Match: ❌ / 💚 y lista #}
+    <script src="{{ url_for('static', filename='js/atreverse.js') }}"></script>  {# ¿Te atreves?: botón "Otro" #}
     <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
     {# sonido.js antes que efectos.js: efectos.js usa SFX, que se define en sonido.js #}
     <script src="{{ url_for('static', filename='js/sonido.js') }}"></script>

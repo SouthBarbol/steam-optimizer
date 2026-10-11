@@ -82,6 +82,10 @@ la comunidad son mucho más precisas (Zombis, Terror...). Con ellas (`territorio
   aparta del top 5 y va a la opción **"¿Te atreves?"** (aunque tenga 0 puntos: la gracia es probar).
   Allí salen los 3 con más puntos, cada uno con una etiqueta nueva distinta si se puede
   (`elegir_atrevidos`, `TOP_ATREVIDOS`).
+- En la web: tarjeta "🧭 ¿Te atreves?" con 1 juego visible y botón "Otro" (`atreverse.js`). Muestra
+  "Nunca has jugado a nada de: ..." (hasta 3 etiquetas nuevas) y una frase absurda de `BIOS_ATREVIDO`
+  (`poner_retos`, hueco `{nueva}` = su etiqueta nueva más votada). Sin puntos (pueden ser 0) y sin
+  👍 % (la nota solo se pide para los finalistas del top).
 - Sin etiquetas de lo que conoces (p. ej. Steam falló), no se aparta nada.
 
 Ej.: has jugado Hollow Knight (Metroidvania, Plataformas...). Resident Evil 2 (Zombis,

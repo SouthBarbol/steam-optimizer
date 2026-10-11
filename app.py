@@ -10,7 +10,7 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
-    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado,
+    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
@@ -128,6 +128,7 @@ def index():
     valoraciones = {r["appid"]: get_valoracion(r["appid"]) for r in finalistas}
     recomendacion = que_jugar(*datos_reco, valoraciones=valoraciones)
     poner_bios(recomendacion["recomendados"])  # una bio absurda por ficha de Steam Match
+    poner_retos(recomendacion["atreverse"])  # una frase absurda por juego de "¿Te atreves?"
 
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(

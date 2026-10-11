@@ -911,3 +911,9 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 @media (prefers-reduced-motion: reduce) {
     .ficha { transition: none; }
 }
+
+/* ¿Te atreves? (4.R5): mismas fichas que Steam Match, con borde naranja de "zona peligrosa" */
+.reto { border-color: #ff9f1c; box-shadow: 0 0 14px #ff9f1c55; }
+.reto-nuevas { font-size: 0.75rem; color: #ff9f1c; }
+.reto-otro[hidden] { display: none; }  /* el estilo de botón no debe ganarle a "hidden" */
+.centro { text-align: center; }
