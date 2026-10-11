@@ -195,13 +195,13 @@ titulo.addEventListener("mouseenter", () => glitch(500, true));
 if (!calma) setInterval(() => { if (Math.random() < 0.35) glitch(250, false); }, 6000);  // 35 % cada 6 s
 
 // ===================== Efectos bizarros (paso 3.6e) =====================
-// --- Modo caos: SOLO manual (botón "NO PULSAR" o código Konami). 7 s de colores, bamboleo y trance ---
+// --- Modo caos: SOLO manual (botón "NO PULSAR" o código Konami). 7 s de colores, bamboleo y "ay ay ay" ---
 let enCaos = false;  // evita que se active dos veces a la vez
 function caos() {
     if (calma || enCaos) return;
     enCaos = true;
     SFX.glitch();
-    SFX.trance(4);  // 4 compases a 136 BPM = unos 7 s
+    clip("ayayay", () => SFX.trance(4), 7);  // "ay ay ay" cortado a 7 s; si falta el mp3, el trance (unos 7 s)
     const victimas = document.querySelectorAll("body > :not(.fijo)");  // todo menos lo fijo
     victimas.forEach(el => el.classList.add("caos"));
     setTimeout(() => {

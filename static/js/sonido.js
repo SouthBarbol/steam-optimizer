@@ -135,6 +135,7 @@ const CLIPS = {
     tbc: "to-be-continued.mp3",  // "Roundabout" (Yes), el final de los episodios
     dio: "kono-dio-da.mp3",  // Dio: "Kono Dio da!" (¡pero era yo, Dio!)
     yare: "yare-yare.mp3",  // Jotaro: "Yare yare daze"
+    ayayay: "ay-ay-ay.mp3",  // música del modo caos (sustituye al trance; si falta, suena el trance)
 };
 
 function clip(nombre, respaldo, maxSeg = 0) {  // reproduce un clip; si falla, "respaldo"; maxSeg > 0 lo corta
