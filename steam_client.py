@@ -1,5 +1,6 @@
 # Capa de integración: el ÚNICO módulo que habla con Steam (conoce la API key y las URLs).
 # Aquí no hay cálculos: solo pedir datos y devolverlos (los cálculos van en analysis.py).
+import json  # para escribir la consulta de GetItems en formato JSON
 import os  # para leer variables de entorno
 
 import requests  # librería para hacer peticiones HTTP
@@ -169,3 +170,54 @@ def get_valoracion(appid):
     pct = round(resumen.get("total_positive", 0) / total * 100) if total else None
     _cache_valoraciones[appid] = {"pct": pct, "total": total}
     return _cache_valoraciones[appid]
+
+
+# API OFICIAL de Steam con las etiquetas de los juegos (las ponen los jugadores); no necesita API key
+ITEMS_URL = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/"
+TAGLIST_URL = "https://api.steampowered.com/IStoreService/GetTagList/v1/"
+LOTE_ETIQUETAS = 50  # juegos por llamada (probado con 61 sin problema)
+_cache_etiquetas = {}  # {appid: [etiquetas en español, de más a menos votada]}; datos del JUEGO
+_nombres_etiquetas = {}  # {número de etiqueta: nombre en español}; se pide una sola vez
+
+
+def _cargar_nombres_etiquetas():
+    """Pide a Steam los nombres de las ~450 etiquetas (solo la primera vez). True si los tenemos."""
+    if not _nombres_etiquetas:  # diccionario vacío: aún no los hemos pedido (o falló)
+        try:
+            respuesta = requests.get(TAGLIST_URL, params={"language": "spanish"}, timeout=10)
+            respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx
+            lista = respuesta.json()["response"]["tags"]  # [{"tagid": 1667, "name": "Terror"}, ...]
+        except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
+            return False  # sin nombres no podemos traducir: esta visita va sin etiquetas
+        _nombres_etiquetas.update({t["tagid"]: t["name"] for t in lista})  # update: añade todos
+    return True
+
+
+def get_tags(appids):
+    """{appid: [etiquetas, de más a menos votada]}, pidiendo a Steam por lotes de 50 solo lo que
+    no está en caché. Si un lote falla, sus juegos no salen (se reintentan en otra visita)."""
+    faltan = [a for a in dict.fromkeys(appids) if a not in _cache_etiquetas]  # sin repetidos ni los de caché
+    if faltan and _cargar_nombres_etiquetas():
+        for i in range(0, len(faltan), LOTE_ETIQUETAS):  # range(inicio, fin, paso): 0, 50, 100...
+            lote = faltan[i:i + LOTE_ETIQUETAS]  # [i:i+50]: los 50 siguientes
+            consulta = {
+                "ids": [{"appid": int(a)} for a in lote],  # int(): solo números en la consulta
+                "context": {"language": "spanish", "country_code": "ES"},
+                "data_request": {"include_tag_count": 20},  # sus 20 etiquetas más votadas
+            }
+            try:
+                respuesta = requests.get(ITEMS_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
+                respuesta.raise_for_status()
+                items = respuesta.json()["response"].get("store_items", [])
+            except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
+                continue  # este lote falla: NO se guarda nada, se reintentará en otra visita
+            for item in items:
+                if item.get("success") == 1:  # 1 = juego con ficha en la tienda
+                    # Ordenamos por votos ("weight"), de más a menos, y traducimos número -> nombre
+                    votadas = sorted(item.get("tags", []), key=lambda t: t.get("weight", 0), reverse=True)
+                    _cache_etiquetas[item["appid"]] = [
+                        _nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas
+                    ]
+            for a in lote:  # los del lote que Steam no devolvió con ficha (retirados...): dato definitivo
+                _cache_etiquetas.setdefault(a, [])  # setdefault: pone [] solo si no tiene ya etiquetas
+    return {a: _cache_etiquetas[a] for a in appids if a in _cache_etiquetas}

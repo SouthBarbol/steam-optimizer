@@ -32,6 +32,7 @@ En la web los puntos se muestran sin explicar de dónde salen (es un misterio a 
 | Minutos jugados en las últimas 2 semanas | `playtime_2weeks` de `GetOwnedGames` |
 | Géneros y nº de reseñas de cada juego | Steam Store `appdetails` (una consulta por juego, con caché en memoria) |
 | % de reseñas positivas | Steam Store `appreviews` (solo los 15 finalistas, con caché en memoria) |
+| Etiquetas de la comunidad (Terror, Metroidvania...) | API oficial `IStoreBrowseService/GetItems` (por lotes de 50) + `IStoreService/GetTagList` (nombres en español) |
 | Horas de cada familiar | `GetOwnedGames` de cada familiar |
 
 ## Paso a paso
@@ -68,6 +69,23 @@ puntos = 0,4 × afinidad_siempre + 0,6 × afinidad_racha      (PESO_RACHA = 0.6)
 
 Si tu perfil no trae fechas (no hay racha), solo cuenta la afinidad de siempre.
 Un juego con **0 puntos** no se parece a nada de lo que juegas y no se recomienda.
+
+### 5b. Territorio inexplorado → "¿Te atreves?"
+Los géneros de Steam son muy amplios (Resident Evil 2 es solo "Acción"). Las **etiquetas** de
+la comunidad son mucho más precisas (Zombis, Terror...). Con ellas (`territorio_inexplorado`):
+- **Lo que conoces** (`experiencia`): las 10 etiquetas más votadas (`TOP_EXPERIENCIA`) de cada
+  juego que has jugado de verdad (2 h o más). Las de la familia no cuentan.
+- **Lo que define a un pendiente** (`etiquetas_nuevas`): sus 3 etiquetas más votadas
+  (`TOP_DEFINEN`), quitando las neutras que no dicen de qué va (`ETIQUETAS_NEUTRAS`: Un jugador,
+  Indie, 2D, Buena trama...).
+- Si alguna de esas 3 **nunca** aparece en lo que conoces, es **territorio inexplorado**: se
+  aparta del top 5 y va a la opción **"¿Te atreves?"** (aunque tenga 0 puntos: la gracia es probar).
+  Allí salen los 3 con más puntos, cada uno con una etiqueta nueva distinta si se puede
+  (`elegir_atrevidos`, `TOP_ATREVIDOS`).
+- Sin etiquetas de lo que conoces (p. ej. Steam falló), no se aparta nada.
+
+Ej.: has jugado Hollow Knight (Metroidvania, Plataformas...). Resident Evil 2 (Zombis,
+Supervivencia / Terror, Terror) → "¿Te atreves?". Dead Cells (Roguelike, Metroidvania...) → top normal.
 
 ### 6. El consejo del primo
 Si un familiar le echó **20 h o más** al juego (`UMBRAL_PRIMO`), sus puntos se multiplican
@@ -131,6 +149,13 @@ Se eligen los **5 mejores** (`TOP_RECOMENDACIONES`), pero como mucho **2 con los
 géneros en común contigo** (`MAX_IGUALES`). Si no hay variedad suficiente, los huecos se
 rellenan con los saltados, en su orden (`con_variedad`).
 
+### 9. Bios de Steam Match (solo texto, NO afectan a los puntos)
+Cada recomendación lleva una frase absurda sacada de plantillas con huecos rellenados con
+datos reales (nombre, un género en común al azar, familiar y sus horas, dueño, % positivo)
+(`bio`, `poner_bios`; plantillas `BIOS_*`). Si el juego tiene algo especial (consejo del
+primo, préstamo, joya, aclamado), hay un 50 % de usar una frase de ese tipo
+(`PROB_BIO_ESPECIAL`); si no, una general. En una visita no se repite ninguna frase.
+
 ## Ejemplo completo
 
 Gustos de siempre: Acción 100 %. Racha actual: Rol 70 %, Acción 30 %.
@@ -165,6 +190,9 @@ y se rellena con C.
 | `PRESUPUESTO_ABANDONOS` | 10 | consultas nuevas de géneros de abandonados por visita |
 | `MIN_ABANDONOS_ANTI` / `PCT_ABANDONOS_ANTI` | 3 / 25 % | mínimo de abandonos para un anti-gusto |
 | `MAX_GUSTO_ANTI` / `CASTIGO_ANTI` | 20 % / ×0,8 | gusto máximo para ser anti-gusto y su castigo |
+| `TOP_EXPERIENCIA` / `TOP_DEFINEN` | 10 / 3 | etiquetas de "lo que conoces" / que definen un pendiente |
+| `ETIQUETAS_NEUTRAS` | ~45 | etiquetas que no dicen de qué va un juego |
+| `TOP_ATREVIDOS` | 3 | juegos en "¿Te atreves?" |
 | `FINALISTAS` | 15 | juegos a los que se consulta la nota de las reseñas |
 | `UMBRAL_ACLAMADO` / `PLUS_ACLAMADO` | 90 % / ×1,15 | aclamado |
 | `UMBRAL_MIXTO` / `CASTIGO_MIXTO` | 70 % / ×0,9 | reseñas variadas |

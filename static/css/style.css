@@ -784,3 +784,130 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 @media (prefers-reduced-motion: reduce) {
     .gogogo, .tbc-flecha { animation: none; }
 }
+
+/* ===================== Steam Match: qué jugar (paso 4.3) ===================== */
+.match-seccion {
+    max-width: 900px;                /* mismo ancho que el resto de cuadros */
+    margin: 1.5rem auto;             /* centrado */
+    color: var(--magenta);           /* color del borde, el título y los detalles */
+}
+.match-contador, .match-vacio {
+    text-align: center;
+    font-size: 0.55rem;
+    color: var(--texto);
+    opacity: 0.75;                   /* información secundaria */
+}
+
+/* ---- Ficha (una cada vez, como en una app de citas) ---- */
+.match {
+    max-width: 380px;                /* ficha estrecha, como un móvil */
+    margin: 1rem auto 0;
+    text-align: center;
+}
+.ficha {
+    position: relative;              /* referencia para colocar el número de puesto */
+    background: var(--fondo);
+    border: 2px solid currentColor;  /* borde del color de la sección */
+    border-radius: 12px;
+    padding: 0.8rem;
+    box-shadow: 0 0 14px currentColor;  /* halo neón */
+    transition: transform 0.35s, opacity 0.35s;  /* para cuando match.js la lance a un lado */
+}
+.ficha[hidden] { display: none; }    /* asegura que "hidden" la oculta */
+.ficha img { width: 100%; display: block; border-radius: 8px; }
+.ficha .rango {                      /* círculo "#1" en la esquina */
+    position: absolute;
+    top: -0.8rem;
+    left: -0.8rem;
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;               /* igual que el alto: el texto queda centrado en vertical */
+    border-radius: 50%;              /* círculo */
+    background: var(--magenta);
+    color: var(--fondo);
+    font-size: 0.7rem;
+}
+.ficha-nombre { margin: 0.7rem 0 0.2rem; font-size: 0.75rem; color: var(--texto); }
+.ficha-puntos { margin: 0; font-size: 0.65rem; color: #ffe600; }
+.ficha-bio { margin: 0.6rem 0; font-size: 0.55rem; font-style: italic; color: var(--texto); }
+.ficha-gustos { font-size: 0.55rem; color: var(--texto); }
+.ficha-gustos b { font-weight: normal; color: #39ff14; }  /* los géneros en verde */
+.ficha-posicion { margin: 0.5rem 0 0; font-size: 0.5rem; color: var(--texto); opacity: 0.6; }
+/* Clases que pondrá match.js para lanzar la ficha a un lado (❌ izquierda, 💚 derecha) */
+.ficha.izq { transform: translateX(-140%) rotate(-25deg); opacity: 0; }
+.ficha.der { transform: translateX(140%) rotate(25deg); opacity: 0; }
+
+/* Botón "VER EN STEAM" (es un enlace con aspecto de botón) */
+.ver-steam {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.55rem;
+    color: var(--fondo);
+    background: var(--cian);
+    border-radius: 4px;
+    text-decoration: none;           /* sin subrayado */
+}
+.ver-steam:hover { box-shadow: 0 0 14px var(--cian); }
+
+/* Botones redondos ❌ y 💚 */
+.botones-match { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; }
+.botones-match button { width: 3.5rem; height: 3.5rem; padding: 0; border-radius: 50%; font-size: 1.2rem; }
+.botones-match button[hidden] { display: none; }
+.match-no { background: var(--error); }
+.match-si { background: #39ff14; }
+.es-match { min-height: 1.4rem; text-align: center; font-size: 0.8rem; color: #39ff14; text-shadow: 0 0 10px #39ff14; }
+
+/* Pegatinas: sellos torcidos, como la de INDIE */
+.pegatinas { margin: 0.4rem 0; }
+.peg {
+    display: inline-block;
+    margin: 0.15rem;
+    padding: 0.15rem 0.35rem;
+    font-size: 0.5rem;
+    border: 2px solid currentColor;  /* borde del color de cada pegatina */
+    border-radius: 3px;
+    transform: rotate(-4deg);
+    white-space: nowrap;             /* una pegatina no se parte en dos líneas */
+}
+.peg-joya { color: var(--cian); }
+.peg-aclamado { color: #ffe600; transform: rotate(3deg); }
+.peg-primo { color: #ff8c00; }
+.peg-nota { color: var(--texto); border-style: dotted; transform: none; }  /* dato, no premio: recta y punteada */
+.prestamo { margin: 0.3rem 0 0; font-size: 0.5rem; color: #ff8c00; }
+
+/* ---- Desglose: lista con todas las recomendaciones ---- */
+.desglose-titulo { margin: 1.5rem 0 0.5rem; text-align: center; font-size: 0.7rem; }
+.desglose { list-style: none; margin: 0; padding: 0; }  /* sin los números automáticos: ya ponemos los nuestros */
+.fila {
+    display: grid;                   /* cuatro columnas: número | carátula | datos | enlace */
+    grid-template-columns: 2rem 120px 1fr auto;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.6rem;
+    border-bottom: 1px solid #2a2a4d;
+}
+.fila p { margin: 0.2rem 0; }
+.fila img { width: 120px; display: block; }
+.fila-num { text-align: center; font-size: 0.8rem; color: #ffe600; }
+.fila-nombre { font-size: 0.6rem; color: var(--texto); }
+.fila-linea { display: flex; align-items: center; gap: 0.5rem; }
+.fila .bloque { width: 8px; height: 10px; }  /* bloques algo más pequeños que los de géneros */
+.fila-puntos { font-size: 0.5rem; color: #ffe600; }
+.fila-steam { font-size: 0.5rem; color: var(--cian); text-decoration: none; white-space: nowrap; }
+.fila-steam:hover { text-decoration: underline; }
+/* Clase que pondrá match.js en la fila que se ve en la ficha */
+.fila.actual { background: rgba(255, 43, 214, 0.12); outline: 2px solid currentColor; }
+.fila { cursor: pointer; }           /* manita: la fila se puede pulsar (match.js) */
+.fila:focus-visible { outline: 2px dashed #ffe600; }  /* borde visible al llegar con la tecla Tab */
+.fila-match[hidden] { display: none; }  /* el 💚 de la fila, oculto hasta que haya match */
+
+/* Móvil: carátula más pequeña y el enlace debajo de los datos */
+@media (max-width: 600px) {
+    .fila { grid-template-columns: 1.5rem 80px 1fr; }
+    .fila img { width: 80px; }
+    .fila-steam { grid-column: 3; }  /* tercera columna, en una fila nueva */
+}
+@media (prefers-reduced-motion: reduce) {
+    .ficha { transition: none; }
+}

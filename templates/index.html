@@ -229,6 +229,87 @@
         </section>
     {% endif %}
 
+    {# ===== Qué jugar (paso 4): Steam Match. TODO lo pinta Jinja2 (escapado automático: los nombres
+         vienen de Steam); match.js (4.3c) solo mostrará u ocultará fichas, sin escribir HTML ===== #}
+    {% if recomendacion %}  {# /demo no la trae: allí no se muestra la sección #}
+        {% set recos = recomendacion.recomendados %}
+        {# Pegatinas de una recomendación (todas con datos reales de Steam o de la familia) #}
+        {% macro pegatinas(r) %}
+            {%- if r.joya %}<span class="peg peg-joya">💎 JOYA OCULTA</span>{% endif -%}
+            {%- if r.aclamado %}<span class="peg peg-aclamado">👑 ACLAMADO</span>{% endif -%}
+            {%- if r.consejo %}<span class="peg peg-primo">🎮 {{ r.consejo.nombre }} le echó {{ r.consejo.horas }} h</span>{% endif -%}
+            {#- "is not none": 0 % también se muestra; None (sin dato) no -#}
+            {%- if r.pct_positivo is not none %}<span class="peg peg-nota">👍 {{ r.pct_positivo }} %</span>{% endif -%}
+        {% endmacro %}
+        {# Etiquetas de dueños con su color (número dueno-N, nunca el nombre en la clase) #}
+        {% macro duenos(r) %}
+            {%- for d in r.duenos %}<span class="etiqueta dueno-{{ colores.get(d, 0) if colores else 0 }}">{{ d }}</span> {% endfor -%}
+        {% endmacro %}
+        <section id="match" class="stats match-seccion">
+            <h2>💘 Steam Match</h2>
+            <p class="match-contador">Analizados {{ recomendacion.analizados }} de {{ recomendacion.pendientes }} pendientes · cada visita se miran más</p>
+            {% if recos %}
+                {% set mejor = recos[0].puntos %}  {# el 1.º tiene más puntos: las barras son relativas a él #}
+                <div class="match">
+                    {% for r in recos %}
+                        {# Una ficha por recomendación; "hidden" oculta todas menos la primera #}
+                        <article class="ficha" data-i="{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>
+                            <span class="rango">#{{ loop.index }}</span>  {# loop.index: 1, 2, 3... #}
+                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ r.appid }}/header.jpg" alt="Carátula de {{ r.nombre }}" loading="lazy">
+                            <h3 class="ficha-nombre">{{ r.nombre }}</h3>
+                            <p class="ficha-puntos">♥ {{ r.puntos }} pts de afinidad</p>  {# sin explicar: es un misterio #}
+                            <div class="pegatinas">{{ pegatinas(r) }}</div>
+                            <p class="ficha-bio">«{{ r.bio }}»</p>
+                            {% if r.comunes %}
+                                {# géneros en común, sin %; loop.last: el último no lleva " · " detrás #}
+                                <p class="ficha-gustos">Le gusta lo mismo que a ti:
+                                    {% for g in r.comunes %}<b>{{ g }}</b>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+                            {% endif %}
+                            <p>{{ duenos(r) }}</p>
+                            {% if r.desconocido %}<p class="prestamo">Préstamo de la familia: quizá ya lo probaste</p>{% endif %}
+                            {# Pestaña nueva; noopener noreferrer: Steam no puede tocar esta página ni ve su URL (con los IDs) #}
+                            <a class="ver-steam" href="https://store.steampowered.com/app/{{ r.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+                            <p class="ficha-posicion">{{ loop.index }} / {{ recos|length }}</p>
+                        </article>
+                    {% endfor %}
+                    {# Botones ocultos hasta que match.js (4.3c) los active: sin JavaScript no harían nada #}
+                    <div class="botones-match">
+                        <button type="button" id="match-no" class="match-no" aria-label="Siguiente candidato" hidden>❌</button>
+                        <button type="button" id="match-si" class="match-si" aria-label="¡Match!" hidden>💚</button>
+                    </div>
+                </div>
+                <p id="es-match" class="es-match" aria-live="polite"></p>  {# aria-live: los lectores de pantalla lo anuncian #}
+
+                <h3 class="desglose-titulo">📜 Tus {{ recos|length }} candidatos</h3>
+                <ol class="desglose">  {# ol: lista numerada (el orden importa) #}
+                    {% for r in recos %}
+                        {# Bloques encendidos = puntos respecto al mejor (en décimas); mínimo 1 #}
+                        {% set llenos = [1, (r.puntos / mejor * 10)|round|int]|max %}
+                        <li class="fila" data-i="{{ loop.index0 }}" style="--fila: {{ loop.index0 }}">
+                            <span class="fila-num">{{ loop.index }}</span>
+                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ r.appid }}/header.jpg" alt="" loading="lazy">  {# alt="": decorativa, el nombre ya está al lado #}
+                            <div>
+                                <p class="fila-nombre">{{ r.nombre }} <span class="fila-match" hidden>💚</span></p>
+                                <p class="fila-linea">
+                                    <span class="vida" aria-hidden="true">
+                                        {%- for i in range(10) %}<span class="bloque{% if i < llenos %} lleno{% endif %}" style="--i: {{ i }}"></span>{% endfor -%}
+                                    </span>
+                                    <span class="fila-puntos">{{ r.puntos }} pts</span>
+                                </p>
+                                <div class="pegatinas">{{ pegatinas(r) }}</div>
+                                <p>{{ duenos(r) }}</p>
+                                {% if r.desconocido %}<p class="prestamo">Préstamo de la familia: quizá ya lo probaste</p>{% endif %}
+                            </div>
+                            <a class="fila-steam" href="https://store.steampowered.com/app/{{ r.appid }}/" target="_blank" rel="noopener noreferrer">STEAM ↗</a>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p class="match-vacio">Aún no hay candidatos con chispa. Vuelve a analizar: cada visita se miran más pendientes.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
     {# Si hay juegos, dibujamos la tabla #}
     {% if juegos %}
         <h2>Tu librería ({{ juegos|length }} juegos)</h2>  {# |length cuenta los elementos #}
@@ -290,6 +371,7 @@
 
     {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
     <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/match.js') }}"></script>  {# Steam Match: ❌ / 💚 y lista #}
     <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
     {# sonido.js antes que efectos.js: efectos.js usa SFX, que se define en sonido.js #}
     <script src="{{ url_for('static', filename='js/sonido.js') }}"></script>

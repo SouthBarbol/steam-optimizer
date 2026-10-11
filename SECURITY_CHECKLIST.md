@@ -45,6 +45,33 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Los géneros (dato externo) se muestran con el escapado de Jinja2; los `style="--i: N"` de las
   barras solo llevan números calculados por nosotros, nunca texto externo
 
+## Qué jugar (paso 4)
+- [x] Géneros, nº de reseñas (`appdetails`) y % de positivas (`appreviews`) se piden desde Flask, sin
+  API key y con `timeout` de 10 s; caché solo con datos del JUEGO; las consultas fallidas no se guardan
+- [x] Presupuesto por visita para no saturar Steam: 20 pendientes + 10 abandonados + 15 notas nuevas
+- [x] El `appid` se fuerza a número (`int`) antes de meterlo en la URL de `appreviews`
+- [x] Nombres de juegos y bios (llevan el nombre dentro) se pintan con Jinja2 (escapado automático);
+  probado con un nombre malicioso (`<script>...`, `onerror=`): sale como texto
+- [x] Enlaces a la tienda con `target="_blank" rel="noopener noreferrer"`: Steam no puede tocar
+  nuestra pestaña ni recibe nuestra URL (que lleva los Steam IDs)
+- [x] Las fichas de Steam Match las pinta el servidor; el JavaScript solo mostrará u ocultará
+- [x] Etiquetas: API oficial (`IStoreBrowseService/GetItems`, `IStoreService/GetTagList`) desde Flask,
+  sin API key, por lotes de 50 con `timeout`; `appid` forzado a número; caché solo de datos del juego;
+  un lote fallido no se guarda
+
+## Repaso general (paso 4.3)
+- [x] Logs: el servidor de desarrollo escribía en la consola cada petición con su URL, que lleva
+  `?steam_id=...`. Silenciado (`werkzeug` a nivel WARNING en `app.py`); probado: el ID ya no aparece.
+  OJO al publicar: el servidor de producción (gunicorn, nginx...) tiene sus propios registros de
+  acceso; configurarlos para no guardar la URL completa (o pasar a POST, ver abajo)
+- [x] Cabeceras de seguridad en cada respuesta (`cabeceras_seguridad` en `app.py`):
+  `Content-Security-Policy` (solo scripts propios; imágenes propias y del CDN de Steam; sin plugins;
+  sin iframes), `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
+  `style-src` permite `'unsafe-inline'` por los `style="--i: N"` (solo números nuestros). Regla para el
+  futuro: nada de `<script>` ni `onclick=` dentro del HTML (la CSP los bloquearía); todo en `static/js/`
+- [ ] Antes de publicar: formulario con `method="post"` para que los IDs no queden en la URL
+  (historial del navegador y registros del hosting)
+
 ## JavaScript del navegador
 - [x] El JavaScript no llama a Steam ni a ninguna otra web (solo usa datos ya presentes en la página)
 - [x] Los datos se pasan de Jinja2 a JavaScript solo con `|tojson` (escapa `<`, `>`, `'`, `&`)
@@ -59,8 +86,10 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   de autor. Si la web se publica para uso comercial (o se abre al público), quitarlos y sustituirlos por los
   respaldos sintetizados o por sonidos con licencia libre. Están en `.gitignore`: no subirlos nunca a un repo
   público. El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
-- [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor;
-  valorar acotar peticiones por visita/minuto o el tamaño de la caché
+- [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor
+  (una visita nueva puede costar ~70 consultas); valorar acotar peticiones por visita/minuto o el
+  tamaño de la caché
+- [ ] Revisar el tono de las bios satíricas de Steam Match (vivienda, capitalismo, fondos buitre)
 - [ ] `debug=False` en producción
 - [ ] HTTPS activo en el hosting
 - [ ] Dependencias actualizadas (`pip list --outdated`)

@@ -132,18 +132,31 @@ la librería de un usuario.
   terremoto, caos manual/Konami con trance ORIGINAL, pantallazo azul, DVD, cascarrabias), carga.js (99 % con
   excusas de tu mamá), logros.js (16 logros, `desbloquear(id)`), Stand con hexágono SVG y 7 referencias a JoJo
   (ZA WARUDO acepta "za warudo"/"the world"; ORA/MUDA con una ráfaga a la vez y clips cortados a 3 s).
-* PENDIENTE DEL USUARIO (mañana): descargar a mano de myinstants (Cloudflare bloquea la descarga automática,
-  no saltarla) los clips originales de JoJo y guardarlos en `static/sonidos/` con los nombres del README
-  (za-warudo, tiempo-fluye, ora-ora, muda-muda, to-be-continued, kono-dio-da, yare-yare .mp3). Están en
-  .gitignore; si faltan suenan los respaldos. Comprobar después que suenan bien y que ORA/MUDA no se encolan.
+* HECHO: clips de JoJo en `static/sonidos/` (en .gitignore) y probados. Además `ay-ay-ay.mp3` suena en el
+  modo caos (empieza en el segundo 0,9 por un silencio inicial; si falta, suena el trance sintetizado).
 * Git: había `README.MD` y `README.md` duplicados en el índice (Windows no distingue mayúsculas); se quitó
   `README.MD` con `git rm --cached` (pendiente de commit del usuario).
-* Paso 4 en curso: LÓGICA HECHA y probada con datos falsos (4.1, 4.2 y reglas R1-R4: racha 60/40,
-  variedad, consejo del primo, joya oculta, nota de reseñas, anti-gustos). Detalle COMPLETO en
-  `ALGORITMO.md` (mantenerlo al día; no repetirlo aquí). Siguiente: **4.3** plantilla (Steam Match
-  estilo C arriba + desglose en lista estilo A debajo; puntos sin explicar; barra relativa al mejor;
-  botón "Ver en Steam" a la tienda en pestaña nueva; muestra en `<scratchpad>/muestra-4/`), luego
-  4.4 (juego aleatorio con descripción absurda), 4.5 y el paso 5.
+* ROADMAP DEL PASO 4 (qué jugar). Detalle del algoritmo en `ALGORITMO.md` (mantenerlo al día; no repetirlo aquí).
+  HECHO y probado: 4.1-4.2 lógica base · reglas R1-R4 (racha 60/40, variedad, consejo del primo, joya
+  oculta, nota de reseñas, anti-gustos) · 4.3a bios bizarras (`BIOS_*`, vivienda/capitalismo SOLO con
+  Cádiz y Madrid) · 4.3b sección 💘 Steam Match en `index.html` (fichas + desglose, pintadas por Jinja) ·
+  4.3c `static/js/match.js` (probado por el usuario: funciona) · seguridad: logs sin Steam IDs y
+  cabeceras (CSP...) en `app.py` · **4.R5 lógica de "territorio inexplorado"** (etiquetas por lotes con
+  `get_tags`; los juegos con etiquetas que nunca has jugado, p. ej. Terror, salen del top y van a
+  `recomendacion["atreverse"]`).
+  SIGUIENTE (en orden, proponer código antes de cada uno):
+  1. **4.R5 interfaz**: tarjeta "🧭 ¿Te atreves?" (1 juego visible + botón "Otro" hasta 3; texto
+     "Nunca has jugado a nada de {etiqueta nueva}", frase bizarra propia; pintada por Jinja, JS solo
+     muestra/oculta). Aún NO hay nada de esto en la plantilla.
+  2. **4.4** 🎲 ruleta del caos: juego al azar de TODA la librería con descripción absurda por plantillas
+     (huecos: nombre, etiqueta, horas, dueño, año); "Otra" sortea en el navegador sin llamar a Steam.
+  3. **4.5** efectos/sonidos/logros de Steam Match y "¿Te atreves?" + README.
+  4. IDEA DEL USUARIO (fase aparte, a valorar): usar ETIQUETAS en vez de géneros también en la afinidad
+     y en el perfil gamer (los géneros son demasiado genéricos), y rehacer las frases de `PERFILES`.
+  Luego: paso 5 (qué comprar).
+* Pruebas del paso 4: scripts `prueba_*.py` en el scratchpad (se pierden al cerrar la sesión; si hacen
+  falta, rehacerlos). Las pruebas de extremo a extremo sustituyen TODAS las funciones de Steam de `app`
+  (`get_owned_games`, `get_genres`, `en_cache`, `get_resenas`, `get_valoracion`, `get_tags`...).
   Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado completo. Proponer
   primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
@@ -279,5 +292,6 @@ si sobran recursos.
 Formulario más cómodo para los IDs familiares (idea futura), borrar `/demo`
 y publicación. Antes de publicar: quitar o generalizar las comparaciones con
 bromas internas sobre personas reales (Calero, Mauri, Navarro) en `analysis.py`, y
-revisar el tono de las bromas de "tu mamá" (pensadas para amigos) por si se publica.
+revisar el tono de las bromas de "tu mamá" (pensadas para amigos) y de las bios satíricas de
+Steam Match (vivienda, capitalismo, fondos buitre; `BIOS_*` en `analysis.py`) por si se publica.
 

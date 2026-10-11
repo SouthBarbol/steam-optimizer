@@ -1,3 +1,4 @@
+import logging  # registro de mensajes del servidor (para silenciar el de cada petición)
 import math  # funciones matemáticas (seno y coseno para el hexágono de Stand)
 import random  # para elegir al azar qué pendientes consultar (paso 4)
 import re  # módulo de expresiones regulares, para validar el Steam ID
@@ -9,13 +10,36 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
-    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS,
+    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
-    get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion,
+    get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
 )
 
 app = Flask(__name__)  # crea la aplicación web
+
+
+@app.after_request  # se ejecuta tras CADA respuesta, justo antes de enviarla al navegador
+def cabeceras_seguridad(respuesta):
+    """Añade cabeceras de seguridad: instrucciones para que el navegador sea más estricto."""
+    # Content-Security-Policy: de dónde puede cargar cosas la página. Si algún día se colara
+    # código ajeno (p. ej. en un nombre de juego), el navegador se negaría a ejecutarlo
+    respuesta.headers["Content-Security-Policy"] = "; ".join([  # "; ".join une las reglas con "; "
+        "default-src 'self'",  # por defecto, solo cosas de nuestro propio servidor
+        "script-src 'self'",  # solo nuestros .js: ni scripts escritos dentro del HTML ni de otras webs
+        "style-src 'self' 'unsafe-inline'",  # nuestro CSS + los style="--i: N" (solo números calculados por nosotros)
+        "img-src 'self' https://cdn.cloudflare.steamstatic.com",  # imágenes nuestras y carátulas de Steam
+        "font-src 'self'",  # la fuente Press Start 2P, alojada aquí
+        "media-src 'self'",  # los sonidos de static/sonidos/
+        "object-src 'none'",  # nada de plugins (Flash y similares)
+        "base-uri 'none'",  # nadie puede cambiar la dirección base de los enlaces relativos
+        "form-action 'self'",  # el formulario solo puede enviarse a nuestro servidor
+        "frame-ancestors 'none'",  # ninguna web puede meter la nuestra dentro de un <iframe>
+    ])
+    respuesta.headers["Referrer-Policy"] = "no-referrer"  # no decir a otras webs de qué URL venimos (lleva los IDs)
+    respuesta.headers["X-Content-Type-Options"] = "nosniff"  # el navegador no "adivina" el tipo de un archivo
+    respuesta.headers["X-Frame-Options"] = "DENY"  # anti-iframe para navegadores antiguos (como frame-ancestors)
+    return respuesta  # after_request debe devolver la respuesta (modificada)
 
 
 @app.route("/")  # esta función responde cuando se visita la raíz: http://127.0.0.1:5000/
@@ -92,14 +116,18 @@ def index():
     # + géneros que sueles abandonar
     mis_generos = tarjetas[0]["generos"]["generos"]
     racha = racha_actual(recientes, generos)
+    # + territorio inexplorado: etiquetas de TODOS tus juegos (por lotes de 50: pocas llamadas)
+    etiquetas = get_tags([j["appid"] for j in juegos])
     datos_reco = (juegos, generos, mis_generos, racha, consejos_familia(jugados),
                   {a: get_resenas(a) for a in generos},
-                  anti_gustos(dejados, generos, mis_generos, racha))  # tupla con los 7 datos
+                  anti_gustos(dejados, generos, mis_generos, racha),
+                  territorio_inexplorado(juegos, etiquetas))  # tupla con los 8 datos
     # Dos pasadas: 1) puntuar todo y quedarse con los finalistas; 2) pedir la nota de SUS reseñas
-    # (una llamada por juego, solo ellos) y volver a puntuar. *datos_reco "despliega" la tupla en 7 argumentos
+    # (una llamada por juego, solo ellos) y volver a puntuar. *datos_reco "despliega" la tupla en 8 argumentos
     finalistas = que_jugar(*datos_reco, n=FINALISTAS)["recomendados"]
     valoraciones = {r["appid"]: get_valoracion(r["appid"]) for r in finalistas}
     recomendacion = que_jugar(*datos_reco, valoraciones=valoraciones)
+    poner_bios(recomendacion["recomendados"])  # una bio absurda por ficha de Steam Match
 
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
@@ -241,4 +269,9 @@ def demo():
 
 
 if __name__ == "__main__":  # solo si ejecutamos este archivo directamente (python app.py)
+    # El servidor de desarrollo ("werkzeug") escribe en la consola cada petición con su URL, que lleva
+    # los Steam IDs. Con el nivel WARNING solo muestra avisos y errores, no las peticiones
+    logging.getLogger("werkzeug").setLevel(logging.WARNING)
+    # Eso también oculta el aviso de arranque, así que lo escribimos nosotros (sin datos de usuarios)
+    print("Servidor en http://127.0.0.1:5000 (Ctrl+C para pararlo)")
     app.run(debug=False)  # arranca el servidor con debug desactivado (seguridad)

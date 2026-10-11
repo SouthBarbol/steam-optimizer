@@ -335,6 +335,19 @@ MIN_ABANDONOS_ANTI = 3  # anti-gusto: aparece en al menos 3 abandonados...
 PCT_ABANDONOS_ANTI = 25  # ...y en al menos el 25 % de tus abandonados analizados...
 MAX_GUSTO_ANTI = 20  # ...y tu % en ese género (de siempre o de la racha) es menor que esto
 CASTIGO_ANTI = 0.8  # pendientes con algún anti-gusto: puntos × 0,8
+TOP_EXPERIENCIA = 10  # etiquetas de cada juego jugado que cuentan como "lo que conoces"
+TOP_DEFINEN = 3  # etiquetas que definen a un pendiente (las 3 más votadas, sin las neutras)
+TOP_ATREVIDOS = 3  # juegos en "¿Te atreves?" (1 visible + "Otro")
+# Etiquetas que no dicen DE QUÉ va un juego (modo, formato, estilo o calidad): no cuentan como "nuevas"
+ETIQUETAS_NEUTRAS = {
+    "Un jugador", "Multijugador", "Multijugador local", "Cooperativos", "Cooperativos en línea",
+    "Cooperativos locales", "Pantalla dividida", "Para mando", "Solo ratón", "Indie", "Free to Play",
+    "Acceso anticipado", "Versiones nuevas", "Secuelas", "Clásicos", "Buena trama", "Gran banda sonora",
+    "Banda sonora", "Preciosos", "Adictivos", "Divertidos", "Cortos", "2D", "3D", "2.5D", "Pixelados",
+    "Estilizados", "Coloridos", "Primera persona", "Tercera persona", "Modificables", "Mods", "Episódicos",
+    "Valor continuo", "Lineales", "No lineales", "Finales múltiples", "Las elecciones importan", "Retro",
+    "Nostalgia", "Vieja escuela", "Años 80", "Años 90", "Épicos", "Ambientales", "Música",
+}
 
 
 def pendientes(juegos):
@@ -398,6 +411,47 @@ def anti_gustos(dejados, generos, por_genero, racha):
             if v >= MIN_ABANDONOS_ANTI
             and v / contados * 100 >= PCT_ABANDONOS_ANTI
             and max(siempre.get(g, 0), racha.get(g, 0)) < MAX_GUSTO_ANTI}
+
+
+def experiencia(juegos, etiquetas):
+    """Etiquetas de los juegos que has jugado DE VERDAD (2 h o más): "lo que conoces"."""
+    conocidas = set()
+    for j in juegos:
+        if (j.get("playtime_forever") or 0) >= UMBRAL_ABANDONO:  # los abandonados no cuentan
+            conocidas.update(etiquetas.get(j["appid"], [])[:TOP_EXPERIENCIA])  # update: añade varias
+    return conocidas
+
+
+def etiquetas_nuevas(etiquetas_juego, conocidas):
+    """De las 3 etiquetas que definen el juego (sin las neutras), las que nunca has jugado."""
+    definen = [e for e in etiquetas_juego if e not in ETIQUETAS_NEUTRAS][:TOP_DEFINEN]
+    return [e for e in definen if e not in conocidas]
+
+
+def territorio_inexplorado(juegos, etiquetas):
+    """{appid: [etiquetas nuevas]} de tus pendientes con algo que nunca has jugado."""
+    conocidas = experiencia(juegos, etiquetas)
+    if not conocidas:  # sin etiquetas de lo que has jugado (p. ej. falló Steam): no se aparta nada
+        return {}
+    resultado = {}
+    for j in pendientes(juegos):
+        nuevas = etiquetas_nuevas(etiquetas.get(j["appid"], []), conocidas)
+        if nuevas:
+            resultado[j["appid"]] = nuevas
+    return resultado
+
+
+def elegir_atrevidos(atrevidos, n=TOP_ATREVIDOS):
+    """Los n inexplorados con más puntos; si se puede, cada uno con una etiqueta nueva distinta."""
+    random.shuffle(atrevidos)  # a igualdad de puntos, al azar
+    atrevidos.sort(key=lambda r: r["puntos"], reverse=True)
+    elegidos, vistas = [], set()  # vistas: primeras etiquetas nuevas ya usadas
+    for r in atrevidos:
+        if r["nuevas"][0] not in vistas:  # [0]: la etiqueta nueva más votada del juego
+            elegidos.append(r)
+            vistas.add(r["nuevas"][0])
+    saltados = [r for r in atrevidos if r not in elegidos]  # si no hay variedad, se rellena con estos
+    return (elegidos + saltados)[:n]
 
 
 def consejos_familia(jugados, umbral=UMBRAL_PRIMO):
@@ -464,8 +518,8 @@ def multiplicador_valoracion(pct):
     return CASTIGO_MALO  # más negativas que positivas
 
 
-def que_jugar(juegos, generos, por_genero, racha, consejos=None, resenas=None, anti=None, valoraciones=None,
-              n=TOP_RECOMENDACIONES):
+def que_jugar(juegos, generos, por_genero, racha, consejos=None, resenas=None, anti=None, inexplorados=None,
+              valoraciones=None, n=TOP_RECOMENDACIONES):
     """Los n pendientes con más afinidad: mezcla tus gustos de siempre y tu racha actual.
 
     juegos: tu lista unida (unir_familia). generos: {appid: géneros, o None si no se pudo consultar}.
@@ -474,16 +528,19 @@ def que_jugar(juegos, generos, por_genero, racha, consejos=None, resenas=None, a
     consejos: lo que devuelve consejos_familia (juegos a los que un familiar echó muchas horas).
     resenas: {appid: nº de reseñas en Steam, o None si no se sabe} (joya oculta / superventas).
     anti: lo que devuelve anti_gustos (géneros que sueles abandonar).
+    inexplorados: lo que devuelve territorio_inexplorado ({appid: etiquetas que nunca has jugado}).
     valoraciones: {appid: lo que devuelve get_valoracion} (% de positivas); solo de los finalistas.
     """
     consejos = consejos or {}  # None -> {} (un {} como valor por defecto se compartiría entre llamadas)
     resenas = resenas or {}
     anti = anti or set()  # set(): conjunto vacío ({} sería un diccionario)
+    inexplorados = inexplorados or {}
     valoraciones = valoraciones or {}
     siempre = {g["nombre"]: g["pct"] for g in por_genero}  # de lista a diccionario: búsqueda rápida
     peso = PESO_RACHA if racha else 0  # sin racha (no hay fechas), solo tus horas de siempre
     lista = pendientes(juegos)
     puntuados, analizados = [], 0  # dos variables a la vez: lista vacía y contador a 0
+    atrevidos = []  # pendientes de territorio inexplorado (para "¿Te atreves?")
     for j in lista:
         generos_j = generos.get(j["appid"])  # None = no consultado (fuera del presupuesto) o fallo
         if generos_j is None:
@@ -501,23 +558,117 @@ def que_jugar(juegos, generos, por_genero, racha, consejos=None, resenas=None, a
         pct = nota_fiable(valoraciones.get(j["appid"]))  # % de positivas, o None
         puntos = round(puntos * fama * multiplicador_valoracion(pct))  # redondeamos una sola vez, al final
         joya = joya and (pct is None or pct >= JOYA_MIN_PCT)  # desconocido y MALO no es una joya
-        if puntos:  # 0 = no se parece a nada de lo que juegas: no se recomienda
-            puntuados.append({
-                "appid": j["appid"],
-                "nombre": j.get("name", "?"),
-                "duenos": j.get("duenos", []),
-                "desconocido": j.get("playtime_forever") is None,  # préstamo: quizá ya lo probaste
-                "puntos": puntos,
-                # géneros en común, sin % (la fórmula es secreta); {...}: conjunto, sin repetidos
-                "comunes": sorted({g for g, _ in comunes_s + comunes_r}),
-                "consejo": consejo,  # {"nombre", "horas"} del familiar, o None
-                "joya": joya,  # True = pocas reseñas (para la pegatina 💎)
-                "pct_positivo": pct,  # % de reseñas positivas en Steam (None si no se sabe)
-            })
+        reco = {
+            "appid": j["appid"],
+            "nombre": j.get("name", "?"),
+            "duenos": j.get("duenos", []),
+            "desconocido": j.get("playtime_forever") is None,  # préstamo: quizá ya lo probaste
+            "puntos": puntos,
+            # géneros en común, sin % (la fórmula es secreta); {...}: conjunto, sin repetidos
+            "comunes": sorted({g for g, _ in comunes_s + comunes_r}),
+            "consejo": consejo,  # {"nombre", "horas"} del familiar, o None
+            "joya": joya,  # True = pocas reseñas (para la pegatina 💎)
+            "pct_positivo": pct,  # % de reseñas positivas en Steam (None si no se sabe)
+            "aclamado": pct is not None and pct >= UMBRAL_ACLAMADO,  # para la pegatina 👑
+        }
+        nuevas = inexplorados.get(j["appid"])  # etiquetas que nunca has jugado (o None)
+        if nuevas:  # territorio inexplorado: fuera del top, a "¿Te atreves?" (aunque tenga 0 puntos)
+            atrevidos.append({**reco, "nuevas": nuevas})
+        elif puntos:  # 0 = no se parece a nada de lo que juegas: no se recomienda
+            puntuados.append(reco)
     random.shuffle(puntuados)  # a igualdad de puntos, orden al azar (sort respeta el orden previo)
     puntuados.sort(key=lambda r: r["puntos"], reverse=True)  # de más a menos afinidad
     return {
         "recomendados": con_variedad(puntuados, n),  # los n mejores, sin repetir demasiado la misma mezcla
+        "atreverse": elegir_atrevidos(atrevidos),  # territorio inexplorado (opción "¿Te atreves?")
         "analizados": analizados,  # pendientes con géneros conocidos...
         "pendientes": len(lista),  # ...de todos los pendientes ("analizados 40 de 230")
     }
+
+
+# ===================== Bios de Steam Match (paso 4.3a) =====================
+# Plantillas absurdas con huecos que se rellenan con datos reales del juego.
+# OJO: humor satírico (vivienda, capitalismo); revisar el tono antes de publicar.
+BIOS_GENERALES = [
+    "Me gustan los paseos largos por la playa y el {genero}. Sobre todo el {genero}.",
+    "Llevo tanto tiempo en tu biblioteca que un fondo buitre ya quiere alquilarme por habitaciones.",
+    "Busco a alguien de {genero} que no me deje a las 2 h.",
+    "Mi signo es {genero}, con ascendente «pendiente de instalar».",
+    "Prometo no ocupar 60 GB. Bueno, igual sí. Bueno, seguro que sí.",
+    "Soy {nombre}. Mis amigos me llaman «ese que nunca abres».",
+    "He visto cosas que no creerías. Principalmente tu escritorio, desde dentro de una carpeta.",
+    "Red flag: no me has jugado. Green flag: aún estás a tiempo.",
+    "Mi terapeuta dice que deje de esperar tu doble clic.",
+    "No soy como los otros juegos. Yo también tengo {genero}, pero con sentimientos.",
+    "Un pato me dijo que haríamos match. Los patos nunca mienten.",
+    "Busco relación seria. Mínimo tres partidas y conocer a tu mando.",
+    "Me salté el tutorial de la vida. Ahora soy {genero} a tiempo completo.",
+    "Vivo en tu disco duro sin pagar alquiler. Ni en Cádiz ni en Madrid lo consigue nadie más.",
+    "Ocupo un hueco de tu SSD que en Madrid se alquilaría por 900 € al mes como «estudio con encanto».",
+    "Busco jugador solvente: nómina, aval de tus padres y tres meses de fianza. Lo de la fianza va en serio.",
+    "Me compraste en rebajas. Es lo más cerca que vas a estar de tener una propiedad.",
+    "Si no me juegas no es culpa tuya: es el capitalismo, que te tiene 40 h a la semana pagando un zulo.",
+    "Soy {genero}, no un piso turístico: puedes quedarte en mí más de tres noches.",
+    "Un fondo buitre compró la carpeta de al lado. Ahora el vecindario se llama «Gaming Living Premium».",
+    "El capitalismo me hizo pendiente. Tú puedes hacerme libre. Doble clic, camarada.",
+]
+BIOS_PRIMO = [
+    "{familiar} me dedicó {horas} h y aún así sigo pensando en ti.",
+    "{horas} h con {familiar}. Lo nuestro sería distinto, te lo juro.",
+    "Pregúntale a {familiar} por mí. Mejor no, que se pone celoso.",
+    "{familiar} y yo tuvimos {horas} h de algo bonito. Ahora quiero conocer al resto de la familia.",
+]
+BIOS_PRESTAMO = [
+    "Soy de {dueno}, pero mi corazón es tuyo. Que no se entere.",
+    "Técnicamente esto es infidelidad familiar. Técnicamente.",
+    "Vivo en casa de {dueno}, como todo el mundo a los 35 con estos alquileres.",
+    "Soy de {dueno}, pero lo compartimos como un piso de estudiantes: sin preguntar y sin fregar.",
+]
+BIOS_JOYA = [
+    "Poca gente me conoce, como a un piso asequible en Cádiz.",
+    "Me han descubierto tres personas y un bot. Sé la cuarta.",
+    "Underground desde antes de que fuera guay.",
+]
+BIOS_ACLAMADO = [
+    "El {pct} % de la gente me quiere. El otro {resto} % no tiene corazón.",
+    "{pct} % de reseñas positivas y aún así sigo soltero.",
+    "Tengo un {pct} % de aprobación. Ningún político puede decir lo mismo.",
+]
+PROB_BIO_ESPECIAL = 0.5  # si el juego tiene algo especial, probabilidad de usar una frase de ese tipo
+
+
+def bio(reco, usadas):
+    """Una bio absurda para la ficha de Steam Match. usadas: frases ya elegidas (para no repetir)."""
+    consejo = reco.get("consejo") or {}  # {} si no hay consejo, para que .get() no falle
+    pct = reco.get("pct_positivo")
+    huecos = {  # todos los huecos posibles, siempre definidos (format falla si falta uno)
+        "nombre": reco["nombre"],
+        "genero": random.choice(reco["comunes"]) if reco["comunes"] else "cariño",
+        "familiar": consejo.get("nombre", ""),
+        "horas": consejo.get("horas", 0),
+        "dueno": reco["duenos"][0] if reco["duenos"] else "alguien",
+        "pct": pct or 0,
+        "resto": 100 - (pct or 0),
+    }
+    especiales = []  # frases de las cosas especiales que tiene este juego
+    if consejo:
+        especiales += BIOS_PRIMO
+    if reco.get("desconocido"):
+        especiales += BIOS_PRESTAMO
+    if reco.get("joya"):
+        especiales += BIOS_JOYA
+    if pct is not None and pct >= UMBRAL_ACLAMADO:
+        especiales += BIOS_ACLAMADO
+    fuente = especiales if especiales and random.random() < PROB_BIO_ESPECIAL else BIOS_GENERALES
+    libres = [f for f in fuente if f not in usadas] or fuente  # sin repetir (si se agotan, se repite)
+    plantilla = random.choice(libres)
+    usadas.add(plantilla)
+    return plantilla.format(**huecos)  # **huecos: cada clave rellena su {hueco}
+
+
+def poner_bios(recomendados):
+    """Añade una bio distinta a cada recomendación (modifica la lista y la devuelve)."""
+    usadas = set()
+    for r in recomendados:
+        r["bio"] = bio(r, usadas)
+    return recomendados
