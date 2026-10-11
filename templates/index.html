@@ -260,7 +260,7 @@
                             {# loading="lazy": el navegador la descarga solo cuando va a verse; alt: texto si no carga #}
                             {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
                             {{ juego.nombre }}
-                            {# Pegatina si el juego es Indie (solo los del top de alguien tienen géneros) #}
+                            {# Pegatina si el juego es Indie (solo tienen géneros los del top de alguien y tus pendientes consultados) #}
                             {% if juego.indie %}<span class="pegatina-indie">INDIE</span>{% endif %}
                         </td>
                         {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}

@@ -309,3 +309,215 @@ def stand(stats, por_genero):
             {"nombre": n, "nota": nota(valores[n], umbrales, sentido)} for n, (umbrales, sentido) in STAND.items()
         ],
     }
+
+
+# ===================== Qué jugar (paso 4) =====================
+TOP_RECOMENDACIONES = 5  # cuántas recomendaciones se muestran
+PRESUPUESTO_GENEROS = 20  # consultas NUEVAS de géneros a Steam por visita (las de la caché no cuentan)
+ULTIMOS_JUGADOS = 10  # cuántos juegos recientes forman tu "racha actual"
+PESO_RACHA = 0.6  # cuánto pesa la racha frente a tus horas de siempre (0 = nada, 1 = todo): 60/40
+MAX_IGUALES = 2  # en el top, como mucho 2 juegos con los mismos géneros en común contigo
+UMBRAL_PRIMO = 20  # horas: si un familiar le echó al menos esto a un juego, el juego recibe un plus
+PLUS_PRIMO = 1.25  # el plus: puntos × 1,25 (+25 %)
+UMBRAL_JOYA = 1000  # menos reseñas que esto en Steam: joya oculta...
+PLUS_JOYA = 1.2  # ...puntos × 1,2
+UMBRAL_SUPERVENTAS = 100000  # más reseñas que esto: superventas...
+CASTIGO_SUPERVENTAS = 0.9  # ...puntos × 0,9
+FINALISTAS = 15  # solo a estos se les consulta la nota de las reseñas (una llamada por juego)
+MIN_RESENAS_NOTA = 10  # con menos reseñas, el % no es fiable: sin efecto
+UMBRAL_ACLAMADO, PLUS_ACLAMADO = 90, 1.15  # 90 % positivas o más: × 1,15
+UMBRAL_MIXTO, CASTIGO_MIXTO = 70, 0.9  # por debajo del 70 %: × 0,9
+UMBRAL_MALO, CASTIGO_MALO = 50, 0.75  # por debajo del 50 %: × 0,75
+JOYA_MIN_PCT = 80  # la pegatina 💎 exige además este % de positivas (si se sabe)
+UMBRAL_ABANDONO = 120  # minutos: menos de 2 h jugadas = abandonado (como en las estadísticas)
+PRESUPUESTO_ABANDONOS = 10  # consultas NUEVAS de géneros de abandonados por visita
+MIN_ABANDONOS_ANTI = 3  # anti-gusto: aparece en al menos 3 abandonados...
+PCT_ABANDONOS_ANTI = 25  # ...y en al menos el 25 % de tus abandonados analizados...
+MAX_GUSTO_ANTI = 20  # ...y tu % en ese género (de siempre o de la racha) es menor que esto
+CASTIGO_ANTI = 0.8  # pendientes con algún anti-gusto: puntos × 0,8
+
+
+def pendientes(juegos):
+    """Juegos que (probablemente) no has jugado: tus horas a 0 o desconocidas (None = préstamo)."""
+    return [j for j in juegos if not j.get("playtime_forever")]  # "not" es True para 0 y para None
+
+
+def ultimos_jugados(juegos, n=ULTIMOS_JUGADOS):
+    """Los n juegos que has jugado más recientemente (por la fecha de tu última partida)."""
+    def fecha(j):  # función dentro de otra: solo se usa aquí
+        if not j.get("propio"):  # préstamo jugado en las últimas 2 semanas: no trae fecha, pero es reciente
+            return float("inf")  # "infinito": va el primero
+        return j.get("rtime_last_played") or 0  # segundos desde 1970; 0 = Steam no lo sabe
+    jugados = [j for j in juegos if j.get("playtime_forever") and fecha(j)]  # con horas y con fecha
+    return sorted(jugados, key=fecha, reverse=True)[:n]  # del más reciente al más antiguo
+
+
+def racha_actual(recientes, generos):
+    """{género: % de tus últimos juegos que lo tienen}. Un voto por juego, sin mirar horas."""
+    votos, contados = {}, 0  # {género: nº de juegos} y cuántos juegos han votado
+    for j in recientes:
+        lista = generos.get(j["appid"])
+        if lista is None:  # consulta fallida: ese juego no vota
+            continue
+        contados += 1
+        for g in lista:
+            votos[g] = votos.get(g, 0) + 1  # un voto más para ese género
+    return {g: round(v / contados * 100) for g, v in votos.items()} if contados else {}
+
+
+def afinidad(generos_juego, tus_pct):
+    """Suma tus % de horas en los géneros del juego. Devuelve (puntos, motivo).
+
+    tus_pct: {género: % de tus horas del top}. Motivo: [(género, %), ...] de mayor a menor.
+    Los géneros que no dicen cómo se juega (NO_DEFINEN_PERFIL: Indie, Free to Play...) no suman.
+    """
+    coinciden = [(g, tus_pct[g]) for g in generos_juego if g in tus_pct and g not in NO_DEFINEN_PERFIL]
+    coinciden.sort(key=lambda par: par[1], reverse=True)  # el género que más pesa, primero
+    return sum(pct for _, pct in coinciden), coinciden  # "_" = el nombre, que aquí no hace falta
+
+
+def abandonados(juegos):
+    """Juegos que probaste menos de 2 h y no has tocado en las últimas 2 semanas."""
+    return [j for j in juegos
+            if 0 < (j.get("playtime_forever") or 0) < UMBRAL_ABANDONO and not j.get("playtime_2weeks")]
+
+
+def anti_gustos(dejados, generos, por_genero, racha):
+    """Conjunto de géneros que sueles abandonar y que NO están entre tus gustos."""
+    siempre = {g["nombre"]: g["pct"] for g in por_genero}
+    votos, contados = {}, 0  # {género: nº de abandonados que lo tienen} y abandonados con datos
+    for j in dejados:
+        lista = generos.get(j["appid"])
+        if lista is None:  # sin consultar o fallo: no vota
+            continue
+        contados += 1
+        for g in lista:
+            if g not in NO_DEFINEN_PERFIL:
+                votos[g] = votos.get(g, 0) + 1
+    return {g for g, v in votos.items()  # {... for ...}: conjunto por comprensión
+            if v >= MIN_ABANDONOS_ANTI
+            and v / contados * 100 >= PCT_ABANDONOS_ANTI
+            and max(siempre.get(g, 0), racha.get(g, 0)) < MAX_GUSTO_ANTI}
+
+
+def consejos_familia(jugados, umbral=UMBRAL_PRIMO):
+    """{appid: {"nombre", "horas"}} del familiar que más horas le echó a cada juego (si llega al umbral).
+
+    jugados: {familiar: sus juegos con SUS horas} (lo que devuelve pedir_familia en app.py).
+    """
+    consejos = {}
+    for nombre, lista in jugados.items():  # .items(): pares (clave, valor) del diccionario
+        for j in lista:
+            horas = (j.get("playtime_forever") or 0) / 60
+            previo = consejos.get(j["appid"])  # otro familiar que ya lo aconsejó (o None)
+            if horas >= umbral and (previo is None or horas > previo["horas"]):
+                consejos[j["appid"]] = {"nombre": nombre, "horas": round(horas)}
+    return consejos
+
+
+def con_variedad(puntuados, n, max_iguales=MAX_IGUALES):
+    """Elige los n primeros saltándose los que repetirían demasiado la misma mezcla de géneros.
+
+    puntuados: ya ordenados de más a menos puntos. Si no hay variedad suficiente,
+    se rellena con los saltados (en su orden), para devolver siempre n si hay n.
+    """
+    elegidos, cuenta = [], {}  # cuenta: {mezcla de géneros: cuántos van en el top}
+    for r in puntuados:
+        mezcla = tuple(r["comunes"])  # tupla: como una lista, pero sirve de clave de diccionario
+        if cuenta.get(mezcla, 0) < max_iguales:
+            elegidos.append(r)
+            cuenta[mezcla] = cuenta.get(mezcla, 0) + 1
+        if len(elegidos) == n:  # ya están todos: dejamos de buscar
+            break
+    saltados = [r for r in puntuados if r not in elegidos]  # los que no entraron, en su orden
+    return (elegidos + saltados)[:n]
+
+
+def multiplicador_fama(resenas):
+    """(multiplicador, ¿es joya?) según el nº de reseñas en Steam. Sin dato (None): sin efecto."""
+    if resenas is None:
+        return 1, False  # no inventamos: ni plus ni castigo
+    if resenas < UMBRAL_JOYA:
+        return PLUS_JOYA, True  # poca gente lo conoce: joya oculta
+    if resenas > UMBRAL_SUPERVENTAS:
+        return CASTIGO_SUPERVENTAS, False  # lo conoce todo el mundo: un poco menos
+    return 1, False  # término medio: sin efecto
+
+
+def nota_fiable(valoracion):
+    """% de reseñas positivas si es fiable (al menos MIN_RESENAS_NOTA reseñas); si no, None."""
+    if valoracion and valoracion["total"] >= MIN_RESENAS_NOTA:
+        return valoracion["pct"]
+    return None
+
+
+def multiplicador_valoracion(pct):
+    """Multiplicador según el % de reseñas positivas (el de nota_fiable). None: sin efecto."""
+    if pct is None:
+        return 1
+    if pct >= UMBRAL_ACLAMADO:
+        return PLUS_ACLAMADO  # aclamado
+    if pct >= UMBRAL_MIXTO:
+        return 1  # bien valorado: sin efecto
+    if pct >= UMBRAL_MALO:
+        return CASTIGO_MIXTO  # reseñas variadas
+    return CASTIGO_MALO  # más negativas que positivas
+
+
+def que_jugar(juegos, generos, por_genero, racha, consejos=None, resenas=None, anti=None, valoraciones=None,
+              n=TOP_RECOMENDACIONES):
+    """Los n pendientes con más afinidad: mezcla tus gustos de siempre y tu racha actual.
+
+    juegos: tu lista unida (unir_familia). generos: {appid: géneros, o None si no se pudo consultar}.
+    por_genero: la lista "generos" de horas_por_genero (tus % de horas por género, de siempre).
+    racha: lo que devuelve racha_actual ({género: % de tus últimos juegos}); {} si no hay fechas.
+    consejos: lo que devuelve consejos_familia (juegos a los que un familiar echó muchas horas).
+    resenas: {appid: nº de reseñas en Steam, o None si no se sabe} (joya oculta / superventas).
+    anti: lo que devuelve anti_gustos (géneros que sueles abandonar).
+    valoraciones: {appid: lo que devuelve get_valoracion} (% de positivas); solo de los finalistas.
+    """
+    consejos = consejos or {}  # None -> {} (un {} como valor por defecto se compartiría entre llamadas)
+    resenas = resenas or {}
+    anti = anti or set()  # set(): conjunto vacío ({} sería un diccionario)
+    valoraciones = valoraciones or {}
+    siempre = {g["nombre"]: g["pct"] for g in por_genero}  # de lista a diccionario: búsqueda rápida
+    peso = PESO_RACHA if racha else 0  # sin racha (no hay fechas), solo tus horas de siempre
+    lista = pendientes(juegos)
+    puntuados, analizados = [], 0  # dos variables a la vez: lista vacía y contador a 0
+    for j in lista:
+        generos_j = generos.get(j["appid"])  # None = no consultado (fuera del presupuesto) o fallo
+        if generos_j is None:
+            continue  # sin datos no se puede puntuar: se queda para otra visita
+        analizados += 1
+        p_siempre, comunes_s = afinidad(generos_j, siempre)
+        p_racha, comunes_r = afinidad(generos_j, racha)
+        puntos = (1 - peso) * p_siempre + peso * p_racha  # mezcla de las dos afinidades (con decimales)
+        consejo = consejos.get(j["appid"])  # ¿algún familiar le echó muchas horas?
+        if consejo:
+            puntos *= PLUS_PRIMO  # *= multiplica y guarda; solo multiplica: con 0 puntos sigue en 0
+        if anti & set(generos_j):  # &: géneros que están en los dos conjuntos; vacío = False
+            puntos *= CASTIGO_ANTI  # tiene algún género que sueles abandonar (una vez, aunque tenga varios)
+        fama, joya = multiplicador_fama(resenas.get(j["appid"]))  # joya oculta / superventas
+        pct = nota_fiable(valoraciones.get(j["appid"]))  # % de positivas, o None
+        puntos = round(puntos * fama * multiplicador_valoracion(pct))  # redondeamos una sola vez, al final
+        joya = joya and (pct is None or pct >= JOYA_MIN_PCT)  # desconocido y MALO no es una joya
+        if puntos:  # 0 = no se parece a nada de lo que juegas: no se recomienda
+            puntuados.append({
+                "appid": j["appid"],
+                "nombre": j.get("name", "?"),
+                "duenos": j.get("duenos", []),
+                "desconocido": j.get("playtime_forever") is None,  # préstamo: quizá ya lo probaste
+                "puntos": puntos,
+                # géneros en común, sin % (la fórmula es secreta); {...}: conjunto, sin repetidos
+                "comunes": sorted({g for g, _ in comunes_s + comunes_r}),
+                "consejo": consejo,  # {"nombre", "horas"} del familiar, o None
+                "joya": joya,  # True = pocas reseñas (para la pegatina 💎)
+                "pct_positivo": pct,  # % de reseñas positivas en Steam (None si no se sabe)
+            })
+    random.shuffle(puntuados)  # a igualdad de puntos, orden al azar (sort respeta el orden previo)
+    puntuados.sort(key=lambda r: r["puntos"], reverse=True)  # de más a menos afinidad
+    return {
+        "recomendados": con_variedad(puntuados, n),  # los n mejores, sin repetir demasiado la misma mezcla
+        "analizados": analizados,  # pendientes con géneros conocidos...
+        "pendientes": len(lista),  # ...de todos los pendientes ("analizados 40 de 230")
+    }

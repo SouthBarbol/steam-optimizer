@@ -138,7 +138,12 @@ la librería de un usuario.
   .gitignore; si faltan suenan los respaldos. Comprobar después que suenan bien y que ORA/MUDA no se encolan.
 * Git: había `README.MD` y `README.md` duplicados en el índice (Windows no distingue mayúsculas); se quitó
   `README.MD` con `git rm --cached` (pendiente de commit del usuario).
-* Siguiente: **paso 4, qué jugar** (puntuación por géneros y horas, con pendientes; ver "Fase 3"), luego el 5.
+* Paso 4 en curso: LÓGICA HECHA y probada con datos falsos (4.1, 4.2 y reglas R1-R4: racha 60/40,
+  variedad, consejo del primo, joya oculta, nota de reseñas, anti-gustos). Detalle COMPLETO en
+  `ALGORITMO.md` (mantenerlo al día; no repetirlo aquí). Siguiente: **4.3** plantilla (Steam Match
+  estilo C arriba + desglose en lista estilo A debajo; puntos sin explicar; barra relativa al mejor;
+  botón "Ver en Steam" a la tienda en pestaña nueva; muestra en `<scratchpad>/muestra-4/`), luego
+  4.4 (juego aleatorio con descripción absurda), 4.5 y el paso 5.
   Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado completo. Proponer
   primero el código de cada sub-paso, como siempre.
 * Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high

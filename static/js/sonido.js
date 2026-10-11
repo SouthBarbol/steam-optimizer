@@ -138,10 +138,12 @@ const CLIPS = {
     ayayay: "ay-ay-ay.mp3",  // música del modo caos (sustituye al trance; si falta, suena el trance)
 };
 
-function clip(nombre, respaldo, maxSeg = 0) {  // reproduce un clip; si falla, "respaldo"; maxSeg > 0 lo corta
+// inicio > 0 salta los primeros segundos del clip (p. ej. un silencio al principio)
+function clip(nombre, respaldo, maxSeg = 0, inicio = 0) {  // reproduce un clip; si falla, "respaldo"; maxSeg > 0 lo corta
     if (!sonidoActivo || !audioListo) return;
     const reproductor = new Audio(`/static/sonidos/${CLIPS[nombre]}`);  // Audio: reproductor de un archivo de sonido
     reproductor.volume = 0.7;  // de 0 a 1
+    reproductor.currentTime = inicio;  // currentTime: segundo por el que empieza a sonar
     // play() devuelve una "promesa": si el archivo no está (404) o no se puede reproducir, salta el catch
     reproductor.play().catch(() => { if (respaldo) respaldo(); });
     if (maxSeg) setTimeout(() => reproductor.pause(), maxSeg * 1000);  // pause(): lo para a los maxSeg segundos

@@ -1,4 +1,5 @@
 import math  # funciones matemáticas (seno y coseno para el hexágono de Stand)
+import random  # para elegir al azar qué pendientes consultar (paso 4)
 import re  # módulo de expresiones regulares, para validar el Steam ID
 import time  # para medir cuánto tarda la página (logro "Paciencia infinita")
 
@@ -6,10 +7,12 @@ from flask import Flask, render_template, request  # render_template rellena una
 
 from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntesis = import en varias líneas)
     candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
-    catalogo_logros, logros_datos, stand,
+    catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
+    ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
+    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
-    get_owned_games, get_recently_played_games, get_player_names, get_genres,
+    get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion,
 )
 
 app = Flask(__name__)  # crea la aplicación web
@@ -60,7 +63,14 @@ def index():
     # (usamos la lista original: preparar_juegos quita el campo "propio")
     # "if l": sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
     personas = [(yo, 0, juegos)] + [(e, colores[e], l) for e, l in jugados.items() if l]
-    generos = pedir_generos([lista for _, _, lista in personas])  # TODAS las consultas de géneros de una vez
+    recientes = ultimos_jugados(juegos)  # tus últimos 10 jugados (para la racha actual)
+    # TODAS las consultas de géneros de una vez: el top de cada persona + tus recientes
+    # (son 10 y todos con horas, así que su "top 10" son ellos mismos)
+    generos = pedir_generos([lista for _, _, lista in personas] + [recientes])
+    # + géneros de tus pendientes y de tus abandonados, cada uno con su presupuesto de consultas nuevas
+    generos = pedir_generos_presupuesto(pendientes(juegos), generos, PRESUPUESTO_GENEROS)
+    dejados = abandonados(juegos)  # menos de 2 h y sin tocar en 2 semanas (para los anti-gustos)
+    generos = pedir_generos_presupuesto(dejados, generos, PRESUPUESTO_ABANDONOS)
 
     tarjetas = []  # una tarjeta de estadísticas por persona
     for nombre, color, lista in personas:  # cada tupla se "desempaqueta" en tres variables
@@ -77,6 +87,20 @@ def index():
             "perfil": perfil_gamer(por_genero["generos"]),  # título y frase (None si no hay datos)
         })
 
+    # Qué jugar: tus gustos de siempre (tarjetas[0] eres tú) + tu racha actual + consejos de la familia
+    # + nº de reseñas de cada juego consultado (get_resenas solo lee la caché: no llama a Steam)
+    # + géneros que sueles abandonar
+    mis_generos = tarjetas[0]["generos"]["generos"]
+    racha = racha_actual(recientes, generos)
+    datos_reco = (juegos, generos, mis_generos, racha, consejos_familia(jugados),
+                  {a: get_resenas(a) for a in generos},
+                  anti_gustos(dejados, generos, mis_generos, racha))  # tupla con los 7 datos
+    # Dos pasadas: 1) puntuar todo y quedarse con los finalistas; 2) pedir la nota de SUS reseñas
+    # (una llamada por juego, solo ellos) y volver a puntuar. *datos_reco "despliega" la tupla en 7 argumentos
+    finalistas = que_jugar(*datos_reco, n=FINALISTAS)["recomendados"]
+    valoraciones = {r["appid"]: get_valoracion(r["appid"]) for r in finalistas}
+    recomendacion = que_jugar(*datos_reco, valoraciones=valoraciones)
+
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
         "index.html",
@@ -85,6 +109,7 @@ def index():
         colores=colores,
         tarjetas=tarjetas,
         candidatos=candidatos_sorpresa(juegos),  # juegos posibles para el "juego sorpresa"
+        recomendacion=recomendacion,  # qué jugar (calculado arriba)
         logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
         # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
         ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),
@@ -144,6 +169,17 @@ def pedir_generos(listas):
     return {a: get_genres(a) for a in appids}  # una consulta por juego (o la caché, si ya se pidió)
 
 
+def pedir_generos_presupuesto(lista, generos, presupuesto):
+    """Añade a generos los de los juegos de lista: todos los que ya están en caché (gratis)
+    y hasta "presupuesto" nuevos elegidos al azar. Devuelve un diccionario nuevo."""
+    faltan = [j["appid"] for j in lista if j["appid"] not in generos]  # aún sin géneros
+    gratis = [a for a in faltan if en_cache(a)]  # ya consultados en otra visita: no llaman a Steam
+    nuevos = [a for a in faltan if not en_cache(a)]  # costarían una llamada cada uno
+    # random.sample elige k elementos al azar sin repetir; min(): por si quedan menos que el presupuesto
+    elegidos = gratis + random.sample(nuevos, min(presupuesto, len(nuevos)))
+    return {**generos, **{a: get_genres(a) for a in elegidos}}  # ** "vuelca" ambos diccionarios en uno
+
+
 def hexagono(notas, radio=70):
     """Coordenadas del hexágono de Stand (SVG con el centro en 0,0). Dibujar es cosa de la presentación.
 
@@ -179,7 +215,7 @@ def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto (l
             "nombre": j.get("name", "?"),
             "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
             "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)
-            # True si Steam dice que es Indie; solo sabemos los géneros de los juegos del top de alguien
+            # True si Steam dice que es Indie; solo sabemos los géneros del top de alguien y de tus pendientes consultados
             # ("or []": None, consulta fallida o juego no pedido, cuenta como lista vacía)
             "indie": "Indie" in (generos.get(j.get("appid")) or []),
         }
