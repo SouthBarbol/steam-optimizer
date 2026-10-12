@@ -66,6 +66,7 @@ const hz = nota => 440 * 2 ** ((nota - 69) / 12);
 const SFX = {
     blip: n => tono(260 + n * 45, 0.05),  // bloque de barra: cada uno más agudo (n = posición 0-9)
     voz: () => tono(500 + Math.random() * 300, 0.03, "square", 0, 0.03),  // "voz" del texto letra a letra
+    clack: () => { ruido(0.04, 0.2, 3000); tono(140, 0.05, "square", 0, 0.06); },  // botón arcade (E3): golpe seco
     tic: () => tono(1500, 0.015, "square", 0, 0.03),  // ruleta tragaperras: cada vuelta (4.5b)
     moneda: () => { tono(988, 0.08); tono(1319, 0.35, "square", 0.08); },  // al activar el sonido
     fanfarria: () => {  // logro desbloqueado: tres notas subiendo y una larga

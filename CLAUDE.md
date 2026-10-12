@@ -189,7 +189,25 @@ la librería de un usuario.
   `montarTragaperras(seccion)` para toda sección `.tragaperras` (clases `tragaperras-img/-frase/-detalle/
   -otra`); la ruleta de la librería conserva sus ids (`ruleta-otra`, `ruleta-dio`: ORA/MUDA, Dio, Ludópata);
   tarjeta amarilla "🎰 Tragaperras de la tienda" al final de ¿Qué comprar? (`azar` en `app.py`; las
-  pruebas deben sustituir también `app.tienda_al_azar`). SIGUIENTE: 5.5 efectos/logros/docs
+  pruebas deben sustituir también `app.tienda_al_azar`); probado por el usuario. Espaciado general
+  ampliado a petición del usuario ("todo apelotonado"): variables `--hueco-seccion`, `--hueco-tarjetas`
+  y `--relleno` en `:root` de `style.css`, `letter-spacing` en `body`; `.atreverse` igualada al resto.
+  FASE E (ESTÉTICA, elegida por el usuario; CERRADA):
+  E1a HECHO y probado: `static/js/navegacion.js` construye el menú fijo con los elementos `[data-menu]`
+  (resalta el actual con IntersectionObserver) + cohete 🚀 abajo a la izquierda · E1b HECHO y probado:
+  tabla dentro de `<details id="libreria-plegable">` (cerrada; se abre sola al saltar desde el menú),
+  `static/js/libreria.js` (buscador sin tildes con contador; cabeceras `th[data-orden]` -> botones ▲▼;
+  filas con `data-nombre` y `data-horas`, -1 = "—" siempre al final). Con la librería cerrada, To Be
+  Continued y "abismo" salen antes · E2 HECHO y probado: corazones ❤️🖤 (1 por cada 20 %; sin % no hay)
+  y ofertas que tiemblan (`--temblor` = descuento/25 px; precio tachado colgando), macro `ficha_compra`
+  + CSS, sin JS (precios en unidades absurdas: DESCARTADO por el usuario) · E3 HECHO y
+  probado: neón estropeado (efectos.js parte cada h2 de texto puro en nodos de texto), clase `arcade`
+  en botones de acción (NO en btn-revelar: su animación `latir` usa box-shadow) + `SFX.clack`, botón 📺
+  `#btn-crt` -> `html.crt body::after` (capa, no filter: un filter rompería lo fijo) · E4 HECHO y probado: cartel ★ HIGH SCORES ★, medallas en filas `podio-1..3` (solo con
+  horas), horas que cuentan al abrir la librería la 1.ª vez (`toggle` en libreria.js); las telarañas y el
+  sepia en juegos con 0 h se QUITARON (no le gustaron al usuario). FASE E CERRADA por el usuario: la E5
+  (fichas 3D que se inclinan y se dan la vuelta) NO se hizo; retomarla solo si lo pide.
+  SIGUIENTE: 5.5 efectos/logros/docs del paso 5 (EMPEZAR AQUÍ; sugerir antes el commit de la fase E)
   · 5.6 (IDEA DEL USUARIO) sección aparte "juego malísimo": recomendar un juego con MUCHÍSIMAS reseñas
   negativas, al azar entre varios para que no salgan siempre los mismos. A investigar: `Query` no tiene
   orden "peor valorados"; probar populares/valorados con muchas reseñas y filtrar % positivo bajo

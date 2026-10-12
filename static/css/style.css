@@ -15,18 +15,22 @@
     --magenta: #ff2bd6;        /* neón magenta */
     --texto: #e6e6ff;          /* texto claro */
     --error: #ff4d6d;          /* rojo para errores */
+    --hueco-seccion: 3rem;     /* espacio vertical entre secciones */
+    --hueco-tarjetas: 1.8rem;  /* espacio entre tarjetas de una rejilla */
+    --relleno: 1.6rem;         /* margen interior (padding) de las tarjetas */
 }
 
 /* Estilo base de toda la página */
 body {
     margin: 0;                                    /* quita el margen por defecto */
-    padding: 2rem 1rem;                           /* aire alrededor del contenido */
+    padding: 2.5rem 1rem;                         /* aire alrededor del contenido */
     background: var(--fondo);                     /* fondo oscuro */
     background-image: radial-gradient(circle at top, #2a0f4d 0%, var(--fondo) 60%);  /* halo morado arriba */
     color: var(--texto);
     font-family: "Press Start 2P", monospace;     /* fuente arcade; monospace si no carga */
     font-size: 0.7rem;
-    line-height: 1.8;                             /* separación entre líneas */
+    line-height: 2.1;                             /* separación entre líneas */
+    letter-spacing: 0.06em;                       /* separación entre letras (la fuente pixel viene muy junta) */
     min-height: 100vh;                            /* ocupa al menos toda la pantalla */
 }
 
@@ -43,6 +47,7 @@ h2 {
     color: var(--magenta);
     font-size: 0.9rem;
     text-shadow: 0 0 8px var(--magenta);
+    margin: 0 0 1.5rem;                           /* aire debajo del título */
 }
 
 /* Formulario centrado en una tarjeta con borde neón */
@@ -106,7 +111,7 @@ button:hover {
 table {
     width: 100%;
     max-width: 720px;
-    margin: 1.5rem auto;
+    margin: var(--hueco-seccion) auto;
     border-collapse: collapse;                    /* bordes de celdas unidos */
     background: var(--panel);
     box-shadow: 0 0 16px rgba(255, 43, 214, 0.35);
@@ -115,12 +120,12 @@ table {
 th {
     color: var(--cian);
     text-align: left;
-    padding: 0.8rem;
+    padding: 1rem;
     border-bottom: 2px solid var(--cian);
 }
 
 td {
-    padding: 0.8rem;
+    padding: 1rem;
     border-bottom: 1px solid #2a2a4d;
 }
 
@@ -138,9 +143,9 @@ td {
     display: grid;
     /* columnas de mínimo 380px (o el 100% en móvil) que se reparten el espacio sobrante (1fr) */
     grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
-    gap: 1rem;                                    /* separación entre tarjetas */
+    gap: var(--hueco-tarjetas);                   /* separación entre tarjetas */
     max-width: 900px;                             /* algo más ancho que la tabla (720px), sin llegar a los bordes */
-    margin: 1.5rem auto;                          /* auto a los lados = centrado horizontal */
+    margin: var(--hueco-seccion) auto;            /* auto a los lados = centrado horizontal */
 }
 
 /* Cada tarjeta; su color (borde y título) viene de la clase dueno-N */
@@ -149,7 +154,7 @@ td {
     background: var(--panel);
     border: 2px solid currentColor;               /* borde del color del dueño */
     border-radius: 8px;
-    padding: 1rem;
+    padding: var(--relleno);
     font-size: 0.7rem;
     line-height: 1.8;                             /* más espacio entre líneas: la fuente pixel se lee mejor */
 }
@@ -169,14 +174,14 @@ td {
 .ruleta {
     position: relative;                           /* referencia para colocar al presentador cascarrabias */
     max-width: 900px;                             /* mismo ancho que la rejilla de estadísticas */
-    margin: 1.5rem auto;                          /* centrado */
+    margin: var(--hueco-seccion) auto;            /* centrado */
     color: #39ff14;                               /* color del borde y del título */
 }
 
 /* Cuadro del duelo familiar: mismo ancho y centrado que el resto, en amarillo "de trofeo" */
 .duelo {
     max-width: 900px;
-    margin: 1.5rem auto;
+    margin: var(--hueco-seccion) auto;
     color: #ffe600;                               /* color del borde y los títulos */
 }
 
@@ -783,7 +788,7 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 /* ===================== Steam Match: qué jugar (paso 4.3) ===================== */
 .match-seccion {
     max-width: 900px;                /* mismo ancho que el resto de cuadros */
-    margin: 1.5rem auto;             /* centrado */
+    margin: var(--hueco-seccion) auto;  /* centrado */
     color: var(--magenta);           /* color del borde, el título y los detalles */
 }
 .match-contador, .match-vacio {
@@ -804,7 +809,7 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
     background: var(--fondo);
     border: 2px solid currentColor;  /* borde del color de la sección */
     border-radius: 12px;
-    padding: 0.8rem;
+    padding: 1.3rem;
     box-shadow: 0 0 14px currentColor;  /* halo neón */
     transition: transform 0.35s, opacity 0.35s;  /* para cuando match.js la lance a un lado */
 }
@@ -822,9 +827,9 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
     color: var(--fondo);
     font-size: 0.7rem;
 }
-.ficha-nombre { margin: 0.7rem 0 0.2rem; font-size: 0.75rem; color: var(--texto); }
+.ficha-nombre { margin: 1rem 0 0.6rem; font-size: 0.75rem; color: var(--texto); }
 .ficha-puntos { margin: 0; font-size: 0.65rem; color: #ffe600; }
-.ficha-bio { margin: 0.6rem 0; font-size: 0.55rem; font-style: italic; color: var(--texto); }
+.ficha-bio { margin: 0.9rem 0; font-size: 0.55rem; font-style: italic; color: var(--texto); }
 .ficha-gustos { font-size: 0.55rem; color: var(--texto); }
 .ficha-gustos b { font-weight: normal; color: #39ff14; }  /* los géneros en verde */
 .ficha-posicion { margin: 0.5rem 0 0; font-size: 0.5rem; color: var(--texto); opacity: 0.6; }
@@ -908,6 +913,11 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 }
 
 /* ¿Te atreves? (4.R5): mismas fichas que Steam Match, con borde naranja de "zona peligrosa" */
+.atreverse {                    /* la sección: mismo ancho y centrado que el resto */
+    max-width: 900px;
+    margin: var(--hueco-seccion) auto;
+    color: #ff9f1c;                /* naranja: borde y título */
+}
 .reto { border-color: #ff9f1c; box-shadow: 0 0 14px #ff9f1c55; }
 .reto-nuevas { font-size: 0.75rem; color: #ff9f1c; }
 .reto-otro[hidden] { display: none; }  /* el estilo de botón no debe ganarle a "hidden" */
@@ -921,21 +931,20 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 /* ===================== ¿Qué comprar? (paso 5.3) ===================== */
 .compra {
     max-width: 900px;                /* mismo ancho que el resto de cuadros */
-    margin: 1.5rem auto;             /* centrado */
+    margin: var(--hueco-seccion) auto;  /* centrado */
     color: var(--cian);              /* color del borde y del título */
 }
-.compra-titulo { margin: 1.2rem 0 0.4rem; font-size: 0.7rem; color: var(--cian); text-align: center; }
+.compra-titulo { margin: 2.2rem 0 0.8rem; font-size: 0.7rem; color: var(--cian); text-align: center; }
 .compra-titulo.bizarra { color: #b967ff; }  /* morado: lo raro */
 .compra-rejilla {                    /* fichas en rejilla: tantas columnas de 240 px como quepan */
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
+    gap: var(--hueco-tarjetas);
     margin-top: 0.8rem;
 }
 .compra-rejilla.bizarra .ficha { color: #b967ff; }  /* borde y halo morados (la ficha usa currentColor) */
 .compra-ficha { text-align: center; }
-.compra-precio { margin: 0.4rem 0; font-size: 0.7rem; color: var(--texto); }
-.compra-precio s { opacity: 0.6; font-size: 0.55rem; }  /* precio original tachado */
+.compra-precio { margin: 0.7rem 0; font-size: 0.7rem; color: var(--texto); }
 .compra-descuento {                  /* pegatina "−75 %" */
     padding: 0.15rem 0.35rem;
     background: #4c6b22;             /* verde de las ofertas de Steam */
@@ -943,6 +952,176 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
     font-size: 0.55rem;
     border-radius: 3px;
 }
-.compra-resenas, .compra-motivo { margin: 0.3rem 0; font-size: 0.5rem; color: var(--texto); }
+.compra-resenas, .compra-motivo { margin: 0.6rem 0; font-size: 0.5rem; color: var(--texto); }
 .compra-titulo.azar { color: #ffe600; }  /* tragaperras de la tienda (5.4): amarillo de máquina recreativa */
 .tienda-azar .ficha { color: #ffe600; }  /* borde y halo amarillos (la ficha usa currentColor) */
+
+/* ===================== Navegación (fase E1a): menú fijo y cohete ===================== */
+html { scroll-behavior: smooth; }  /* los saltos del menú se deslizan en vez de aparecer de golpe */
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+[data-menu] { scroll-margin-top: 4.5rem; }  /* al saltar, la barra fija no tapa el título de la sección */
+.menu {
+    position: sticky;                /* sticky: se queda pegada arriba al hacer scroll */
+    top: 0;
+    z-index: 80;                     /* por encima de las tarjetas, por debajo del confeti y los avisos */
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    max-width: 900px;
+    margin: 1.5rem auto 0;
+    padding: 0.7rem;
+    overflow-x: auto;                /* en el móvil, si no caben, se deslizan en horizontal */
+    white-space: nowrap;             /* cada enlace en una sola línea */
+    background: rgba(11, 11, 26, 0.88);  /* fondo oscuro semitransparente */
+    border-bottom: 2px solid var(--cian);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);      /* desenfoca lo que pasa por detrás */
+}
+.menu a {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.55rem;
+    color: var(--texto);
+    text-decoration: none;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+.menu a:hover { border-color: var(--magenta); }
+.menu a.activo {                     /* la sección que estás viendo */
+    color: var(--fondo);
+    background: var(--cian);
+    box-shadow: 0 0 12px var(--cian);
+}
+@media (max-width: 700px) {
+    .menu { justify-content: flex-start; padding-right: 6rem; }  /* hueco a la derecha para 🔇 y 🏆 */
+}
+.cohete {
+    position: fixed;
+    left: 1rem;                      /* abajo a la izquierda: abajo a la derecha salen los logros */
+    bottom: 1rem;
+    z-index: 70;
+    padding: 0.6rem 0.7rem;
+    font-size: 1.4rem;
+    line-height: 1;
+    background: var(--panel);
+    border: 2px solid var(--cian);
+    box-shadow: 0 0 12px var(--cian);
+}
+.cohete[hidden] { display: none; }   /* el estilo de botón no debe ganarle a "hidden" */
+.cohete.despega { animation: despegar 0.9s ease-in forwards; }  /* forwards: se queda donde acaba */
+@keyframes despegar {
+    0% { transform: translateY(0) rotate(-45deg); }  /* el emoji 🚀 apunta en diagonal: lo enderezamos */
+    20% { transform: translateY(6px) rotate(-45deg); box-shadow: 0 14px 18px #ff8c00; }  /* coge impulso: fuego */
+    100% { transform: translateY(-110vh) rotate(-45deg); box-shadow: 0 30px 30px #ff4d00; }  /* sale por arriba */
+}
+@media (prefers-reduced-motion: reduce) { .cohete.despega { animation: none; } }
+
+/* ===================== Librería plegable, buscar y ordenar (fase E1b) ===================== */
+.libreria-plegable { max-width: 720px; margin: 0 auto var(--hueco-seccion); }  /* mismo ancho que la tabla */
+.libreria-plegable > summary {       /* el "botón" que abre y cierra */
+    cursor: pointer;
+    padding: 1rem;
+    text-align: center;
+    color: var(--cian);
+    background: var(--panel);
+    border: 2px solid var(--cian);
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+}
+.libreria-plegable > summary:hover { box-shadow: 0 0 18px var(--cian); }
+.libreria-plegable[open] > summary { margin-bottom: 1.5rem; }  /* [open]: cuando está abierta */
+.libreria-buscar { text-align: center; }
+.libreria-buscar[hidden] { display: none; }
+.libreria-buscar input { width: 100%; max-width: 420px; box-sizing: border-box; }  /* mismo estilo que el formulario */
+th .ordenar {                        /* cabeceras-botón: que parezcan cabeceras, no botones magenta */
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+}
+th .ordenar:hover { transform: none; box-shadow: none; text-shadow: 0 0 8px currentColor; }
+th .ordenar::after { content: " " attr(data-flecha); }  /* ▲ / ▼ de la columna activa (siempre como texto) */
+
+/* ===================== Fichas de compra (fase E2): corazones y ofertas que tiemblan ===================== */
+.compra-vida { margin: 0.6rem 0 0; font-size: 0.9rem; letter-spacing: 0.15em; }  /* barra de vida ❤️🖤 */
+.compra-precio s {                   /* precio original tachado: cuelga torcido como un cartel roto */
+    display: inline-block;           /* inline-block: así se le puede aplicar transform */
+    opacity: 0.6;
+    font-size: 0.55rem;
+    transform-origin: top left;      /* cuelga de la esquina de arriba a la izquierda */
+    animation: colgando 2.5s ease-in-out infinite alternate;  /* alternate: va y vuelve (vaivén) */
+}
+@keyframes colgando { from { transform: rotate(8deg); } to { transform: rotate(14deg); } }
+.compra-descuento { display: inline-block; animation: tiembla-oferta 0.15s infinite; }
+@keyframes tiembla-oferta {          /* --temblor: px de sacudida (más descuento, más fuerte) */
+    25% { transform: translate(var(--temblor), 0) rotate(-2deg); }
+    75% { transform: translate(calc(var(--temblor) * -1), 0) rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {  /* sin movimiento: solo la inclinación, quieta */
+    .compra-descuento, .compra-precio s { animation: none; }
+    .compra-precio s { transform: rotate(10deg); }
+}
+
+/* ===================== Retro (fase E3) ===================== */
+/* Neón estropeado: la letra se apaga a tirones unas pocas veces en cada ciclo de 7 s */
+.neon-roto { animation: fluorescente 7s infinite; }
+@keyframes fluorescente {
+    0%, 60%, 64%, 67%, 100% { opacity: 1; }
+    61%, 63% { opacity: 0.15; text-shadow: none; }  /* se apaga... */
+    62% { opacity: 0.6; }                            /* ...intenta encenderse... */
+    65%, 66% { opacity: 0.2; text-shadow: none; }   /* ...y vuelve a fallar */
+}
+
+/* Botones arcade: relieve de recreativa; al pulsarlos se hunden */
+.arcade {
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.55),        /* el "cuerpo" del botón, debajo */
+                inset 0 2px 0 rgba(255, 255, 255, 0.35),  /* brillo en el borde de arriba */
+                inset 0 -3px 0 rgba(0, 0, 0, 0.25);  /* sombra en el borde de abajo */
+}
+.arcade:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.35),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 16px var(--magenta);
+}
+.arcade:active {                     /* mientras se aprieta: hundido */
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55), inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition-duration: 0.04s;
+}
+
+/* Modo CRT: una capa por encima de todo que NO bloquea los clics (pointer-events: none).
+   Es una capa y no un "filter" en el body porque un filter rompería lo que va fijo (menú, 🚀, logros) */
+html.crt body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 150;                    /* por encima de todo, incluso del pantallazo azul */
+    pointer-events: none;            /* los clics la atraviesan */
+    background:
+        repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),  /* líneas de escaneo */
+        radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.65) 100%);       /* viñeta del tubo */
+    animation: parpadeo-crt 0.12s infinite alternate;
+}
+@keyframes parpadeo-crt { from { opacity: 0.9; } to { opacity: 1; } }  /* brillo que tiembla muy poco */
+html.crt body { text-shadow: 1px 0 rgba(255, 0, 80, 0.35), -1px 0 rgba(0, 220, 255, 0.35); }  /* colores corridos */
+#btn-crt[aria-pressed="true"] { background: #39ff14; }  /* encendido: verde */
+@media (prefers-reduced-motion: reduce) {
+    .neon-roto, html.crt body::after { animation: none; }
+}
+
+/* ===================== Librería (fase E4): HIGH SCORES ===================== */
+/* Cartel de recreativa encima de la tabla */
+.high-scores {
+    text-align: center;
+    font-size: 1rem;
+    color: #ffe600;
+    text-shadow: 0 0 10px #ffe600, 3px 3px 0 var(--magenta);
+    animation: insert-coin 1s steps(1) infinite;  /* steps(1): parpadeo seco, sin transición */
+}
+@keyframes insert-coin { 50% { opacity: 0.25; } }
+/* Podio: medallas y nombre en oro, plata y bronce */
+.medalla { margin-right: 0.4rem; font-size: 1rem; }
+.podio-1 td:first-child { color: #ffd700; text-shadow: 0 0 8px #ffd70088; }
+.podio-2 td:first-child { color: #d9d9e8; text-shadow: 0 0 8px #d9d9e888; }
+.podio-3 td:first-child { color: #e0915a; text-shadow: 0 0 8px #e0915a88; }
+@media (prefers-reduced-motion: reduce) { .high-scores { animation: none; } }

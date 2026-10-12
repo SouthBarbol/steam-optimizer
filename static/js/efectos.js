@@ -489,3 +489,31 @@ if (btnMatchNo) btnMatchNo.addEventListener("click", () => {
     flotante("💔", r.left + r.width / 2, r.top - 20);  // corazón roto que sube y se desvanece
     SFX.error();  // dos notas graves
 });
+
+// ===================== Retro (fase E3): neón estropeado, botones arcade y modo CRT =====================
+// Neón estropeado: en cada título de sección, una letra al azar parpadea como un fluorescente que falla.
+// El título se parte en nodos de TEXTO (nunca HTML), así que es seguro aunque lleve un nombre de Steam
+document.querySelectorAll("h2").forEach(h2 => {
+    const texto = h2.firstChild;
+    if (h2.childNodes.length !== 1 || texto.nodeType !== Node.TEXT_NODE) return;  // solo títulos de texto puro
+    const letras = [...texto.data.matchAll(/\p{L}/gu)];  // \p{L}: cualquier letra (tildes, ñ...), sin emojis
+    if (!letras.length) return;
+    const i = letras[Math.floor(Math.random() * letras.length)].index;  // posición de la letra elegida
+    const rota = document.createElement("span");
+    rota.className = "neon-roto";
+    rota.textContent = texto.data[i];
+    rota.style.animationDelay = `${(Math.random() * 6).toFixed(1)}s`;  // cada título falla a su ritmo
+    h2.replaceChildren(texto.data.slice(0, i), rota, texto.data.slice(i + 1));  // antes + letra + después
+});
+
+// Botones arcade: "clack" al apretar cualquiera (pointerdown: al bajar el dedo o el ratón, no al soltar)
+document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".arcade")) SFX.clack();  // SFX respeta el botón 🔇
+});
+
+// Modo CRT: el botón 📺 pone o quita la clase "crt" en <html> (el CSS dibuja la capa de la tele)
+const btnCrt = document.getElementById("btn-crt");
+if (btnCrt) btnCrt.addEventListener("click", () => {
+    const encendido = document.documentElement.classList.toggle("crt");  // toggle devuelve si quedó puesta
+    btnCrt.setAttribute("aria-pressed", encendido);  // lectores de pantalla: activado o no
+});
