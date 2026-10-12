@@ -206,6 +206,66 @@ y se rellena con C.
 | `MAX_IGUALES` | 2 | juegos con la misma mezcla de géneros en el top |
 | `TOP_RECOMENDACIONES` | 5 | recomendaciones mostradas |
 
-## Pendiente (se añadirá al implementarlo)
+## Ruleta del caos (4.4)
 
-- **Juego aleatorio con descripción absurda** (sub-paso 4.4).
+No es una recomendación: un juego al azar de TODA la librería con una frase absurda por plantillas
+(`ruleta` en `analysis.py`). No puntúa nada.
+
+---
+
+# Algoritmo de compra: "¿Qué comprar?" (paso 5)
+
+Recomienda juegos de la **tienda** que no tenéis ni tú ni tu familia, en dos listas: **mainstream**
+(populares y afines) y **bizarras** (mezclas raras de tus gustos, poco conocidas pero bien valoradas).
+Código: `analysis.py` (sección "Qué comprar") y `buscar_tienda` en `steam_client.py`.
+
+## Fórmula (resumen)
+
+```
+puntos = afinidad × nota de reseñas × plus de oferta
+afinidad        = suma de tus % en las 3 etiquetas en común que más pesan (TOP_AFINIDAD)
+nota de reseñas = multiplicador_valoracion (el mismo del paso 4)
+plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis no gana nada)
+```
+
+## Paso a paso
+
+1. **Tus etiquetas favoritas** (`tus_etiquetas`). De cada juego jugado 2 h o más se toman sus 5
+   etiquetas más votadas que dicen algo de cómo se juega (sin `ETIQUETAS_NEUTRAS` ni avisos de
+   contenido) y cada una suma las horas COMPLETAS del juego. Las **amplias** (Acción, Rol, Estrategia...)
+   suman aparte a mitad de peso (`PESO_AMPLIAS`), sin quitar hueco a las específicas: probado con una
+   librería real, a peso completo copaban el top y la búsqueda devolvía "cualquier juego popular".
+   Resultado: `{etiqueta: % de tus horas}` (no suma 100).
+2. **Búsquedas** (3 llamadas a `IStoreQueryService/Query`, caché de 3 h porque los precios cambian):
+   - Mainstream: tus 5 favoritas, con ALGUNA de ellas, ordenadas por popularidad.
+   - Bizarras (`mezclas_raras`): tu n.º 1 y tu n.º 2, cada una con una etiqueta al azar de tus
+     puestos 6.º-10.º, con LAS DOS a la vez, ordenadas por valoración.
+3. **Filtros** (`candidatos_compra`): fuera lo que ya tenéis tú o tu familia, los que no están a la
+   venta (sin precio y no gratis) y los **adultos** (`ETIQUETAS_ADULTAS` entre sus 5 etiquetas más
+   votadas; la violencia no excluye). Mainstream: ≥ 10.000 reseñas. Bizarras: entre 50 y 10.000
+   reseñas y ≥ 80 % positivas.
+4. **Puntos** (`puntuar_compra`): fórmula de arriba. Las etiquetas amplias dan afinidad a mitad de
+   peso porque ya pesan la mitad en tus %. Con menos de 10 reseñas, la nota no cuenta.
+5. **Elección** (`elegir_compra`): de más a menos puntos (empates al azar), fuera los que no
+   comparten nada contigo, como mucho **1 gratis por lista** (abundan entre los populares), como mucho
+   **1 juego por desarrolladora** en las dos listas juntas (evita dos entregas de la misma saga; idea del
+   usuario: el parecido de nombres se descartó porque falla con subtítulos y confunde "Dead Cells" con
+   "Dead Space"; el publisher, porque los grandes publican juegos sin relación) y
+   variedad con `con_variedad` (máx. 2 con la misma mezcla de etiquetas en común). 5 + 5.
+
+## Constantes (todas en `analysis.py`)
+
+| Constante | Valor | Qué controla |
+|---|---|---|
+| `TOP_ETIQUETAS_GUSTO` | 5 | etiquetas específicas de cada juego que cuentan |
+| `PESO_AMPLIAS` | 0,5 | peso de las etiquetas amplias |
+| `TOP_FAVORITAS` | 5 | favoritas usadas en la búsqueda mainstream |
+| `RAREZAS` | 6.º-10.º | puestos que se mezclan en las bizarras |
+| `MEZCLAS` | 2 | búsquedas de mezclas raras |
+| `UMBRAL_MAINSTREAM` | 10.000 | reseñas: mainstream desde aquí, bizarras por debajo |
+| `MIN_RESENAS_BIZARRA` | 50 | reseñas mínimas de una bizarra |
+| `MIN_PCT_BIZARRA` | 80 % | positivas mínimas de una bizarra |
+| `PLUS_OFERTA` | 0,2 | plus máximo por descuento (100 % = × 1,2) |
+| `MAX_GRATIS` | 1 | gratis como mucho por lista |
+| `TOP_MAINSTREAM` / `TOP_BIZARRAS` | 5 / 5 | recomendaciones mostradas |
+| `TOP_AFINIDAD` | 3 | etiquetas en común que suman afinidad (si sumaran todas, ganarían siempre los juegos con muchas etiquetas, como los de gestión) |

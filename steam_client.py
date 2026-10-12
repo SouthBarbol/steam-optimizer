@@ -244,6 +244,9 @@ def _ficha_tienda(item):
         "precio": compra.get("formatted_final_price"),  # "19,99€"; None = gratis o no está a la venta
         "precio_original": compra.get("formatted_original_price"),  # solo viene si hay descuento
         "descuento": compra.get("discount_pct", 0),  # % de descuento (0 = sin oferta)
+        "gratis": item.get("is_free") is True,  # free-to-play (no traen precio)
+        # Nombres de los estudios que lo hicieron ([] si Steam no los da)
+        "desarrolladores": [d["name"] for d in (item.get("basic_info") or {}).get("developers", []) if d.get("name")],
         "resenas": resenas.get("review_count", 0),
         "pct": resenas.get("percent_positive"),  # % de reseñas positivas
         "etiquetas": [_nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas],
@@ -279,7 +282,8 @@ def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
             },
         },
         "context": {"language": "spanish", "country_code": "ES"},  # textos en español y precios en euros
-        "data_request": {"include_all_purchase_options": True, "include_reviews": True, "include_tag_count": 20},
+        "data_request": {"include_all_purchase_options": True, "include_reviews": True, "include_tag_count": 20,
+                         "include_basic_info": True},  # basic_info: desarrolladores (para no repetir sagas)
     }
     try:
         respuesta = requests.get(QUERY_URL, params={"input_json": json.dumps(consulta)}, timeout=15)

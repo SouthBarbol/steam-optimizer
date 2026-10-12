@@ -727,3 +727,152 @@ def ruleta(juegos, etiquetas):
         )
         fichas.append({"nombre": j.get("name", "?"), "appid": j["appid"], "frase": frase})
     return fichas
+
+
+# ===================== Qué comprar (paso 5.2) =====================
+TOP_ETIQUETAS_GUSTO = 5  # etiquetas de cada juego que cuentan (las más votadas, sin las neutras)
+TOP_FAVORITAS = 5  # tus etiquetas favoritas que se usan en la búsqueda mainstream
+RAREZAS = (6, 10)  # puestos de tus etiquetas (del 6.º al 10.º) que se mezclan con tus favoritas
+MEZCLAS = 2  # búsquedas de mezclas raras (tu n.º 1 y tu n.º 2, cada una con una rareza al azar)
+# Probado con una librería real: a peso completo estas salían arriba en casi todo y convertían la búsqueda
+# en "cualquier juego popular". Cuentan, pero a mitad de peso y sin quitar hueco a las específicas.
+ETIQUETAS_AMPLIAS = {
+    "Acción", "Aventura", "Estrategia", "Rol", "Casuales", "Simulación", "Deportes", "Carreras", "Puzles",
+}
+PESO_AMPLIAS = 0.5  # las etiquetas amplias cuentan a la mitad (con 0,3 casi desaparecían)
+# Avisos de contenido: no son un gusto (evita mezclas como "Estrategia + Contenido sexual")
+ETIQUETAS_CONTENIDO = {"Contenido sexual", "Desnudos", "Hentai", "Sexual Themes", "Violentos", "Sangrientos"}
+# Juegos que NO se recomiendan si alguna de estas está entre sus 5 etiquetas más votadas (la página
+# puede verla la familia). La violencia no excluye
+ETIQUETAS_ADULTAS = {"Contenido sexual", "Desnudos", "Hentai", "Sexual Themes"}
+TOP_ADULTAS = 5  # cuántas etiquetas más votadas se miran para decidir si un juego es adulto
+NO_SON_GUSTO = ETIQUETAS_NEUTRAS | ETIQUETAS_AMPLIAS | ETIQUETAS_CONTENIDO  # "|" une conjuntos
+
+
+def principales(etiquetas_juego, n=TOP_ETIQUETAS_GUSTO):
+    """Las n etiquetas más votadas de un juego que dicen algo de tus gustos (sin neutras, amplias
+    ni avisos de contenido)."""
+    return [e for e in etiquetas_juego if e not in NO_SON_GUSTO][:n]
+
+
+def amplias(etiquetas_juego, n=TOP_ETIQUETAS_GUSTO):
+    """Las etiquetas amplias del juego que están entre sus n más votadas (sin contar neutras ni avisos)."""
+    utiles = [e for e in etiquetas_juego if e not in ETIQUETAS_NEUTRAS and e not in ETIQUETAS_CONTENIDO][:n]
+    return [e for e in utiles if e in ETIQUETAS_AMPLIAS]
+
+
+def tus_etiquetas(juegos, etiquetas):
+    """Tus etiquetas favoritas: [(etiqueta, % de tus horas), ...] de mayor a menor.
+
+    Solo juegos jugados de verdad (2 h o más) y con etiquetas. Cada una de sus etiquetas principales suma
+    las horas COMPLETAS del juego (las amplias, a mitad de peso), así que los % no suman 100.
+    """
+    minutos_por = {}  # {etiqueta: minutos}
+    total = 0  # minutos de los juegos que cuentan
+    for j in juegos:
+        minutos = j.get("playtime_forever") or 0  # "or 0": None (desconocido) cuenta como 0
+        tags = etiquetas.get(j["appid"], [])
+        suyas, anchas = principales(tags), amplias(tags)  # específicas y amplias, por separado
+        if minutos < UMBRAL_ABANDONO or not (suyas or anchas):  # abandonado o sin etiquetas: no cuenta
+            continue
+        total += minutos
+        for e in suyas:
+            minutos_por[e] = minutos_por.get(e, 0) + minutos  # específicas: horas completas (.get: 0 si no estaba)
+        for e in anchas:
+            minutos_por[e] = minutos_por.get(e, 0) + minutos * PESO_AMPLIAS  # amplias: a la mitad
+    if not total:
+        return []
+    pcts = [(e, round(m * 100 / total)) for e, m in minutos_por.items()]
+    return sorted(pcts, key=lambda par: par[1], reverse=True)  # la que más pesa, primero
+
+
+def mezclas_raras(favoritas, n=MEZCLAS):
+    """Parejas [favorita, rareza] para buscar bizarras: tu n.º 1, tu n.º 2... cada una con una etiqueta
+    al azar de tus puestos 6.º a 10.º (distinta en cada pareja). [] si tienes menos de 6 etiquetas."""
+    nombres = [e for e, _ in favoritas]  # solo los nombres, sin los %
+    rarezas = nombres[RAREZAS[0] - 1:RAREZAS[1]]  # [5:10] = puestos 6.º a 10.º
+    elegidas = random.sample(rarezas, min(n, len(rarezas)))  # sample: distintas y al azar
+    return [[nombres[i], rara] for i, rara in enumerate(elegidas)]  # i = 0 -> tu n.º 1, i = 1 -> tu n.º 2
+
+
+UMBRAL_MAINSTREAM = 10000  # reseñas: mainstream con al menos estas; bizarras, con menos
+MIN_RESENAS_BIZARRA = 50  # con menos, el % no es fiable: una "joya" con 3 reseñas puede ser cualquier cosa
+MIN_PCT_BIZARRA = 80  # % de positivas mínimo de una bizarra (rara, pero buena)
+PLUS_OFERTA = 0.2  # descuento del 100 % = puntos × 1,2; del 50 % = × 1,1 (el PRECIO no puntúa)
+MAX_GRATIS = 1  # gratis como mucho por lista (abundan entre los populares)
+TOP_MAINSTREAM, TOP_BIZARRAS = 5, 5
+# Solo suman las 3 etiquetas en común que más pesan: si sumaran todas, ganarían siempre los juegos con
+# MUCHAS etiquetas tuyas (gestión, estrategia) y un FPS puro nunca podría competir (probado con datos reales)
+TOP_AFINIDAD = 3
+
+
+def es_adulto(juego):
+    """True si alguna de sus 5 etiquetas más votadas es de contenido sexual."""
+    return any(e in ETIQUETAS_ADULTAS for e in juego["etiquetas"][:TOP_ADULTAS])
+
+
+def candidatos_compra(tienda, tuyos):
+    """Quita repetidos, los que ya tenéis tú o tu familia (tuyos: set de appids), los adultos
+    y los que no están a la venta (sin precio y no gratis)."""
+    vistos, lista = set(), []
+    for j in tienda:
+        if j["appid"] in tuyos or j["appid"] in vistos or es_adulto(j) or not (j["precio"] or j["gratis"]):
+            continue
+        vistos.add(j["appid"])
+        lista.append(j)
+    return lista
+
+
+def puntuar_compra(juego, tus_pct):
+    """Copia del juego con "puntos" = afinidad × nota de reseñas × plus de oferta, y "motivo"."""
+    suyas = principales(juego["etiquetas"]) + amplias(juego["etiquetas"])  # las amplias ya pesan la mitad en tus_pct
+    comunes = sorted((e for e in suyas if e in tus_pct), key=lambda e: tus_pct[e], reverse=True)
+    comunes = comunes[:TOP_AFINIDAD]  # solo las 3 que más pesan (también son el motivo y la mezcla de variedad)
+    afinidad = sum(tus_pct[e] for e in comunes)  # suma de tus % en lo que compartís
+    pct = juego["pct"] if juego["resenas"] >= MIN_RESENAS_NOTA else None  # pocas reseñas: sin efecto
+    oferta = 1 + PLUS_OFERTA * juego["descuento"] / 100  # gratis: descuento 0, así que × 1 (no gana nada)
+    return {**juego, "puntos": afinidad * multiplicador_valoracion(pct) * oferta,
+            "comunes": comunes, "motivo": [(e, tus_pct[e]) for e in comunes]}
+
+
+def elegir_compra(puntuados, n, estudios):
+    """Los n mejores: sin afinidad fuera, como mucho MAX_GRATIS gratis, 1 juego por desarrolladora
+    (evita dos entregas de la misma saga) y con variedad (con_variedad).
+
+    estudios: desarrolladoras ya elegidas en otra lista (set); se le añaden las de los elegidos.
+    """
+    random.shuffle(puntuados)  # a igualdad de puntos, al azar
+    puntuados.sort(key=lambda r: r["puntos"], reverse=True)
+    lista, gratis, vistos = [], 0, set(estudios)  # set(...): copia, para no tocar 'estudios' todavía
+    for r in puntuados:
+        if r["puntos"] <= 0:  # nada en común contigo
+            continue
+        suyos = set(r.get("desarrolladores", []))  # .get: los de la caché antigua no traen el campo
+        if suyos & vistos:  # "&": estudios en común -> misma saga o mismo estudio: ya tiene representante
+            continue
+        if r["gratis"]:
+            if gratis >= MAX_GRATIS:
+                continue
+            gratis += 1
+        vistos |= suyos  # "|=": añade sus estudios a los vistos
+        lista.append(r)
+    elegidos = con_variedad(lista, n)
+    for r in elegidos:
+        estudios.update(r.get("desarrolladores", []))  # la otra lista ya no podrá repetirlos
+    return elegidos
+
+
+def que_comprar(populares, raras, favoritas, tuyos):
+    """Qué comprar: {"mainstream": [...], "bizarras": [...]}.
+
+    populares: búsqueda mainstream (buscar_tienda); raras: búsquedas de mezclas raras unidas en una lista;
+    favoritas: tus_etiquetas(...); tuyos: appids de la librería unida (tú + familia).
+    """
+    tus_pct = dict(favoritas)  # {etiqueta: %}
+    main = [puntuar_compra(j, tus_pct) for j in candidatos_compra(populares, tuyos)
+            if j["resenas"] >= UMBRAL_MAINSTREAM]
+    biz = [puntuar_compra(j, tus_pct) for j in candidatos_compra(raras, tuyos)
+           if MIN_RESENAS_BIZARRA <= j["resenas"] < UMBRAL_MAINSTREAM and (j["pct"] or 0) >= MIN_PCT_BIZARRA]
+    estudios = set()  # desarrolladoras ya recomendadas (compartido: primero mainstream, luego bizarras)
+    return {"mainstream": elegir_compra(main, TOP_MAINSTREAM, estudios),
+            "bizarras": elegir_compra(biz, TOP_BIZARRAS, estudios)}

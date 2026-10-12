@@ -165,7 +165,20 @@ la librería de un usuario.
   Luego: paso 5 (qué comprar). Sub-pasos: 5.0 investigación (HECHO) · 5.1 (HECHO y probado contra Steam)
   `buscar_tienda(etiquetas, todas, orden, cantidad)` en `steam_client.py` (recibe NOMBRES de etiquetas;
   caché 3 h; `None` si falla; precio None = gratis/F2P o no a la venta). Usuario eligió opción A: "tus
-  etiquetas favoritas" = etiquetas de tus juegos más jugados, ponderadas por horas · 5.2 puntuación y reparto mainstream/bizarras · 5.3 interfaz · 5.4 juego al azar de
+  etiquetas favoritas" = etiquetas de tus juegos más jugados, ponderadas por horas · 5.2 lógica
+  ACORDADA (pasarla a `ALGORITMO.md`, sección "Qué comprar"): favoritas = 5 etiquetas principales sin
+  neutras de tus juegos de 2 h o más, horas completas a cada una; 3 búsquedas (mainstream: top 5 favoritas
+  con "alguna", populares; bizarras: 2 mezclas n.º 1/n.º 2 + rareza de puestos 6-10 con "todas",
+  valorados); fuera lo que tenéis tú y la familia; mainstream ≥ 10.000 reseñas; bizarras < 10.000 y
+  ≥ 80 %; puntos = afinidad (tus % en las 3 comunes que más pesan) × `multiplicador_valoracion` × oferta (hasta ×1,2 por
+  descuento; el PRECIO no puntúa: lo gratis no gana puntos); máx. 1 gratis por lista; 5 + 5 con
+  variedad. 5.2a HECHO y probado: `principales`, `tus_etiquetas`, `mezclas_raras`. Tras probar con la
+  librería real del usuario: `ETIQUETAS_AMPLIAS` (Acción, Rol, Estrategia...) cuentan a mitad de peso
+  (`PESO_AMPLIAS` = 0,5, función `amplias`, sin quitar hueco a las 5 específicas; idea del usuario) y
+  `ETIQUETAS_CONTENIDO` no cuentan como gusto; el usuario pidió EXCLUIR juegos adultos (`ETIQUETAS_ADULTAS`
+  en sus 5 etiquetas más votadas; la violencia no excluye). 5.2b HECHO y probado (datos falsos y
+  librería real): `que_comprar` y ayudantes; `gratis` (`is_free`) en `buscar_tienda`; nuevo
+  `MIN_RESENAS_BIZARRA` = 50; `TOP_AFINIDAD` = 3 y 5 bizarras (pedido del usuario); máx. 1 juego por DESARROLLADORA en las dos listas (campo `desarrolladores` vía `include_basic_info`; evita sagas repetidas); documentado en `ALGORITMO.md`. SIGUIENTE: 5.3 interfaz · 5.4 juego al azar de
   la tienda con frase · 5.5 efectos/logros/docs.
   Resultado 5.0: `IStoreQueryService/Query/v1` (input_json, SIN API key) sirve para todo en UNA llamada:
   filtros `released_only`, `type_filters.include_games`, `tagids_must_match` (dentro de un grupo = O;
