@@ -917,3 +917,30 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 .ruleta-otra[hidden] { display: none; }
 .ruleta .ficha.girando img { filter: blur(3px); }  /* carátula desenfocada mientras gira la ruleta (4.5b) */
 .centro { text-align: center; }
+
+/* ===================== ¿Qué comprar? (paso 5.3) ===================== */
+.compra {
+    max-width: 900px;                /* mismo ancho que el resto de cuadros */
+    margin: 1.5rem auto;             /* centrado */
+    color: var(--cian);              /* color del borde y del título */
+}
+.compra-titulo { margin: 1.2rem 0 0.4rem; font-size: 0.7rem; color: var(--cian); text-align: center; }
+.compra-titulo.bizarra { color: #b967ff; }  /* morado: lo raro */
+.compra-rejilla {                    /* fichas en rejilla: tantas columnas de 240 px como quepan */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 0.8rem;
+}
+.compra-rejilla.bizarra .ficha { color: #b967ff; }  /* borde y halo morados (la ficha usa currentColor) */
+.compra-ficha { text-align: center; }
+.compra-precio { margin: 0.4rem 0; font-size: 0.7rem; color: var(--texto); }
+.compra-precio s { opacity: 0.6; font-size: 0.55rem; }  /* precio original tachado */
+.compra-descuento {                  /* pegatina "−75 %" */
+    padding: 0.15rem 0.35rem;
+    background: #4c6b22;             /* verde de las ofertas de Steam */
+    color: #beee11;
+    font-size: 0.55rem;
+    border-radius: 3px;
+}
+.compra-resenas, .compra-motivo { margin: 0.3rem 0; font-size: 0.5rem; color: var(--texto); }

@@ -11,10 +11,11 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
     abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
-    ruleta,
+    ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
+    buscar_tienda, ORDEN_VALORADOS,
 )
 
 app = Flask(__name__)  # crea la aplicación web
@@ -140,6 +141,7 @@ def index():
         tarjetas=tarjetas,
         recomendacion=recomendacion,  # qué jugar (calculado arriba)
         ruleta=ruleta(juegos, etiquetas),  # ruleta del caos: todos los juegos con su frase absurda
+        compra=pedir_compra(juegos, etiquetas),  # qué comprar (paso 5): mainstream y bizarras de la tienda
         logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
         # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
         ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),
@@ -208,6 +210,27 @@ def pedir_generos_presupuesto(lista, generos, presupuesto):
     # random.sample elige k elementos al azar sin repetir; min(): por si quedan menos que el presupuesto
     elegidos = gratis + random.sample(nuevos, min(presupuesto, len(nuevos)))
     return {**generos, **{a: get_genres(a) for a in elegidos}}  # ** "vuelca" ambos diccionarios en uno
+
+
+def pedir_compra(juegos, etiquetas):
+    """Qué comprar (paso 5): tus etiquetas favoritas -> 3 búsquedas en la tienda -> que_comprar.
+    juegos: librería unida (tú + familia: lo que ya tenéis no se recomienda). None si no hay gustos."""
+    favoritas = tus_etiquetas(juegos, etiquetas)
+    if not favoritas:  # sin juegos jugados con etiquetas no sabemos qué te gusta
+        return None
+    populares = buscar_tienda([e for e, _ in favoritas[:TOP_FAVORITAS]])  # mainstream: alguna de tus 5
+    fallo = populares is None  # None = Steam no respondió
+    mezclas = mezclas_raras(favoritas)
+    raras = []
+    for mezcla in mezclas:  # bizarras: cada mezcla rara, con las dos etiquetas a la vez
+        encontrados = buscar_tienda(mezcla, todas=True, orden=ORDEN_VALORADOS)
+        if encontrados is None:
+            fallo = True
+        else:
+            raras += encontrados  # += une las listas
+    compra = que_comprar(populares or [], raras, favoritas, {j["appid"] for j in juegos})
+    compra.update(mezclas=mezclas, aviso=fallo)  # para la plantilla: qué se mezcló y si algo falló
+    return compra
 
 
 def hexagono(notas, radio=70):

@@ -344,6 +344,46 @@
                 </div>
             </section>
         {% endif %}
+
+        {# ===== ¿Qué comprar? (paso 5): juegos de la tienda que no tenéis. Lo pinta TODO Jinja2 con
+             escapado automático (nombre y precio vienen de Steam: nada de |safe) ===== #}
+        {# Una ficha de compra (macro = trozo de plantilla reutilizable, como una función) #}
+        {% macro ficha_compra(j) %}
+            <article class="ficha compra-ficha">
+                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ j.appid }}/header.jpg" alt="Carátula de {{ j.nombre }}" loading="lazy">
+                <h3 class="ficha-nombre">{{ j.nombre }}</h3>
+                <p class="compra-precio">
+                    {% if j.gratis %}<b>GRATIS</b>
+                    {% else %}
+                        {% if j.descuento %}<span class="compra-descuento">−{{ j.descuento }} %</span> <s>{{ j.precio_original }}</s>{% endif %}
+                        <b>{{ j.precio }}</b>
+                    {% endif %}
+                </p>
+                {# "{:,}".format pone comas de millar; las cambiamos por puntos (26,673 -> 26.673) #}
+                <p class="compra-resenas">{{ j.pct }} % de {{ "{:,}".format(j.resenas)|replace(",", ".") }} reseñas positivas</p>
+                <p class="compra-motivo">Comparte contigo:
+                    {% for e, pct in j.motivo %}<b>{{ e }}</b> {{ pct }} %{% if not loop.last %} · {% endif %}{% endfor %}</p>
+                <a class="ver-steam" href="https://store.steampowered.com/app/{{ j.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+            </article>
+        {% endmacro %}
+        <section id="compra" class="stats compra">
+            <h2>🛒 ¿Qué comprar?</h2>
+            {% if compra and (compra.mainstream or compra.bizarras) %}
+                {% if compra.aviso %}<p class="error">La tienda de Steam no ha respondido del todo: puede que falten recomendaciones.</p>{% endif %}
+                {% if compra.mainstream %}
+                    <h3 class="compra-titulo">Mainstream: lo que juega todo el mundo y encaja contigo</h3>
+                    <div class="compra-rejilla">{% for j in compra.mainstream %}{{ ficha_compra(j) }}{% endfor %}</div>
+                {% endif %}
+                {% if compra.bizarras %}
+                    <h3 class="compra-titulo bizarra">Bizarras: joyas raras que mezclan tus gustos</h3>
+                    {# m|join(" + "): une las dos etiquetas de cada mezcla #}
+                    <p class="match-contador">Mezclas raras de hoy: {% for m in compra.mezclas %}{{ m|join(" + ") }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+                    <div class="compra-rejilla bizarra">{% for j in compra.bizarras %}{{ ficha_compra(j) }}{% endfor %}</div>
+                {% endif %}
+            {% else %}
+                <p class="match-vacio">No hay recomendaciones de compra: hacen falta juegos jugados (2 h o más) con etiquetas en Steam{% if compra and compra.aviso %}, y la tienda de Steam no ha respondido{% endif %}.</p>
+            {% endif %}
+        </section>
     {% endif %}
 
     {# Si hay juegos, dibujamos la tabla #}

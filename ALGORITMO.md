@@ -251,7 +251,7 @@ plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis 
    **1 juego por desarrolladora** en las dos listas juntas (evita dos entregas de la misma saga; idea del
    usuario: el parecido de nombres se descartó porque falla con subtítulos y confunde "Dead Cells" con
    "Dead Space"; el publisher, porque los grandes publican juegos sin relación) y
-   variedad con `con_variedad` (máx. 2 con la misma mezcla de etiquetas en común). 5 + 5.
+   variedad con `con_variedad` (máx. 2 con la misma mezcla de etiquetas en común). 6 + 6 (la rejilla queda completa).
 
 ## Constantes (todas en `analysis.py`)
 
@@ -267,5 +267,5 @@ plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis 
 | `MIN_PCT_BIZARRA` | 80 % | positivas mínimas de una bizarra |
 | `PLUS_OFERTA` | 0,2 | plus máximo por descuento (100 % = × 1,2) |
 | `MAX_GRATIS` | 1 | gratis como mucho por lista |
-| `TOP_MAINSTREAM` / `TOP_BIZARRAS` | 5 / 5 | recomendaciones mostradas |
+| `TOP_MAINSTREAM` / `TOP_BIZARRAS` | 6 / 6 | recomendaciones mostradas |
 | `TOP_AFINIDAD` | 3 | etiquetas en común que suman afinidad (si sumaran todas, ganarían siempre los juegos con muchas etiquetas, como los de gestión) |

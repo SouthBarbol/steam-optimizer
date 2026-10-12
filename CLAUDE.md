@@ -171,14 +171,18 @@ la librería de un usuario.
   con "alguna", populares; bizarras: 2 mezclas n.º 1/n.º 2 + rareza de puestos 6-10 con "todas",
   valorados); fuera lo que tenéis tú y la familia; mainstream ≥ 10.000 reseñas; bizarras < 10.000 y
   ≥ 80 %; puntos = afinidad (tus % en las 3 comunes que más pesan) × `multiplicador_valoracion` × oferta (hasta ×1,2 por
-  descuento; el PRECIO no puntúa: lo gratis no gana puntos); máx. 1 gratis por lista; 5 + 5 con
+  descuento; el PRECIO no puntúa: lo gratis no gana puntos); máx. 1 gratis por lista; 6 + 6 con
   variedad. 5.2a HECHO y probado: `principales`, `tus_etiquetas`, `mezclas_raras`. Tras probar con la
   librería real del usuario: `ETIQUETAS_AMPLIAS` (Acción, Rol, Estrategia...) cuentan a mitad de peso
   (`PESO_AMPLIAS` = 0,5, función `amplias`, sin quitar hueco a las 5 específicas; idea del usuario) y
   `ETIQUETAS_CONTENIDO` no cuentan como gusto; el usuario pidió EXCLUIR juegos adultos (`ETIQUETAS_ADULTAS`
   en sus 5 etiquetas más votadas; la violencia no excluye). 5.2b HECHO y probado (datos falsos y
   librería real): `que_comprar` y ayudantes; `gratis` (`is_free`) en `buscar_tienda`; nuevo
-  `MIN_RESENAS_BIZARRA` = 50; `TOP_AFINIDAD` = 3 y 5 bizarras (pedido del usuario); máx. 1 juego por DESARROLLADORA en las dos listas (campo `desarrolladores` vía `include_basic_info`; evita sagas repetidas); documentado en `ALGORITMO.md`. SIGUIENTE: 5.3 interfaz · 5.4 juego al azar de
+  `MIN_RESENAS_BIZARRA` = 50; `TOP_AFINIDAD` = 3 y 6 + 6 (pedido del usuario: rejilla completa); máx. 1 juego por DESARROLLADORA en las dos listas (campo `desarrolladores` vía `include_basic_info`; evita sagas repetidas); documentado en `ALGORITMO.md`. 5.3 HECHO (probado con datos falsos y por el usuario en
+  navegador): `pedir_compra` en `app.py` (3 búsquedas; aviso si alguna falla), sección "🛒 ¿Qué comprar?"
+  bajo la ruleta (macro `ficha_compra`, rejillas cian/morado, precio tachado, "−X %", GRATIS, motivo).
+  Las pruebas de extremo a extremo deben sustituir también `app.buscar_tienda`. SIGUIENTE (en orden):
+  5.4 juego al azar de
   la tienda con frase · 5.5 efectos/logros/docs.
   Resultado 5.0: `IStoreQueryService/Query/v1` (input_json, SIN API key) sirve para todo en UNA llamada:
   filtros `released_only`, `type_filters.include_games`, `tagids_must_match` (dentro de un grupo = O;

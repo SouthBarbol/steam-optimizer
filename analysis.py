@@ -800,7 +800,7 @@ MIN_RESENAS_BIZARRA = 50  # con menos, el % no es fiable: una "joya" con 3 rese�
 MIN_PCT_BIZARRA = 80  # % de positivas mínimo de una bizarra (rara, pero buena)
 PLUS_OFERTA = 0.2  # descuento del 100 % = puntos × 1,2; del 50 % = × 1,1 (el PRECIO no puntúa)
 MAX_GRATIS = 1  # gratis como mucho por lista (abundan entre los populares)
-TOP_MAINSTREAM, TOP_BIZARRAS = 5, 5
+TOP_MAINSTREAM, TOP_BIZARRAS = 6, 6  # 6: la rejilla queda completa (3 + 3, 2 + 2 + 2 o 1 por fila)
 # Solo suman las 3 etiquetas en común que más pesan: si sumaran todas, ganarían siempre los juegos con
 # MUCHAS etiquetas tuyas (gestión, estrategia) y un FPS puro nunca podría competir (probado con datos reales)
 TOP_AFINIDAD = 3
