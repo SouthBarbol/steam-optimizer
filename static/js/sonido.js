@@ -70,6 +70,7 @@ const SFX = {
     tic: () => tono(1500, 0.015, "square", 0, 0.03),  // ruleta tragaperras: cada vuelta (4.5b)
     jackpot: () => { for (let i = 0; i < 8; i++) tono(988 + i * 90, 0.07, "square", i * 0.07); },  // 5.5a: cascada de monedas
     palanca: () => { for (let i = 0; i < 4; i++) ruido(0.02, 0.2, 2500, i * 0.05); tono(120, 0.12, "square", 0.22, 0.1); },  // 5.5b: cric-cric-clonk
+    zumbido: () => { tono(180, 0.6, "sawtooth", 0, 0.03, 230); tono(187, 0.6, "sawtooth", 0, 0.03, 210); },  // 5.6c: bzzz de moscas
     moneda: () => { tono(988, 0.08); tono(1319, 0.35, "square", 0.08); },  // al activar el sonido
     fanfarria: () => {  // logro desbloqueado: tres notas subiendo y una larga
         [523, 659, 784].forEach((f, i) => tono(f, 0.14, "square", i * 0.11));

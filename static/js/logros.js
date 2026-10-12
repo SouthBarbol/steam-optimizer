@@ -113,6 +113,10 @@ if (zonaLogros) {  // todo lo de abajo, solo en la página de resultados
     document.querySelectorAll(".compra-rejilla.bizarra .ver-steam").forEach(a =>
         a.addEventListener("click", () => desbloquear("gusto")));
 
+    // Estómago de hierro (5.6c): abrir en Steam un juego del rincón de la pesturria
+    document.querySelectorAll("#malisimo .ver-steam").forEach(a =>
+        a.addEventListener("click", () => desbloquear("estomago")));
+
     // Explorador del abismo: llegar al final de la página (con 5 px de margen)
     window.addEventListener("scroll", () => {
         if (innerHeight + scrollY >= document.documentElement.scrollHeight - 5) desbloquear("abismo");

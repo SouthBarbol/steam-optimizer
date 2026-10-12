@@ -206,6 +206,10 @@ if (!calma && bizarras.length) setInterval(() => {
     if (Math.random() < 0.15) reanimar(bizarras[Math.floor(Math.random() * bizarras.length)], "tele-rota");
 }, 8000);
 
+// --- Moscas de la pesturria (5.6c): zumban al pasar el ratón por la ficha ---
+const fichaPesturria = document.querySelector("#malisimo .ficha");  // null si no hay sección
+if (fichaPesturria) fichaPesturria.addEventListener("mouseenter", () => SFX.zumbido());
+
 // ===================== Efectos bizarros (paso 3.6e) =====================
 // --- Modo caos: SOLO manual (botón "NO PULSAR" o código Konami). 7 s de colores, bamboleo y "ay ay ay" ---
 let enCaos = false;  // evita que se active dos veces a la vez
@@ -380,7 +384,9 @@ document.querySelectorAll(".stats[data-menacing] .btn-revelar").forEach(boton =>
 });
 
 // --- To Be Continued ⟸: al llegar al final de la página (una vez por visita) ---
-let tbcVisto = false;
+// Solo con resultados (#trofeos solo existe tras analizar un Steam ID): la página de inicio es tan corta
+// que ya estás "al final" nada más entrar
+let tbcVisto = !document.getElementById("trofeos");  // sin resultados: como si ya se hubiera visto
 addEventListener("scroll", () => {
     if (tbcVisto || innerHeight + scrollY < document.documentElement.scrollHeight - 5) return;
     tbcVisto = true;

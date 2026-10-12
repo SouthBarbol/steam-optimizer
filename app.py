@@ -11,11 +11,11 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
     abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
-    ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS, tragaperras_tienda,
+    ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS, tragaperras_tienda, malisimos,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
-    buscar_tienda, ORDEN_VALORADOS, tienda_al_azar,
+    buscar_tienda, ORDEN_VALORADOS, tienda_al_azar, mas_vendidos,
 )
 
 app = Flask(__name__)  # crea la aplicación web
@@ -132,6 +132,8 @@ def index():
     poner_bios(recomendacion["recomendados"])  # una bio absurda por ficha de Steam Match
     poner_retos(recomendacion["atreverse"])  # una frase absurda por juego de "¿Te atreves?"
 
+    tuyos = {j["appid"] for j in juegos}  # appids que tenéis tú o tu familia (no se recomiendan)
+
     # pasamos juegos, avisos (familiares que fallaron), colores y tarjetas a la plantilla
     return render_template(
         "index.html",
@@ -143,7 +145,8 @@ def index():
         ruleta=ruleta(juegos, etiquetas),  # ruleta del caos: todos los juegos con su frase absurda
         compra=pedir_compra(juegos, etiquetas),  # qué comprar (paso 5): mainstream y bizarras de la tienda
         # tragaperras de la tienda (5.4): juegos al azar de Steam ("or []": si Steam falla, no sale la tarjeta)
-        azar=tragaperras_tienda(tienda_al_azar() or [], {j["appid"] for j in juegos}),
+        azar=tragaperras_tienda(tienda_al_azar() or [], tuyos),
+        malo=malisimos(mas_vendidos() or [], tuyos),  # el juego malísimo (5.6): famosos por malos
         logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
         # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
         ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),

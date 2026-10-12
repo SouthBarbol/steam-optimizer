@@ -19,7 +19,10 @@ a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
 - Qué comprar: 6 juegos mainstream (populares y afines a tus etiquetas favoritas) y 6 bizarros
   (mezclas raras de tus gustos, poco conocidos pero bien valorados), con precio, descuento y reseñas.
   Nunca recomienda lo que ya tenéis tú o tu familia ni juegos para adultos. Detalle en `ALGORITMO.md`.
-- Tragaperras de la tienda: un juego al azar de toda la tienda de Steam con una frase absurda.
+- Tragaperras de la tienda: un juego al azar de toda la tienda de Steam con una frase absurda
+  (y premio si sale una joya, o trombón si sale un desastre).
+- El rincón de la pesturria: juegos famosos por malos (muchísimas reseñas y casi todas negativas),
+  uno al azar con una frase de bar. Con moscas.
 - Navegación: menú fijo de secciones, botón para volver arriba y librería plegable con buscador,
   orden por nombre u horas y tabla de récords (HIGH SCORES).
 - Personalidad: efectos, sonidos sintetizados (empiezan silenciados), logros absurdos,
@@ -28,8 +31,9 @@ a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
 ## Privacidad
 
 No almacenamos ningún dato. Solo consultamos tu perfil público de Steam.
-El servidor guarda en memoria los géneros, etiquetas y reseñas de cada juego, y las búsquedas en la
-tienda durante 3 horas (datos de los juegos, no tuyos), para no repetir consultas.
+El servidor guarda en memoria los géneros, etiquetas y reseñas de cada juego, las búsquedas en la
+tienda durante 3 horas y la lista de los más vendidos durante 24 horas (datos de los juegos, no tuyos),
+para no repetir consultas.
 Las carátulas las descarga tu navegador del CDN de Steam.
 
 ## Limitaciones
@@ -48,6 +52,8 @@ Las carátulas las descarga tu navegador del CDN de Steam.
 - "Qué comprar" usa la búsqueda de la tienda de Steam (`IStoreQueryService/Query`), poco
   documentada: el orden por popularidad o valoración se dedujo probando y puede cambiar.
   Los precios son los de España (euros) y se refrescan cada 3 horas.
+- El rincón de la pesturria busca entre los 5.000 juegos más vendidos de siempre: la primera visita
+  de cada día tarda unos 13 s más.
 
 ## Instalación
 

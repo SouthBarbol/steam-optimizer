@@ -282,3 +282,15 @@ Premios (5.5a): cada ficha lleva `premio` = "jackpot" si tiene `UMBRAL_JACKPOT` 
 positivas (monedas y logro Jackpot), "gatillazo" si baja de `UMBRAL_GATILLAZO` = 40 % (trombón) o nada
 (también si Steam no da el %), y `antiguo` si es de antes de `ANIO_ARQUEOLOGO` = 2005 (logro Arqueólogo).
 Solo cuentan al girar, no con el juego que sale al cargar la página.
+
+## El rincón de la pesturria (5.6)
+
+Tampoco es una recomendación: es un juego famoso por malo, al azar. `Query` no permite filtrar por
+reseñas y su orden "peor valorados" (`sort` 22) empieza por miles de juegos con 0 % y casi sin reseñas,
+así que se parte de los más vendidos de siempre (`sort` 11): `mas_vendidos` trae 5 páginas de 1.000
+(`PAGINAS_VENDIDOS`) y las guarda 24 h. `malisimos` aplica los filtros de "Qué comprar"
+(`candidatos_compra`) y se queda con los que tienen menos de `UMBRAL_MALISIMO` = 40 % de reseñas
+positivas (en Steam, "Mayormente negativas" o peor) y al menos `MIN_RESENAS_MALISIMO` = 500 reseñas, para
+que sean desastres conocidos y no juegos que nadie ha probado. En octubre de 2026 salían 29 (Kerbal Space
+Program 2, C&C 4, FlatOut 3, RollerCoaster Tycoon World...). Cada uno lleva una frase de
+`PLANTILLAS_MALISIMO` y el detalle "precio · X % de N reseñas lo odian"; "Otra" sortea en el navegador.

@@ -212,6 +212,8 @@ LOGROS = {
     "jackpot": ("💰", "Jackpot", "La tragaperras de la tienda te ha dado una joya del 95 %. Ya puedes retirarte."),  # 5.5a
     "arqueologo": ("🦴", "Arqueólogo", "Te ha salido un juego de antes de 2005. Huele a disquete."),  # 5.5a
     "gusto": ("🦄", "Gusto raro", "Has abierto una bizarra. Tu algoritmo y tú tenéis que hablar."),  # 5.5d
+    "estomago": ("🤢", "Estómago de hierro", "Has abierto una pesturria en Steam. Tu médico quiere hablar contigo."),  # 5.6c
+    "catador": ("🍷", "Catador de pesturria", "10 bazofias distintas. Notas de cartón mojado y final a calcetín."),  # 5.6c
 }
 
 # Umbrales de los logros que dependen de tus datos (ajustables)
@@ -927,4 +929,42 @@ def tragaperras_tienda(tienda, tuyos):
         fichas.append({"nombre": j["nombre"], "appid": j["appid"], "frase": frase, "detalle": detalle,
                        "premio": premio,
                        "antiguo": bool(j.get("anio")) and j["anio"] < ANIO_ARQUEOLOGO})  # sin año: no cuenta
+    return fichas
+
+
+# ===================== El juego malísimo (paso 5.6) =====================
+UMBRAL_MALISIMO = 40  # % de positivas: por debajo es "malísimo" (en Steam, "Mayormente negativas" o peor)
+MIN_RESENAS_MALISIMO = 500  # que lo haya sufrido mucha gente, no tres despistados
+# Frases de bar: exageración burra + confesión absurda. Huecos: {resenas} {odian} {gustan} {anio}
+PLANTILLAS_MALISIMO = [
+    "Igual prefiero cortarme el meñique a jugar esta bazofia. Perdón, estoy borracho.",
+    "Lo jugué una tarde y mi perro ya no me mira a la cara. Ni el del vecino.",
+    "El {odian} % lo odia. El otro {gustan} % es la madre del programador con muchas cuentas.",
+    "Antes que esto, lamo una pila de 9 voltios. Lo he probado. La pila gana.",
+    "{resenas} valientes lo jugaron. Hay grupo de apoyo los martes, trae galletas.",
+    "Mi abuela lo probó en {anio} y resucitó solo para quejarse.",
+    "Pedí la devolución antes de que acabara de descargar. Mi instinto nunca falla. Bueno, con mi ex sí.",
+    "Lo metería en la tostadora, pero la tostadora tiene dignidad.",
+    "Me lo regalaron por mi cumpleaños. Ya no tengo amigos. Ni cumpleaños.",
+    "No es un juego, es un castigo divino con logros. Perdón, me he venido arriba.",
+]
+
+
+def malisimos(tienda, tuyos):
+    """Fichas de juegos famosos por malos (paso 5.6): muchas reseñas y casi todas negativas.
+
+    tienda: juegos de mas_vendidos. Mismos filtros que "Qué comprar" (candidatos_compra).
+    Cada ficha: {nombre, appid, frase, detalle}, igual que las de la tragaperras (las sortea ruleta.js).
+    """
+    fichas = []
+    for j in candidatos_compra(tienda, tuyos):
+        if j["pct"] is None or j["pct"] >= UMBRAL_MALISIMO or j["resenas"] < MIN_RESENAS_MALISIMO:
+            continue  # sin %, no tan malo o poco conocido: fuera
+        odian = 100 - j["pct"]  # % de reseñas negativas
+        resenas = f"{j['resenas']:,}".replace(",", ".")  # 4845 -> "4.845"
+        precio = "gratis" if j["gratis"] else j["precio"]
+        frase = random.choice(PLANTILLAS_MALISIMO).format(  # plantilla al azar con sus huecos rellenos
+            resenas=resenas, odian=odian, gustan=j["pct"], anio=j.get("anio") or "un año maldito")
+        fichas.append({"nombre": j["nombre"], "appid": j["appid"], "frase": frase,
+                       "detalle": f"{precio} · {odian} % de {resenas} reseñas lo odian"})
     return fichas

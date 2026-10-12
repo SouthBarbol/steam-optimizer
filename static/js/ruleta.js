@@ -17,6 +17,7 @@ function montarTragaperras(seccion) {
     const ficha = img.closest(".ficha");  // closest: el antepasado más cercano con esa clase
     let actual = nombre.textContent;  // el juego elegido (durante el giro, el texto visible es aleatorio)
     let giro = null;  // temporizador del giro en marcha (null si no gira)
+    const vistos = new Set([actual]);  // juegos distintos vistos en esta tragaperras (para el Catador)
 
     const pintar = (f) => {  // enseña la ficha f entera
         img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${f.appid}/header.jpg`;
@@ -29,6 +30,8 @@ function montarTragaperras(seccion) {
 
     // Premios (5.5a): solo las fichas de la tienda traen "premio" y "antiguo" (los marca el servidor)
     const premiar = (f) => {
+        vistos.add(f.nombre);
+        if (seccion.id === "malisimo" && vistos.size >= 10) desbloquear("catador");  // 5.6c: 10 pesturrias distintas
         if (f.antiguo) desbloquear("arqueologo");
         if (f.premio === "gatillazo") return SFX.trombon();  // menos del 40 %: wah wah wahhh
         if (f.premio !== "jackpot") return;  // ni premio ni castigo

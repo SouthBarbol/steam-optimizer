@@ -79,8 +79,12 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Caché en memoria de 3 h solo con datos de la TIENDA (búsqueda -> juegos); las entradas caducadas se
   borran al guardar otra (la memoria no crece sin fin) y las consultas fallidas no se guardan
 - [x] Coste por visita: 3 búsquedas (en caché 3 h) + 1 de la tragaperras de la tienda (sin caché)
-- [x] Juegos adultos fuera de las recomendaciones de compra y de la tragaperras (etiquetas sexuales
-  entre sus 5 más votadas); tampoco se recomienda lo que ya tenéis tú o tu familia
+  + 5 del rincón de la pesturria (`mas_vendidos`, solo una vez al día: caché de 24 h con ~5.000 juegos,
+  unos pocos MB; si falla una página no se guarda nada)
+- [x] Juegos adultos fuera de las recomendaciones de compra, de la tragaperras y de la pesturria
+  (etiquetas sexuales entre sus 5 más votadas); tampoco se recomienda lo que ya tenéis tú o tu familia.
+  Si no se pueden cargar los nombres de las etiquetas, la pesturria no sale (sin ellas no se detectan
+  los adultos)
 - [x] Nombre, precio, estudio y etiquetas (datos externos) se pintan con Jinja2 (escapado automático);
   probado con un nombre malicioso. El `style="--temblor: Npx"` de las ofertas solo lleva un número
   calculado por nosotros; el `appid` va en las URLs solo si es un número entero (también en el JS)
@@ -104,7 +108,7 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   respaldos sintetizados o por sonidos con licencia libre. Están en `.gitignore`: no subirlos nunca a un repo
   público. El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
 - [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor
-  (una visita nueva puede costar ~70 consultas + 4 de la tienda); valorar acotar peticiones por
+  (una visita nueva puede costar ~70 consultas + 4 de la tienda, + 5 la primera del día); valorar acotar peticiones por
   visita/minuto o el tamaño de las cachés
 - [ ] Personalización de frases: quitar las bios satíricas (vivienda, capitalismo, fondos buitre) y revisar
   todas las frases de broma (ver roadmap en `CLAUDE.md`)

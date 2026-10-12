@@ -331,3 +331,26 @@ def tienda_al_azar(cantidad=50):
     inicio = random.randrange(max(_total_catalogo[0][1] - cantidad, 1))  # randrange(n): de 0 a n-1, al azar
     respuesta = _pedir_tienda({"start": inicio, "count": cantidad, "filters": {}})
     return None if respuesta is None else respuesta[0]
+
+
+# ===================== Tienda: los más vendidos de siempre (paso 5.6, el juego malísimo) =====================
+ORDEN_VENDIDOS = 11  # ...y 11 = más vendidos de siempre (también deducido; trae clásicos, no solo novedades)
+PAGINAS_VENDIDOS = 5  # páginas de 1.000 juegos (~2 s cada una)
+CADUCIDAD_VENDIDOS = 24 * 3600  # esta lista apenas cambia: se guarda 1 día
+_cache_vendidos = []  # [(momento en que se guardó, juegos)]: datos de la tienda, no del usuario
+
+
+def mas_vendidos():
+    """Los 5.000 juegos más vendidos de siempre (paso 5.6), guardados 24 h. None si falla."""
+    if _cache_vendidos and time.time() - _cache_vendidos[0][0] < CADUCIDAD_VENDIDOS:  # está y no ha caducado
+        return _cache_vendidos[0][1]
+    if not _cargar_nombres_etiquetas():  # sin etiquetas no se pueden quitar los adultos: mejor nada
+        return None
+    juegos = []
+    for pagina in range(PAGINAS_VENDIDOS):
+        respuesta = _pedir_tienda({"start": pagina * 1000, "count": 1000, "sort": ORDEN_VENDIDOS, "filters": {}})
+        if respuesta is None:  # falla una página: no se guarda nada (se reintenta en la próxima visita)
+            return None
+        juegos += respuesta[0]  # +=: añade los de esta página a la lista
+    _cache_vendidos[:] = [(time.time(), juegos)]  # [:] = sustituye el contenido de la lista
+    return juegos

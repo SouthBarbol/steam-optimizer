@@ -413,6 +413,30 @@
                 </div>
             {% endif %}
         </section>
+
+        {# ===== El juego malísimo (5.6): famosos por malos. Es una tragaperras más (ruleta.js la monta);
+             la primera la elige Jinja2 (|random). Nombre y frase escapados, nada de |safe ===== #}
+        {% if malo %}
+            {% set f = malo|random %}
+            <section id="malisimo" class="stats malisimo tragaperras" data-menu="☣️ Pesturria" data-fichas='{{ malo|tojson }}'>
+                <h2>☣️ El rincón de la pesturria</h2>
+                <p class="match-contador">Miles de personas lo sufrieron para que tú no tengas que hacerlo.</p>
+                <div class="match">
+                    <article class="ficha">
+                        {# Precinto y moscas (5.6c): decoración (aria-hidden: los lectores de pantalla no la leen) #}
+                        <span class="precinto" aria-hidden="true">☣️ PELIGRO · NO JUGAR ☣️</span>
+                        <span class="mosca m1" aria-hidden="true">🪰</span><span class="mosca m2" aria-hidden="true">🪰</span><span class="mosca m3" aria-hidden="true">🪰</span>
+                        <img class="tragaperras-img" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ f.appid }}/header.jpg" alt="Carátula de {{ f.nombre }}" loading="lazy">
+                        <h3 class="ficha-nombre">{{ f.nombre }}</h3>
+                        <p class="ficha-bio tragaperras-frase">«{{ f.frase }}»</p>
+                        <p class="compra-resenas tragaperras-detalle">{{ f.detalle }}</p>
+                        <a class="ver-steam" href="https://store.steampowered.com/app/{{ f.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+                    </article>
+                    {# Oculto hasta que ruleta.js lo active (sin JavaScript no haría nada) #}
+                    <p class="centro"><button type="button" class="tragaperras-otra arcade" hidden>🎲 Otra</button></p>
+                </div>
+            </section>
+        {% endif %}
     {% endif %}
 
     {# Si hay juegos, dibujamos la tabla #}

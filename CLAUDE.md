@@ -95,7 +95,7 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 * Capa de personalidad (3.6): `sonido.js` (SFX sintetizados, 🔇 empieza silenciado, `?sonido=1` para
   mantenerlo), `efectos.js` (pato, trombón, terremoto, caos manual/Konami, pantallazo azul, DVD,
   cascarrabias, glitch, 7 referencias a JoJo), `carga.js` (99 % con excusas de "tu mamá"), `logros.js`
-  (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 22 logros). Clips de JoJo y `ay-ay-ay.mp3` en
+  (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 24 logros). Clips de JoJo y `ay-ay-ay.mp3` en
   `static/sonidos/` (en .gitignore; si faltan, suenan los sintetizados).
 * Paso 4, qué jugar (detalle en `ALGORITMO.md`): 💘 Steam Match (`match.js`, ❌/💚 con confeti y
   logros piedra/enamoradizo), 🧭 ¿Te atreves? (territorio inexplorado, logro sinmiedo), 🎰 ruleta del caos
@@ -111,6 +111,15 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   tragaperras de la tienda (campos `premio`/`antiguo` de `tragaperras_tienda`); palanca en ambas tragaperras
   (`SFX.palanca`, llama a "Otra"); glitch `tele-rota` en las bizarras (al pasar el ratón y 15 % cada 8 s);
   logros Jackpot, Arqueólogo (< 2005) y Gusto raro (abrir una bizarra).
+* 5.6, ☣️ El rincón de la pesturria (por dentro se llama `malisimo`): `mas_vendidos()` en
+  `steam_client.py` (5 páginas de 1.000 con `sort` 11, caché 24 h, ~13 s la primera visita del día;
+  sin nombres de etiquetas devuelve None para no colar adultos); `malisimos()` en `analysis.py` (< 40 %
+  positivas y ≥ 500 reseñas, mismos filtros que comprar; hoy salen ~29) con `PLANTILLAS_MALISIMO` (frases
+  "de bar" al gusto del usuario); `malo=` en `app.py` (con la variable `tuyos` compartida); sección roja
+  `#malisimo` en la plantilla, que es una `.tragaperras` más (giro, palanca y "Otra" sin JS nuevo), con
+  moscas 🪰 (CSS + `SFX.zumbido` al pasar el ratón) y precinto "PELIGRO · NO JUGAR"; logros Estómago
+  de hierro (abrir una) y Catador de pesturria (10 distintas, contadas en `ruleta.js`). 24 logros.
+* "To Be Continued" de JoJo solo en la página de resultados (antes salía nada más entrar en el inicio).
 * Fase de estética (CERRADA): espaciado con variables `--hueco-seccion`, `--hueco-tarjetas`, `--relleno`;
   menú fijo `[data-menu]` + cohete 🚀 (`navegacion.js`); librería plegable con buscador, orden y HIGH
   SCORES (`libreria.js`, medallas `podio-1..3`, horas que cuentan); corazones ❤️🖤 y ofertas que
@@ -123,7 +132,9 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   (desconocido, no 0). Por eso Steam Match puede recomendar un préstamo que ya jugaste. Descartados
   `IFamilyGroupsService` y `GetSingleGamePlaytime` (exigen token de sesión: riesgo de robo de cuenta).
 * APIs no documentadas aceptadas (`appdetails`, `appreviews`, `Query` con `sort` deducido: 10 = populares,
-  21 = valorados), vigilando límites. SteamSpy descartado. Logros completados de Steam descartados (coste).
+  21 = valorados, 11 = más vendidos de siempre; el 22 es "peor valorados" pero empieza por miles de juegos
+  con 0 % y casi sin reseñas, inútil; `Query` ignora filtros desconocidos y no filtra por reseñas),
+  vigilando límites. SteamSpy descartado. Logros completados de Steam descartados (coste).
 * Juegos adultos excluidos de lo que se recomienda comprar (la página la puede ver la familia).
 * Tono de los textos: humano, de colega; humor bizarro. NADA de alquileres, vivienda, Euríbor ni
   capitalismo (al usuario no le gustan y "se notan escritas por una IA").
@@ -138,25 +149,24 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   falta): datos falsos + `app.app.test_client()`, sustituyendo TODAS las funciones de Steam de `app`
   (`get_owned_games`, `get_recently_played_games`, `get_player_names`, `get_genres`, `en_cache`,
   `get_resenas`, `get_valoracion` (devuelve `{"total", "pct"}`), `get_tags`, `buscar_tienda`,
-  `tienda_al_azar`). Ojo: un nombre malicioso escapado contiene el texto "onerror=".
+  `tienda_al_azar`, `mas_vendidos`; si falta esta última, la prueba llama a Steam de verdad y tarda). Ojo: un nombre malicioso escapado contiene el texto "onerror=".
 * El usuario permitió usar su Steam ID para probar con su librería real; no apuntarlo en archivos.
 * No hay Node instalado: el JavaScript no se puede comprobar en terminal; probarlo en el navegador.
 * Modelo: Opus, effort high.
 
 ## Roadmap restante (en orden)
 
-1. ~~5.5~~ HECHO (efectos y logros de "¿Qué comprar?").
-2. **5.6** (EMPEZAR AQUÍ; idea del usuario): sección "juego malísimo": uno con MUCHÍSIMAS reseñas negativas, al azar
-   entre varios para que no salgan siempre los mismos. Investigar: `Query` no tiene orden "peor
-   valorados"; probar populares/valorados con muchas reseñas y % positivo bajo (p. ej. < 40 %), o varias
-   páginas; sin adultos ni lo que tenéis; frase absurda y efectos propios.
-3. Idea del usuario (a valorar): usar ETIQUETAS en vez de géneros en la afinidad de Steam Match y en el
-   perfil gamer, y rehacer las frases de `PERFILES` (se puede reutilizar `tus_etiquetas`).
-4. Optimizaciones: consultas a Steam en paralelo (la primera visita tarda); acotar consultas por visita.
-5. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
-   `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro; quitar las de
+1. ~~5.5~~ y ~~5.6~~ HECHOS (efectos de "¿Qué comprar?" y rincón de la pesturria). Paso 5 cerrado.
+2. **EMPEZAR AQUÍ**. Idea del usuario (a valorar): usar ETIQUETAS en vez de géneros en la afinidad de
+   Steam Match y en el perfil gamer, y rehacer las frases de `PERFILES` (se puede reutilizar
+   `tus_etiquetas`). Primero explicar al usuario pros y contras y proponer; si no lo quiere, pasar al 3.
+3. Optimizaciones: consultas a Steam en paralelo (la primera visita tarda; `mas_vendidos` hace 5
+   consultas seguidas, ~13 s, una vez al día); acotar consultas por visita.
+4. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
+   `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro, al estilo de
+   `PLANTILLAS_MALISIMO` (exageración burra + confesión absurda, que al usuario SÍ le gusta); quitar las de
    alquileres/vivienda/capitalismo; quitar o generalizar las bromas sobre personas reales (Calero, Mauri,
    Navarro) en `analysis.py`; revisar el tono de "tu mamá". Proponerlas antes.
-6. Publicar: borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
+5. Publicar: borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
    publicar"), elegir hosting y cómo guardar allí la API key. Opcional: formulario más cómodo para los
    IDs familiares y favicon (hoy 404).
