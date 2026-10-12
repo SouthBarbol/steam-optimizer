@@ -146,15 +146,21 @@ la librería de un usuario.
   `recomendacion["atreverse"]`) · **4.R5 interfaz** (tarjeta "🧭 ¿Te atreves?" en `index.html`,
   frases `BIOS_ATREVIDO` con `poner_retos`, botón "Otro" en `static/js/atreverse.js`).
   SIGUIENTE (en orden, proponer código antes de cada uno):
-  1. EMPEZAR AQUÍ: preguntar al usuario si ha probado "¿Te atreves?" en el navegador (reiniciar el
-     servidor; tarjeta naranja bajo Steam Match, botón "🎲 Otro" entre 3 juegos) y arreglar lo que salga.
-     Código hecho y probado con datos falsos; aún SIN commit (sugerirlo).
-  2. **4.4** 🎲 ruleta del caos: juego al azar de TODA la librería con descripción absurda por plantillas
-     (huecos: nombre, etiqueta, horas, dueño, año); "Otra" sortea en el navegador sin llamar a Steam.
+  1. HECHO: "¿Te atreves?" probado por el usuario en el navegador (funciona) y con commit.
+  2. **4.4** 🎰 ruleta del caos: HECHA y probada con datos falsos; FALTA que el usuario la pruebe en el
+     navegador y el commit. `ruleta(juegos, etiquetas)` en `analysis.py` (frase ya rellena por juego;
+     huecos nombre, etiqueta, horas, `{duenos}` = todos con `juntar_nombres`; sin año: no lo tenemos),
+     tarjeta verde lima bajo "¿Te atreves?" y `static/js/ruleta.js`. El "Juego sorpresa" del paso 1 se
+     FUSIONÓ en la ruleta (eran redundantes): se borraron su sección, `sorpresa.js` y `candidatos_sorpresa`;
+     el cascarrabias, Dio, ORA/MUDA y el logro Ludópata cuelgan ahora de `#ruleta-otra` / `#ruleta-dio`.
+     Baldur's Gate "recomendado" con 30 h = préstamo con horas desconocidas (limitación conocida): no se toca.
   3. **4.5** efectos/sonidos/logros de Steam Match y "¿Te atreves?" + README.
   4. IDEA DEL USUARIO (fase aparte, a valorar): usar ETIQUETAS en vez de géneros también en la afinidad
      y en el perfil gamer (los géneros son demasiado genéricos), y rehacer las frases de `PERFILES`.
   Luego: paso 5 (qué comprar).
+  AL FINAL (antes de publicar): paso de PERSONALIZACIÓN DE FRASES. Rehacer las frases de broma
+  (`BIOS_*`, `BIOS_ATREVIDO`, ruleta...) con humor bizarro y quitar TODAS las de alquileres, vivienda,
+  Euríbor o capitalismo: al usuario no le gustan y "se nota que las ha escrito una IA". Proponer antes.
 * Pruebas del paso 4: scripts `prueba_*.py` en el scratchpad (se pierden al cerrar la sesión; si hacen
   falta, rehacerlos). Las pruebas de extremo a extremo sustituyen TODAS las funciones de Steam de `app`
   (`get_owned_games`, `get_genres`, `en_cache`, `get_resenas`, `get_valoracion`, `get_tags`...).

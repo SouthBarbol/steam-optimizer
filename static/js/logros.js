@@ -83,9 +83,9 @@ if (zonaLogros) {  // todo lo de abajo, solo en la página de resultados
     if (tuBoton) tuBoton.addEventListener("click", () => setTimeout(darLogrosVisita, 2500));
     else setTimeout(darLogrosVisita, 1500);
 
-    // Ludópata del azar: pulsar "Otro" 10 veces en el juego sorpresa
+    // Ludópata del azar: pulsar "Otra" 10 veces en la ruleta del caos
     let vecesOtro = 0;
-    const btnOtro = document.getElementById("sorpresa-otro");  // null si no hay juego sorpresa
+    const btnOtro = document.getElementById("ruleta-otra");  // null si no hay ruleta
     if (btnOtro) btnOtro.addEventListener("click", () => {
         vecesOtro++;
         if (vecesOtro >= 10) desbloquear("ludopata");

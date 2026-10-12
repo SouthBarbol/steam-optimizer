@@ -9,8 +9,9 @@ a qué jugar y qué comprar según tus géneros y horas jugadas.
 
 - Muestra tu librería ordenada por horas, con carátulas y de quién es cada juego.
 - Biblioteca familiar: añade hasta 5 Steam IDs de familiares (no se guardan).
-- Estadísticas por persona: Pile of Shame, juegos abandonados, horas en perspectiva,
-  juego sorpresa y duelo familiar.
+- Estadísticas por persona: Pile of Shame, juegos abandonados, horas en perspectiva
+  y duelo familiar.
+- Ruleta del caos: un juego al azar de toda la librería con una frase absurda.
 - Horas por género y perfil gamer, calculados con los 10 juegos más jugados de cada persona.
 
 ## Privacidad

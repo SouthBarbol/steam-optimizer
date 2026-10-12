@@ -38,22 +38,6 @@ def comparaciones(horas, cantidad=2):
     return [f"{formatear(segundos / seg)} {texto} ({dato})" for texto, dato, seg in elegidas]
 
 
-def candidatos_sorpresa(juegos):
-    """Juegos que (probablemente) no has jugado: tus horas a 0 o desconocidas (préstamos de la familia).
-
-    Devuelve una lista simple para la plantilla y el JavaScript: nombre, dueños y si las horas se desconocen.
-    """
-    return [
-        {
-            "nombre": j.get("name", "?"),
-            "duenos": j.get("duenos", []),
-            "desconocido": j.get("playtime_forever") is None,  # True = "—": puede que ya lo hayas probado
-        }
-        for j in juegos
-        if not j.get("playtime_forever")  # "not" es True tanto para 0 como para None
-    ]
-
-
 def estadisticas(juegos):
     """Calcula Pile of Shame, abandonados y horas en perspectiva a partir de la lista de juegos.
 
@@ -215,7 +199,7 @@ LOGROS = {
     "familia": ("👨‍👩‍👧‍👦", "Familia numerosa", "Cinco familiares. Esto ya es una comuna gamer."),
     "paciencia": ("⏳", "Paciencia infinita", "Más de 10 s esperando sin cerrar la pestaña. Respeto."),
     "insomne": ("🦉", "Insomne", "¿Mirando tus horas de Steam a estas horas? Tu mamá te está buscando."),
-    "ludopata": ("🎰", "Ludópata del azar", "10 veces \"Otro\". No te va a salir nada mejor, tío."),
+    "ludopata": ("🎰", "Ludópata del azar", "10 veces \"Otra\". No te va a salir nada mejor, tío."),
     "abismo": ("🕳️", "Explorador del abismo", "Has llegado al final de la página. Aquí no hay nada. ¿Contento?"),
     "patos": ("🦆", "Susurrador de patos", "Los patos te respetan."),  # paso 3.6d
     "esquina": ("📀", "Esquina perfecta", "Has visto el logo dar en la esquina. Ya puedes morir tranquilo."),  # 3.6e
@@ -693,3 +677,50 @@ def poner_retos(atrevidos):
         # r["nuevas"][0]: su etiqueta nueva más votada; % len: si hubiera más juegos que frases, se repite
         r["reto"] = frases[i % len(frases)].format(nombre=r["nombre"], nueva=r["nuevas"][0])
     return atrevidos
+
+
+PLANTILLAS_RULETA = [  # ruleta del caos (provisionales): {nombre}, {etiqueta}, {horas}, {duenos}
+    "{nombre}. Una lagartija ha girado la ruleta por ti y ya no hay vuelta atrás.",
+    "{nombre}, porque anoche soñaste con un pulpo con gorra que susurraba «{etiqueta}».",
+    "Llevas {horas} con {nombre}. Un monje del Tíbet lleva lo mismo meditando sobre él.",
+    "{nombre} es de {duenos}. Lo mínimo es abrirlo antes de que acabe el siglo.",
+    "Juega a {nombre} con un calcetín en la mano. No ayuda, pero así puedes decir que lo hiciste.",
+    "Si hoy no juegas a {nombre}, mañana tus calcetines amanecerán ordenados por colores.",
+    "{nombre}: {horas} y un toque de «{etiqueta}», como un caracol en el microondas.",
+    "La ruleta ha caído en {nombre}. La ruleta está trucada, pero no sabemos a favor de quién.",
+]
+SIN_ETIQUETA = "Misterio"  # para juegos sin etiquetas en Steam
+TOP_ETIQUETAS_RULETA = 3  # la etiqueta del hueco sale al azar de entre estas más votadas
+
+
+def juntar_nombres(nombres):
+    """["Ana"] -> "Ana"; ["Ana", "Luis", "Juan"] -> "Ana, Luis y Juan"; [] -> "Alguien"."""
+    if not nombres:  # lista vacía
+        return "Alguien"
+    if len(nombres) == 1:
+        return nombres[0]
+    return ", ".join(nombres[:-1]) + " y " + nombres[-1]  # [:-1]: todos menos el último; [-1]: el último
+
+
+def ruleta(juegos, etiquetas):
+    """Todos los juegos, cada uno con una frase absurda ya rellenada (para la ruleta del caos).
+
+    etiquetas: {appid: [etiquetas de más a menos votada]} (de get_tags). No modifica 'juegos'.
+    """
+    fichas = []
+    for j in juegos:
+        # Sus etiquetas más votadas sin las neutras (las que no dicen nada del juego)
+        utiles = [e for e in etiquetas.get(j["appid"], []) if e not in ETIQUETAS_NEUTRAS]
+        minutos = j.get("playtime_forever")  # None = desconocido (préstamo no jugado en 2 semanas)
+        if minutos is None:
+            horas = "un número secreto de horas"
+        else:  # con 0 minutos, "0 h" (formatear daría "0,0")
+            horas = f"{formatear(minutos / 60)} h" if minutos else "0 h"
+        frase = random.choice(PLANTILLAS_RULETA).format(  # plantilla al azar con sus huecos rellenos
+            nombre=j.get("name", "?"),
+            etiqueta=random.choice(utiles[:TOP_ETIQUETAS_RULETA]) if utiles else SIN_ETIQUETA,
+            horas=horas,
+            duenos=juntar_nombres(j.get("duenos", [])),  # todos los dueños: "Ana, Luis y Juan"
+        )
+        fichas.append({"nombre": j.get("name", "?"), "appid": j["appid"], "frase": frase})
+    return fichas

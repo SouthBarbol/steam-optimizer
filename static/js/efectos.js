@@ -316,7 +316,7 @@ const RESPUESTAS = [  // [cara, frase]
     ["🙃", "Se lo voy a decir a tu mamá."], ["🤫", "Psst... escribe za warudo (o the world). Yo no te he dicho nada."],
     ["🙂", "Vale, te perdono."],
 ];
-const cascarrabias = document.getElementById("cascarrabias");  // null si no hay juego sorpresa
+const cascarrabias = document.getElementById("cascarrabias");  // null si no hay ruleta
 let toquesCascarrabias = 0;
 if (cascarrabias) cascarrabias.addEventListener("click", () => {
     const [cara, frase] = RESPUESTAS[toquesCascarrabias];
@@ -425,10 +425,10 @@ function zaWarudo() {
     }, 5000);
 }
 
-// --- Juego sorpresa: ORA ORA / MUDA MUDA (5 "Otro" en 2 s) y "¡Pero era yo, Dio!" (20 % de las veces) ---
-const btnOtroJojo = document.getElementById("sorpresa-otro");  // null si no hay juego sorpresa
-const notaDio = document.getElementById("sorpresa-dio");
-let golpesOtro = [];  // momentos (ms) de los últimos clics en "Otro"
+// --- Ruleta del caos: ORA ORA / MUDA MUDA (5 "Otra" en 2 s) y "¡Pero era yo, Dio!" (20 % de las veces) ---
+const btnOtroJojo = document.getElementById("ruleta-otra");  // null si no hay ruleta
+const notaDio = document.getElementById("ruleta-dio");
+let golpesOtro = [];  // momentos (ms) de los últimos clics en "Otra"
 let relojDio = null;
 if (btnOtroJojo) btnOtroJojo.addEventListener("click", () => {
     const ahora = performance.now();

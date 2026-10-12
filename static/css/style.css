@@ -165,16 +165,12 @@ td {
     color: var(--texto);
 }
 
-/* Cuadro del juego sorpresa: mismo estilo que las tarjetas, centrado y en magenta */
-.sorpresa {
+/* Cuadro de la ruleta del caos: mismo ancho que el resto, centrado y en verde lima (tapete de casino) */
+.ruleta {
+    position: relative;                           /* referencia para colocar al presentador cascarrabias */
     max-width: 900px;                             /* mismo ancho que la rejilla de estadísticas */
     margin: 1.5rem auto;                          /* centrado */
-    color: var(--magenta);                        /* color del borde y del título */
-    text-align: center;
-}
-
-.sorpresa p {
-    color: var(--texto);                          /* el texto en color claro, como en las tarjetas */
+    color: #39ff14;                               /* color del borde y del título */
 }
 
 /* Cuadro del duelo familiar: mismo ancho y centrado que el resto, en amarillo "de trofeo" */
@@ -637,8 +633,7 @@ tr.olvidado:hover .lagrima { animation: lagrima 1.2s ease-in infinite; }
     pointer-events: none;
 }
 
-/* Presentador cascarrabias: en la esquina del cuadro del juego sorpresa */
-.sorpresa { position: relative; }    /* referencia para colocarlo */
+/* Presentador cascarrabias: en la esquina del cuadro de la ruleta del caos (.ruleta lleva position: relative) */
 button.cascarrabias {
     position: absolute;
     top: 0.6rem;
@@ -772,8 +767,8 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 
 /* ORA ORA / MUDA MUDA: gritos grandes */
 .flotante.ora { font-size: 1.1rem; text-shadow: 2px 2px 0 var(--magenta); }
-/* "¡Pero era yo, Dio!" en el juego sorpresa */
-.sorpresa-dio { min-height: 1em; color: #ffe600; font-size: 0.55rem; }
+/* "¡Pero era yo, Dio!" en la ruleta del caos */
+.ruleta-dio { min-height: 1em; color: #ffe600; font-size: 0.55rem; }
 
 /* Pista del reloj en el pie (plegable <details>) */
 .pista-reloj { display: inline-block; margin-left: 1rem; vertical-align: middle; }
@@ -916,4 +911,8 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 .reto { border-color: #ff9f1c; box-shadow: 0 0 14px #ff9f1c55; }
 .reto-nuevas { font-size: 0.75rem; color: #ff9f1c; }
 .reto-otro[hidden] { display: none; }  /* el estilo de botón no debe ganarle a "hidden" */
+
+/* Ruleta del caos (4.4): ficha en verde lima, como el tapete de un casino */
+.ruleta .ficha { border-color: #39ff14; box-shadow: 0 0 14px #39ff1455; }
+.ruleta-otra[hidden] { display: none; }
 .centro { text-align: center; }

@@ -7,10 +7,11 @@ import time  # para medir cuánto tarda la página (logro "Paciencia infinita")
 from flask import Flask, render_template, request  # render_template rellena una plantilla HTML con datos
 
 from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntesis = import en varias líneas)
-    candidatos_sorpresa, estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
+    estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
     abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
+    ruleta,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
@@ -137,8 +138,8 @@ def index():
         avisos=avisos,
         colores=colores,
         tarjetas=tarjetas,
-        candidatos=candidatos_sorpresa(juegos),  # juegos posibles para el "juego sorpresa"
         recomendacion=recomendacion,  # qué jugar (calculado arriba)
+        ruleta=ruleta(juegos, etiquetas),  # ruleta del caos: todos los juegos con su frase absurda
         logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
         # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
         ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),

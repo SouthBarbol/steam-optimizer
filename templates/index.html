@@ -211,24 +211,6 @@
         </section>
     {% endif %}
 
-    {# Juego sorpresa: el primero lo sortea Jinja2 (|random); "Otro" sortea en el navegador sin llamar a Steam #}
-    {% if candidatos %}
-        {% set s = candidatos|random %}  {# |random elige un elemento al azar de la lista #}
-        {# |tojson convierte la lista a JSON escapando caracteres peligrosos (forma segura de pasar datos a JS) #}
-        <section id="sorpresa" class="stats sorpresa" data-candidatos='{{ candidatos|tojson }}'>
-            <h2>Juego sorpresa</h2>
-            {# Presentador cascarrabias: cada clic le enfada más (efectos.js); el bocadillo empieza vacío #}
-            <button type="button" id="cascarrabias" class="cascarrabias" aria-label="Presentador cascarrabias">
-                <span class="cara">😐</span><span class="bocadillo"></span>
-            </button>
-            <p><strong id="sorpresa-nombre">{{ s.nombre }}</strong></p>
-            {# Nota solo si tus horas son desconocidas (juego de la familia) #}
-            <p id="sorpresa-nota">{% if s.desconocido %}(de {{ s.duenos|join(", ") }}, puede que ya lo hayas probado){% endif %}</p>
-            <p id="sorpresa-dio" class="sorpresa-dio" aria-live="polite"></p>  {# "¡Pero era yo, Dio!" (efectos.js) #}
-            <button type="button" id="sorpresa-otro">Otro</button>  {# type="button": no envía el formulario #}
-        </section>
-    {% endif %}
-
     {# ===== Qué jugar (paso 4): Steam Match. TODO lo pinta Jinja2 (escapado automático: los nombres
          vienen de Steam); match.js (4.3c) solo mostrará u ocultará fichas, sin escribir HTML ===== #}
     {% if recomendacion %}  {# /demo no la trae: allí no se muestra la sección #}
@@ -336,6 +318,32 @@
                 </div>
             </section>
         {% endif %}
+
+        {# ===== Ruleta del caos (4.4): un juego al azar de TODA la librería con frase absurda.
+             La primera la elige Jinja2 (|random); "Otra" la sortea ruleta.js sin llamar a Steam ===== #}
+        {% if ruleta %}
+            {% set f = ruleta|random %}  {# la primera ficha, al azar #}
+            {# |tojson: forma segura de pasar la lista de fichas a JavaScript #}
+            <section id="ruleta" class="stats ruleta" data-fichas='{{ ruleta|tojson }}'>
+                <h2>🎰 Ruleta del caos</h2>
+                {# Presentador cascarrabias: cada clic le enfada más (efectos.js); el bocadillo empieza vacío #}
+                <button type="button" id="cascarrabias" class="cascarrabias" aria-label="Presentador cascarrabias">
+                    <span class="cara">😐</span><span class="bocadillo"></span>
+                </button>
+                <p class="match-contador">Cualquier juego de la librería. Sin lógica. Sin piedad.</p>
+                <div class="match">
+                    <article class="ficha">
+                        <img id="ruleta-img" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ f.appid }}/header.jpg" alt="Carátula de {{ f.nombre }}" loading="lazy">
+                        <h3 id="ruleta-nombre" class="ficha-nombre">{{ f.nombre }}</h3>
+                        <p id="ruleta-frase" class="ficha-bio">«{{ f.frase }}»</p>
+                        <a id="ruleta-steam" class="ver-steam" href="https://store.steampowered.com/app/{{ f.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+                    </article>
+                    <p id="ruleta-dio" class="ruleta-dio" aria-live="polite"></p>  {# "¡Pero era yo, Dio!" (efectos.js) #}
+                    {# Oculto hasta que ruleta.js lo active (sin JavaScript no haría nada) #}
+                    <p class="centro"><button type="button" id="ruleta-otra" class="ruleta-otra" hidden>🎲 Otra</button></p>
+                </div>
+            </section>
+        {% endif %}
     {% endif %}
 
     {# Si hay juegos, dibujamos la tabla #}
@@ -398,9 +406,9 @@
     </footer>
 
     {# Script al final del body: así, cuando se ejecuta, el HTML de arriba ya existe #}
-    <script src="{{ url_for('static', filename='js/sorpresa.js') }}"></script>
     <script src="{{ url_for('static', filename='js/match.js') }}"></script>  {# Steam Match: ❌ / 💚 y lista #}
     <script src="{{ url_for('static', filename='js/atreverse.js') }}"></script>  {# ¿Te atreves?: botón "Otro" #}
+    <script src="{{ url_for('static', filename='js/ruleta.js') }}"></script>  {# ruleta del caos: botón "Otra" #}
     <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
     {# sonido.js antes que efectos.js: efectos.js usa SFX, que se define en sonido.js #}
     <script src="{{ url_for('static', filename='js/sonido.js') }}"></script>
