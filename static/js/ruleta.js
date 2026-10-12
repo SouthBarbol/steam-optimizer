@@ -27,6 +27,19 @@ function montarTragaperras(seccion) {
         enlace.href = `https://store.steampowered.com/app/${f.appid}/`;
     };
 
+    // Premios (5.5a): solo las fichas de la tienda traen "premio" y "antiguo" (los marca el servidor)
+    const premiar = (f) => {
+        if (f.antiguo) desbloquear("arqueologo");
+        if (f.premio === "gatillazo") return SFX.trombon();  // menos del 40 %: wah wah wahhh
+        if (f.premio !== "jackpot") return;  // ni premio ni castigo
+        SFX.jackpot();
+        desbloquear("jackpot");
+        if (quietoRuleta) return;  // sin movimiento: solo sonido
+        const r = ficha.getBoundingClientRect();  // posición de la ficha en pantalla
+        for (let i = 0; i < 12; i++)  // 12 monedas cayendo sobre la ficha, una cada 60 ms
+            setTimeout(() => flotante("🪙", r.left + Math.random() * r.width, r.top + Math.random() * 40, "cae"), i * 60);
+    };
+
     if (fichas.length < 2) return;  // con un solo juego no hay nada que sortear (el botón sigue oculto)
     boton.addEventListener("click", () => {
         // Todas menos la elegida (así nunca repite), y solo con appid entero (va en las URLs)
@@ -35,7 +48,10 @@ function montarTragaperras(seccion) {
         const f = otras[Math.floor(Math.random() * otras.length)];  // la ganadora, al azar
         actual = f.nombre;
         clearInterval(giro);  // si ya giraba, se reinicia con la nueva ganadora
-        if (quietoRuleta) return pintar(f);  // sin animación: directo
+        if (quietoRuleta) {  // sin animación: directo
+            pintar(f);
+            return premiar(f);
+        }
         ficha.classList.add("girando");  // CSS: carátula desenfocada
         frase.textContent = "«…»";
         const fin = performance.now() + GIRO_MS;  // momento en que debe pararse
@@ -45,12 +61,24 @@ function montarTragaperras(seccion) {
                 ficha.classList.remove("girando");
                 pintar(f);
                 SFX.moneda();
+                premiar(f);  // jackpot, gatillazo o arqueólogo (5.5a)
                 return;
             }
             nombre.textContent = fichas[Math.floor(Math.random() * fichas.length)].nombre;  // nombre al azar
             SFX.tic();
         }, PASO_MS);
     });
+    // Palanca (5.5b): tirar de ella hace lo mismo que "Otra", con su animación y su ruido de manivela
+    const palanca = document.createElement("button");
+    palanca.type = "button";
+    palanca.className = "palanca";
+    palanca.setAttribute("aria-label", "Tirar de la palanca");  // lectores de pantalla: no tiene texto
+    palanca.addEventListener("click", () => {
+        reanimar(palanca, "tirando");  // CSS: baja y vuelve (reanimar la repite aunque se pulse seguido)
+        SFX.palanca();
+        boton.click();  // click(): "pulsa" el botón Otra desde el código
+    });
+    ficha.appendChild(palanca);
     boton.hidden = false;  // con JavaScript funcionando, ya se puede usar
 }
 

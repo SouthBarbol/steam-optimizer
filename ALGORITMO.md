@@ -277,3 +277,8 @@ publicado (~132.000 juegos) y trae 50 seguidos; `tragaperras_tienda` les aplica 
 "Qué comprar" (`candidatos_compra`: sin lo que tenéis, sin adultos, solo a la venta o gratis), exige al
 menos `MIN_RESENAS_AZAR` = 10 reseñas y rellena una frase absurda (`PLANTILLAS_TIENDA`). "Otra" sortea en
 el navegador entre esos juegos, sin volver a llamar a Steam.
+
+Premios (5.5a): cada ficha lleva `premio` = "jackpot" si tiene `UMBRAL_JACKPOT` = 95 % o más de reseñas
+positivas (monedas y logro Jackpot), "gatillazo" si baja de `UMBRAL_GATILLAZO` = 40 % (trombón) o nada
+(también si Steam no da el %), y `antiguo` si es de antes de `ANIO_ARQUEOLOGO` = 2005 (logro Arqueólogo).
+Solo cuentan al girar, no con el juego que sale al cargar la página.

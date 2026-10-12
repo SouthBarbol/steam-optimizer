@@ -109,6 +109,10 @@ if (zonaLogros) {  // todo lo de abajo, solo en la página de resultados
     document.querySelectorAll("#atreverse .ver-steam").forEach(a =>
         a.addEventListener("click", () => desbloquear("sinmiedo")));
 
+    // Gusto raro (5.5d): abrir en Steam un juego de las bizarras de "¿Qué comprar?"
+    document.querySelectorAll(".compra-rejilla.bizarra .ver-steam").forEach(a =>
+        a.addEventListener("click", () => desbloquear("gusto")));
+
     // Explorador del abismo: llegar al final de la página (con 5 px de margen)
     window.addEventListener("scroll", () => {
         if (innerHeight + scrollY >= document.documentElement.scrollHeight - 5) desbloquear("abismo");

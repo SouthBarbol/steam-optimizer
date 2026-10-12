@@ -209,6 +209,9 @@ LOGROS = {
     "piedra": ("💔", "Corazón de piedra", "Todos los juegos te han tirado ficha y los has rechazado a todos."),  # 4.5a
     "enamoradizo": ("💘", "Enamoradizo", "Match con todos. Tienes el corazón más grande que el disco duro."),  # 4.5a
     "sinmiedo": ("🧭", "Sin miedo", "Has abierto un juego de territorio inexplorado. Tu zona de confort te echa de menos."),  # 4.5c
+    "jackpot": ("💰", "Jackpot", "La tragaperras de la tienda te ha dado una joya del 95 %. Ya puedes retirarte."),  # 5.5a
+    "arqueologo": ("🦴", "Arqueólogo", "Te ha salido un juego de antes de 2005. Huele a disquete."),  # 5.5a
+    "gusto": ("🦄", "Gusto raro", "Has abierto una bizarra. Tu algoritmo y tú tenéis que hablar."),  # 5.5d
 }
 
 # Umbrales de los logros que dependen de tus datos (ajustables)
@@ -880,6 +883,10 @@ def que_comprar(populares, raras, favoritas, tuyos):
 
 # ===================== Tragaperras de la tienda (paso 5.4) =====================
 MIN_RESENAS_AZAR = 10  # para que el juego exista para alguien más que su creador
+# Premios de la tragaperras de la tienda (5.5a)
+UMBRAL_JACKPOT = 95  # % de reseñas positivas: lluvia de monedas
+UMBRAL_GATILLAZO = 40  # por debajo de este %: trombón triste
+ANIO_ARQUEOLOGO = 2005  # juegos de antes de este año: logro Arqueólogo
 PLANTILLAS_TIENDA = [  # provisionales: {nombre}, {anio}, {estudio}, {precio}, {etiqueta}, {resenas}
     "El algoritmo lanzó un dardo con los ojos cerrados y cayó en {nombre}. Ahora es tu problema.",
     "{estudio} hizo {nombre} un martes. Se nota.",
@@ -912,6 +919,12 @@ def tragaperras_tienda(tienda, tuyos):
             etiqueta=random.choice(utiles[:TOP_ETIQUETAS_RULETA]) if utiles else SIN_ETIQUETA,
             resenas=resenas,
         )
-        detalle = f"{precio} · {j['pct']} % de {resenas} reseñas positivas"
-        fichas.append({"nombre": j["nombre"], "appid": j["appid"], "frase": frase, "detalle": detalle})
+        # Sin % (Steam no lo dio): solo el número de reseñas, para no escribir "None %"
+        detalle = f"{precio} · {resenas} reseñas" if j["pct"] is None else f"{precio} · {j['pct']} % de {resenas} reseñas positivas"
+        # Premio para ruleta.js: "jackpot", "gatillazo" o None (nada especial, o Steam no dio el %)
+        pct = j["pct"]
+        premio = None if pct is None else "jackpot" if pct >= UMBRAL_JACKPOT else "gatillazo" if pct < UMBRAL_GATILLAZO else None
+        fichas.append({"nombre": j["nombre"], "appid": j["appid"], "frase": frase, "detalle": detalle,
+                       "premio": premio,
+                       "antiguo": bool(j.get("anio")) and j["anio"] < ANIO_ARQUEOLOGO})  # sin año: no cuenta
     return fichas

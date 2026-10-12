@@ -68,6 +68,8 @@ const SFX = {
     voz: () => tono(500 + Math.random() * 300, 0.03, "square", 0, 0.03),  // "voz" del texto letra a letra
     clack: () => { ruido(0.04, 0.2, 3000); tono(140, 0.05, "square", 0, 0.06); },  // botón arcade (E3): golpe seco
     tic: () => tono(1500, 0.015, "square", 0, 0.03),  // ruleta tragaperras: cada vuelta (4.5b)
+    jackpot: () => { for (let i = 0; i < 8; i++) tono(988 + i * 90, 0.07, "square", i * 0.07); },  // 5.5a: cascada de monedas
+    palanca: () => { for (let i = 0; i < 4; i++) ruido(0.02, 0.2, 2500, i * 0.05); tono(120, 0.12, "square", 0.22, 0.1); },  // 5.5b: cric-cric-clonk
     moneda: () => { tono(988, 0.08); tono(1319, 0.35, "square", 0.08); },  // al activar el sonido
     fanfarria: () => {  // logro desbloqueado: tres notas subiendo y una larga
         [523, 659, 784].forEach((f, i) => tono(f, 0.14, "square", i * 0.11));

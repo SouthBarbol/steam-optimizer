@@ -95,7 +95,7 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 * Capa de personalidad (3.6): `sonido.js` (SFX sintetizados, 🔇 empieza silenciado, `?sonido=1` para
   mantenerlo), `efectos.js` (pato, trombón, terremoto, caos manual/Konami, pantallazo azul, DVD,
   cascarrabias, glitch, 7 referencias a JoJo), `carga.js` (99 % con excusas de "tu mamá"), `logros.js`
-  (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 19 logros). Clips de JoJo y `ay-ay-ay.mp3` en
+  (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 22 logros). Clips de JoJo y `ay-ay-ay.mp3` en
   `static/sonidos/` (en .gitignore; si faltan, suenan los sintetizados).
 * Paso 4, qué jugar (detalle en `ALGORITMO.md`): 💘 Steam Match (`match.js`, ❌/💚 con confeti y
   logros piedra/enamoradizo), 🧭 ¿Te atreves? (territorio inexplorado, logro sinmiedo), 🎰 ruleta del caos
@@ -107,6 +107,10 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   (6 mainstream + 6 bizarras; sin lo que tenéis, sin adultos, máx. 1 gratis y 1 por desarrolladora) y
   `tragaperras_tienda`; `pedir_compra` en `app.py`; sección 🛒 con macro `ficha_compra` y tragaperras
   amarilla de la tienda (`ruleta.js` = `montarTragaperras` para toda `.tragaperras`).
+  5.5: jackpot (≥ 95 %: monedas `.flotante.cae`, `SFX.jackpot`) y gatillazo (< 40 %: trombón) en la
+  tragaperras de la tienda (campos `premio`/`antiguo` de `tragaperras_tienda`); palanca en ambas tragaperras
+  (`SFX.palanca`, llama a "Otra"); glitch `tele-rota` en las bizarras (al pasar el ratón y 15 % cada 8 s);
+  logros Jackpot, Arqueólogo (< 2005) y Gusto raro (abrir una bizarra).
 * Fase de estética (CERRADA): espaciado con variables `--hueco-seccion`, `--hueco-tarjetas`, `--relleno`;
   menú fijo `[data-menu]` + cohete 🚀 (`navegacion.js`); librería plegable con buscador, orden y HIGH
   SCORES (`libreria.js`, medallas `podio-1..3`, horas que cuentan); corazones ❤️🖤 y ofertas que
@@ -141,10 +145,8 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 
 ## Roadmap restante (en orden)
 
-1. **5.5** (EMPEZAR AQUÍ): efectos, sonidos y logros de "¿Qué comprar?" y de la tragaperras de la
-   tienda (proponer ideas al usuario para que elija, como en la 4.5). La documentación del paso 5
-   (README, SECURITY_CHECKLIST, ALGORITMO) ya está al día.
-2. **5.6** (idea del usuario): sección "juego malísimo": uno con MUCHÍSIMAS reseñas negativas, al azar
+1. ~~5.5~~ HECHO (efectos y logros de "¿Qué comprar?").
+2. **5.6** (EMPEZAR AQUÍ; idea del usuario): sección "juego malísimo": uno con MUCHÍSIMAS reseñas negativas, al azar
    entre varios para que no salgan siempre los mismos. Investigar: `Query` no tiene orden "peor
    valorados"; probar populares/valorados con muchas reseñas y % positivo bajo (p. ej. < 40 %), o varias
    páginas; sin adultos ni lo que tenéis; frase absurda y efectos propios.

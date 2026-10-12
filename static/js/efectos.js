@@ -194,6 +194,18 @@ function glitch(ms, conSonido) {
 titulo.addEventListener("mouseenter", () => glitch(500, true));
 if (!calma) setInterval(() => { if (Math.random() < 0.35) glitch(250, false); }, 6000);  // 35 % cada 6 s
 
+// --- Bizarras con glitch (5.5c): al pasar el ratón, la carátula falla como una tele estropeada ---
+const bizarras = [...document.querySelectorAll(".compra-rejilla.bizarra .ficha")];  // [] si no hay
+bizarras.forEach(f =>
+    f.addEventListener("mouseenter", () => {  // mouseenter: al entrar el ratón (no se repite al moverlo dentro)
+        reanimar(f, "tele-rota");  // CSS: la animación de la carátula (se repite en cada entrada)
+        SFX.glitch();
+    }));
+// Y de vez en cuando una al azar falla sola, sin sonido (15 % cada 8 s, ~1 por minuto; así también se ve en el móvil)
+if (!calma && bizarras.length) setInterval(() => {
+    if (Math.random() < 0.15) reanimar(bizarras[Math.floor(Math.random() * bizarras.length)], "tele-rota");
+}, 8000);
+
 // ===================== Efectos bizarros (paso 3.6e) =====================
 // --- Modo caos: SOLO manual (botón "NO PULSAR" o código Konami). 7 s de colores, bamboleo y "ay ay ay" ---
 let enCaos = false;  // evita que se active dos veces a la vez
