@@ -2,6 +2,7 @@
 # Aquí no hay cálculos: solo pedir datos y devolverlos (los cálculos van en analysis.py).
 import json  # para escribir la consulta de GetItems en formato JSON
 import os  # para leer variables de entorno
+import random  # para elegir un punto al azar del catálogo de la tienda
 import time  # para saber cuándo caduca la caché de la tienda
 
 import requests  # librería para hacer peticiones HTTP
@@ -238,7 +239,9 @@ def _ficha_tienda(item):
     compra = item.get("best_purchase_option") or {}  # la mejor forma de comprarlo ({} si no se vende)
     resenas = (item.get("reviews") or {}).get("summary_filtered") or {}
     votadas = sorted(item.get("tags", []), key=lambda t: t.get("weight", 0), reverse=True)  # más votadas primero
+    fecha = (item.get("release") or {}).get("steam_release_date")  # segundos desde 1970 (None si no la da)
     return {
+        "anio": time.gmtime(fecha).tm_year if fecha else None,  # gmtime: segundos -> fecha; tm_year: su año
         "appid": item["appid"],
         "nombre": item.get("name", "?"),
         "precio": compra.get("formatted_final_price"),  # "19,99€"; None = gratis o no está a la venta
@@ -251,6 +254,33 @@ def _ficha_tienda(item):
         "pct": resenas.get("percent_positive"),  # % de reseñas positivas
         "etiquetas": [_nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas],
     }
+
+
+def _pedir_tienda(query):
+    """Hace UNA búsqueda en la tienda. query: qué buscar (start, count, sort, filters).
+
+    Devuelve (juegos, total de coincidencias); None si falla. Siempre solo juegos ya publicados.
+    """
+    query["filters"].update({
+        "released_only": True,  # sin esto salen juegos "Próximamente", sin precio
+        "type_filters": {"include_games": True},  # solo juegos (ni DLC, ni bandas sonoras...)
+    })
+    consulta = {
+        "query": query,
+        "context": {"language": "spanish", "country_code": "ES"},  # textos en español y precios en euros
+        "data_request": {"include_all_purchase_options": True, "include_reviews": True, "include_tag_count": 20,
+                         "include_basic_info": True,  # basic_info: desarrolladores (para no repetir sagas)
+                         "include_release": True},  # release: fecha de lanzamiento (el año)
+    }
+    try:
+        respuesta = requests.get(QUERY_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
+        respuesta.raise_for_status()
+        datos = respuesta.json()["response"]
+        items = datos.get("store_items", [])
+        total = datos.get("metadata", {}).get("total_matching_records", 0)
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
+        return None
+    return [_ficha_tienda(i) for i in items if i.get("success") == 1 and "appid" in i], total
 
 
 def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
@@ -272,28 +302,32 @@ def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
         return guardado[1]
     # Dentro de un grupo vale CUALQUIERA de sus etiquetas; entre grupos hacen falta TODOS
     grupos = [{"tagids": [t]} for t in tagids] if todas else [{"tagids": tagids}]
-    consulta = {
-        "query": {
-            "start": 0, "count": cantidad, "sort": orden,
-            "filters": {
-                "released_only": True,  # sin esto salen juegos "Próximamente", sin precio
-                "type_filters": {"include_games": True},  # solo juegos (ni DLC, ni bandas sonoras...)
-                "tagids_must_match": grupos,
-            },
-        },
-        "context": {"language": "spanish", "country_code": "ES"},  # textos en español y precios en euros
-        "data_request": {"include_all_purchase_options": True, "include_reviews": True, "include_tag_count": 20,
-                         "include_basic_info": True},  # basic_info: desarrolladores (para no repetir sagas)
-    }
-    try:
-        respuesta = requests.get(QUERY_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
-        respuesta.raise_for_status()
-        items = respuesta.json()["response"].get("store_items", [])
-    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
+    respuesta = _pedir_tienda({"start": 0, "count": cantidad, "sort": orden,
+                               "filters": {"tagids_must_match": grupos}})
+    if respuesta is None:  # falló: no se guarda nada
         return None
-    juegos = [_ficha_tienda(i) for i in items if i.get("success") == 1 and "appid" in i]
+    juegos = respuesta[0]  # [0]: los juegos ([1] sería el total, que aquí no hace falta)
     ahora = time.time()
     for k in [k for k, (momento, _) in _cache_tienda.items() if ahora - momento >= CADUCIDAD_TIENDA]:
         del _cache_tienda[k]  # limpieza: fuera las búsquedas caducadas (la memoria no crece sin fin)
     _cache_tienda[clave] = (ahora, juegos)
     return juegos
+
+
+_total_catalogo = []  # [(momento en que se guardó, nº de juegos publicados)]: dato de la tienda, no del usuario
+
+
+def tienda_al_azar(cantidad=50):
+    """'cantidad' juegos seguidos desde un punto al azar de TODO el catálogo publicado (paso 5.4).
+
+    El total del catálogo se guarda 3 h; los juegos no (cada visita cae en otro sitio). None si falla.
+    """
+    if not _total_catalogo or time.time() - _total_catalogo[0][0] >= CADUCIDAD_TIENDA:  # no está o caducó
+        respuesta = _pedir_tienda({"start": 0, "count": 1, "filters": {}})  # solo queremos el total
+        if respuesta is None or not respuesta[1]:
+            return None
+        _total_catalogo[:] = [(time.time(), respuesta[1])]  # [:] = sustituye el contenido de la lista
+    _cargar_nombres_etiquetas()  # para traducir sus etiquetas (si falla, saldrán sin etiquetas)
+    inicio = random.randrange(max(_total_catalogo[0][1] - cantidad, 1))  # randrange(n): de 0 a n-1, al azar
+    respuesta = _pedir_tienda({"start": inicio, "count": cantidad, "filters": {}})
+    return None if respuesta is None else respuesta[0]

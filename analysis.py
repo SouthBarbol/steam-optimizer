@@ -876,3 +876,42 @@ def que_comprar(populares, raras, favoritas, tuyos):
     estudios = set()  # desarrolladoras ya recomendadas (compartido: primero mainstream, luego bizarras)
     return {"mainstream": elegir_compra(main, TOP_MAINSTREAM, estudios),
             "bizarras": elegir_compra(biz, TOP_BIZARRAS, estudios)}
+
+
+# ===================== Tragaperras de la tienda (paso 5.4) =====================
+MIN_RESENAS_AZAR = 10  # para que el juego exista para alguien más que su creador
+PLANTILLAS_TIENDA = [  # provisionales: {nombre}, {anio}, {estudio}, {precio}, {etiqueta}, {resenas}
+    "El algoritmo lanzó un dardo con los ojos cerrados y cayó en {nombre}. Ahora es tu problema.",
+    "{estudio} hizo {nombre} un martes. Se nota.",
+    "{resenas} personas han reseñado {nombre}. Una de ellas era un loro.",
+    "Por {precio} te llevas {nombre} y una mirada de desaprobación de tu gato.",
+    "{nombre}, «{etiqueta}» de {anio}. Huele a cajón de casa de tu abuela.",
+    "En {anio}, {estudio} soñó con {nombre}. Nadie le despertó a tiempo.",
+    "{nombre}: «{etiqueta}» por {precio}. Un percebe lo recomienda. Solo uno, pero con mucha convicción.",
+]
+
+
+def tragaperras_tienda(tienda, tuyos):
+    """Fichas de juegos de la tienda al azar, cada una con su frase absurda ya rellena (paso 5.4).
+
+    tienda: juegos de tienda_al_azar. Quita lo que tenéis, los adultos, lo que no está a la venta
+    (candidatos_compra) y los que tienen menos de MIN_RESENAS_AZAR reseñas.
+    """
+    fichas = []
+    for j in candidatos_compra(tienda, tuyos):
+        if j["resenas"] < MIN_RESENAS_AZAR:
+            continue
+        utiles = principales(j["etiquetas"]) or amplias(j["etiquetas"])  # "or": si no hay específicas, amplias
+        precio = "gratis" if j["gratis"] else j["precio"]
+        resenas = f"{j['resenas']:,}".replace(",", ".")  # 2379 -> "2.379"
+        frase = random.choice(PLANTILLAS_TIENDA).format(  # plantilla al azar con sus huecos rellenos
+            nombre=j["nombre"],
+            anio=j.get("anio") or "un año que nadie recuerda",
+            estudio=juntar_nombres(j.get("desarrolladores", [])),  # "Alguien" si Steam no lo da
+            precio=precio,
+            etiqueta=random.choice(utiles[:TOP_ETIQUETAS_RULETA]) if utiles else SIN_ETIQUETA,
+            resenas=resenas,
+        )
+        detalle = f"{precio} · {j['pct']} % de {resenas} reseñas positivas"
+        fichas.append({"nombre": j["nombre"], "appid": j["appid"], "frase": frase, "detalle": detalle})
+    return fichas

@@ -914,8 +914,8 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 
 /* Ruleta del caos (4.4): ficha en verde lima, como el tapete de un casino */
 .ruleta .ficha { border-color: #39ff14; box-shadow: 0 0 14px #39ff1455; }
-.ruleta-otra[hidden] { display: none; }
-.ruleta .ficha.girando img { filter: blur(3px); }  /* carátula desenfocada mientras gira la ruleta (4.5b) */
+.tragaperras-otra[hidden] { display: none; }  /* el estilo de botón no debe ganarle a "hidden" */
+.tragaperras .ficha.girando img { filter: blur(3px); }  /* carátula desenfocada mientras gira (4.5b) */
 .centro { text-align: center; }
 
 /* ===================== ¿Qué comprar? (paso 5.3) ===================== */
@@ -944,3 +944,5 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
     border-radius: 3px;
 }
 .compra-resenas, .compra-motivo { margin: 0.3rem 0; font-size: 0.5rem; color: var(--texto); }
+.compra-titulo.azar { color: #ffe600; }  /* tragaperras de la tienda (5.4): amarillo de máquina recreativa */
+.tienda-azar .ficha { color: #ffe600; }  /* borde y halo amarillos (la ficha usa currentColor) */

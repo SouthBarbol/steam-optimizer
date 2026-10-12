@@ -324,7 +324,7 @@
         {% if ruleta %}
             {% set f = ruleta|random %}  {# la primera ficha, al azar #}
             {# |tojson: forma segura de pasar la lista de fichas a JavaScript #}
-            <section id="ruleta" class="stats ruleta" data-fichas='{{ ruleta|tojson }}'>
+            <section id="ruleta" class="stats ruleta tragaperras" data-fichas='{{ ruleta|tojson }}'>
                 <h2>🎰 Ruleta del caos</h2>
                 {# Presentador cascarrabias: cada clic le enfada más (efectos.js); el bocadillo empieza vacío #}
                 <button type="button" id="cascarrabias" class="cascarrabias" aria-label="Presentador cascarrabias">
@@ -333,14 +333,14 @@
                 <p class="match-contador">Cualquier juego de la librería. Sin lógica. Sin piedad.</p>
                 <div class="match">
                     <article class="ficha">
-                        <img id="ruleta-img" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ f.appid }}/header.jpg" alt="Carátula de {{ f.nombre }}" loading="lazy">
+                        <img id="ruleta-img" class="tragaperras-img" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ f.appid }}/header.jpg" alt="Carátula de {{ f.nombre }}" loading="lazy">
                         <h3 id="ruleta-nombre" class="ficha-nombre">{{ f.nombre }}</h3>
-                        <p id="ruleta-frase" class="ficha-bio">«{{ f.frase }}»</p>
+                        <p id="ruleta-frase" class="ficha-bio tragaperras-frase">«{{ f.frase }}»</p>
                         <a id="ruleta-steam" class="ver-steam" href="https://store.steampowered.com/app/{{ f.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
                     </article>
                     <p id="ruleta-dio" class="ruleta-dio" aria-live="polite"></p>  {# "¡Pero era yo, Dio!" (efectos.js) #}
                     {# Oculto hasta que ruleta.js lo active (sin JavaScript no haría nada) #}
-                    <p class="centro"><button type="button" id="ruleta-otra" class="ruleta-otra" hidden>🎲 Otra</button></p>
+                    <p class="centro"><button type="button" id="ruleta-otra" class="tragaperras-otra" hidden>🎲 Otra</button></p>
                 </div>
             </section>
         {% endif %}
@@ -382,6 +382,25 @@
                 {% endif %}
             {% else %}
                 <p class="match-vacio">No hay recomendaciones de compra: hacen falta juegos jugados (2 h o más) con etiquetas en Steam{% if compra and compra.aviso %}, y la tienda de Steam no ha respondido{% endif %}.</p>
+            {% endif %}
+            {# Tragaperras de la tienda (5.4): fuera del "if" de arriba, sale aunque fallen las recomendaciones.
+               La primera la elige Jinja2 (|random); "Otra" la sortea ruleta.js sin llamar a Steam #}
+            {% if azar %}
+                {% set f = azar|random %}
+                <div class="tragaperras tienda-azar" data-fichas='{{ azar|tojson }}'>
+                    <h3 class="compra-titulo azar">🎰 Tragaperras de la tienda: cualquier juego de Steam</h3>
+                    <div class="match">
+                        <article class="ficha">
+                            <img class="tragaperras-img" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ f.appid }}/header.jpg" alt="Carátula de {{ f.nombre }}" loading="lazy">
+                            <h3 class="ficha-nombre">{{ f.nombre }}</h3>
+                            <p class="ficha-bio tragaperras-frase">«{{ f.frase }}»</p>
+                            <p class="compra-resenas tragaperras-detalle">{{ f.detalle }}</p>
+                            <a class="ver-steam" href="https://store.steampowered.com/app/{{ f.appid }}/" target="_blank" rel="noopener noreferrer">VER EN STEAM ↗</a>
+                        </article>
+                        {# Oculto hasta que ruleta.js lo active (sin JavaScript no haría nada) #}
+                        <p class="centro"><button type="button" class="tragaperras-otra" hidden>🎲 Otra</button></p>
+                    </div>
+                </div>
             {% endif %}
         </section>
     {% endif %}

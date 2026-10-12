@@ -182,8 +182,18 @@ la librería de un usuario.
   navegador): `pedir_compra` en `app.py` (3 búsquedas; aviso si alguna falla), sección "🛒 ¿Qué comprar?"
   bajo la ruleta (macro `ficha_compra`, rejillas cian/morado, precio tachado, "−X %", GRATIS, motivo).
   Las pruebas de extremo a extremo deben sustituir también `app.buscar_tienda`. SIGUIENTE (en orden):
-  5.4 juego al azar de
-  la tienda con frase · 5.5 efectos/logros/docs.
+  5.4a HECHO y probado (datos falsos y Steam real): `tienda_al_azar` en `steam_client.py` (1 llamada por
+  visita a un punto al azar de ~132.000 juegos; total en caché 3 h; `_pedir_tienda` común con
+  `buscar_tienda`; campo `anio`), `tragaperras_tienda` + `PLANTILLAS_TIENDA` en `analysis.py` (mín. 10
+  reseñas, sin tuyos ni adultos). 5.4b HECHO (probado con datos falsos; FALTA prueba del usuario en navegador): `ruleta.js` =
+  `montarTragaperras(seccion)` para toda sección `.tragaperras` (clases `tragaperras-img/-frase/-detalle/
+  -otra`); la ruleta de la librería conserva sus ids (`ruleta-otra`, `ruleta-dio`: ORA/MUDA, Dio, Ludópata);
+  tarjeta amarilla "🎰 Tragaperras de la tienda" al final de ¿Qué comprar? (`azar` en `app.py`; las
+  pruebas deben sustituir también `app.tienda_al_azar`). SIGUIENTE: 5.5 efectos/logros/docs
+  · 5.6 (IDEA DEL USUARIO) sección aparte "juego malísimo": recomendar un juego con MUCHÍSIMAS reseñas
+  negativas, al azar entre varios para que no salgan siempre los mismos. A investigar: `Query` no tiene
+  orden "peor valorados"; probar populares/valorados con muchas reseñas y filtrar % positivo bajo
+  (p. ej. < 40 %), o varias páginas; sin adultos ni lo que tenéis; frase absurda y efectos propios.
   Resultado 5.0: `IStoreQueryService/Query/v1` (input_json, SIN API key) sirve para todo en UNA llamada:
   filtros `released_only`, `type_filters.include_games`, `tagids_must_match` (dentro de un grupo = O;
   entre grupos = Y), `price_filters.only_discounted`; `context` spanish/ES -> `best_purchase_option` con

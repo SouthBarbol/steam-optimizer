@@ -11,11 +11,11 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
     ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
     abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
-    ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS,
+    ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS, tragaperras_tienda,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
-    buscar_tienda, ORDEN_VALORADOS,
+    buscar_tienda, ORDEN_VALORADOS, tienda_al_azar,
 )
 
 app = Flask(__name__)  # crea la aplicación web
@@ -142,6 +142,8 @@ def index():
         recomendacion=recomendacion,  # qué jugar (calculado arriba)
         ruleta=ruleta(juegos, etiquetas),  # ruleta del caos: todos los juegos con su frase absurda
         compra=pedir_compra(juegos, etiquetas),  # qué comprar (paso 5): mainstream y bizarras de la tienda
+        # tragaperras de la tienda (5.4): juegos al azar de Steam ("or []": si Steam falla, no sale la tarjeta)
+        azar=tragaperras_tienda(tienda_al_azar() or [], {j["appid"] for j in juegos}),
         logros=catalogo_logros(),  # todos los logros absurdos (para el contador X/N)
         # tus logros por datos: tarjetas[0] eres tú; perf_counter() - inicio = segundos que ha tardado
         ganados=logros_datos(tarjetas[0]["stats"], tarjetas[0]["perfil"], len(familia), time.perf_counter() - inicio),
