@@ -915,4 +915,5 @@ html.tiempo-parado { filter: invert(1); }  /* invert(1) = colores en negativo */
 /* Ruleta del caos (4.4): ficha en verde lima, como el tapete de un casino */
 .ruleta .ficha { border-color: #39ff14; box-shadow: 0 0 14px #39ff1455; }
 .ruleta-otra[hidden] { display: none; }
+.ruleta .ficha.girando img { filter: blur(3px); }  /* carátula desenfocada mientras gira la ruleta (4.5b) */
 .centro { text-align: center; }

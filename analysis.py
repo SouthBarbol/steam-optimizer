@@ -206,6 +206,9 @@ LOGROS = {
     "compulsivo": ("👆", "Clic compulsivo", "La tarjeta te ha pedido que pares. No has parado."),  # 3.6e
     "konami": ("🎮", "Código Konami", "↑↑↓↓←→←→BA. Tienes una edad. Respeto."),  # 3.6e
     "jojo": ("⭐", "¿Eso es una JoJo referencia??", "Las has encontrado todas. Yare yare daze."),  # 3.6f
+    "piedra": ("💔", "Corazón de piedra", "Todos los juegos te han tirado ficha y los has rechazado a todos."),  # 4.5a
+    "enamoradizo": ("💘", "Enamoradizo", "Match con todos. Tienes el corazón más grande que el disco duro."),  # 4.5a
+    "sinmiedo": ("🧭", "Sin miedo", "Has abierto un juego de territorio inexplorado. Tu zona de confort te echa de menos."),  # 4.5c
 }
 
 # Umbrales de los logros que dependen de tus datos (ajustables)

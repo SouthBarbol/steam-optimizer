@@ -465,3 +465,27 @@ function dio() {
     clearTimeout(relojDio);  // si ya había uno en marcha, lo cancelamos
     relojDio = setTimeout(() => (notaDio.textContent = ""), 4000);
 }
+
+// ===================== Steam Match (paso 4.5a): 💚 confeti y fanfarria, ❌ corazón roto =====================
+// match.js pasa las fichas; aquí solo va el espectáculo. Mientras una ficha sale volando (350 ms, como en
+// match.js) los clics se ignoran, para no lanzar confeti sin match de verdad.
+const btnMatchSi = document.getElementById("match-si");  // null si no hay recomendaciones
+const btnMatchNo = document.getElementById("match-no");
+let ultimoMatch = 0;  // momento (ms) del último clic que contó
+const matchLibre = () => {  // true si ya pasó la animación de la ficha anterior
+    if (performance.now() - ultimoMatch < 350) return false;
+    ultimoMatch = performance.now();
+    return true;
+};
+if (btnMatchSi) btnMatchSi.addEventListener("click", () => {
+    if (!matchLibre()) return;
+    const r = btnMatchSi.getBoundingClientRect();  // posición del botón en pantalla
+    confeti(r.left + r.width / 2, r.top);  // papelitos desde el centro del botón
+    SFX.fanfarria();
+});
+if (btnMatchNo) btnMatchNo.addEventListener("click", () => {
+    if (!matchLibre()) return;
+    const r = btnMatchNo.getBoundingClientRect();
+    flotante("💔", r.left + r.width / 2, r.top - 20);  // corazón roto que sube y se desvanece
+    SFX.error();  // dos notas graves
+});

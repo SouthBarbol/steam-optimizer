@@ -154,7 +154,12 @@ la librería de un usuario.
      FUSIONÓ en la ruleta (eran redundantes): se borraron su sección, `sorpresa.js` y `candidatos_sorpresa`;
      el cascarrabias, Dio, ORA/MUDA y el logro Ludópata cuelgan ahora de `#ruleta-otra` / `#ruleta-dio`.
      Baldur's Gate "recomendado" con 30 h = préstamo con horas desconocidas (limitación conocida): no se toca.
-  3. **4.5** efectos/sonidos/logros de Steam Match y "¿Te atreves?" + README.
+  3. **4.5** efectos/sonidos/logros (elegidos por el usuario). 4.5a HECHO (falta prueba en navegador):
+     💚 confeti + fanfarria y ❌ 💔 + error (listeners en `efectos.js`, sin tocar `match.js`); logros
+     "piedra" y "enamoradizo" en `logros.js` + `LOGROS` (probado: funciona). 4.5b HECHO y probado: ruleta
+     tragaperras en `ruleta.js` (giro 1 s, `SFX.tic`, `.girando` desenfoca; reduced-motion = directo; clic
+     durante el giro lo reinicia). 4.5c HECHO (falta prueba en navegador y commit): logro "sinmiedo" (VER EN
+     STEAM en ¿Te atreves?) y README al día (paso 4, caché, límites, `ay-ay-ay.mp3`).
   4. IDEA DEL USUARIO (fase aparte, a valorar): usar ETIQUETAS en vez de géneros también en la afinidad
      y en el perfil gamer (los géneros son demasiado genéricos), y rehacer las frases de `PERFILES`.
   Luego: paso 5 (qué comprar).

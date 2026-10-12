@@ -91,6 +91,24 @@ if (zonaLogros) {  // todo lo de abajo, solo en la página de resultados
         if (vecesOtro >= 10) desbloquear("ludopata");
     });
 
+    // Corazón de piedra / Enamoradizo: ❌ o 💚 a TODAS las fichas de Steam Match (cada una cuenta una vez)
+    const totalFichas = document.querySelectorAll("#match .ficha").length;
+    const rechazados = new Set(), elegidos = new Set();  // Set: colección sin repetidos
+    const anotar = (conjunto) => {
+        // la ficha que se ve (match.js la cambia 350 ms después del clic, así que aún es la votada)
+        const visible = document.querySelector("#match .ficha:not([hidden]) .ficha-nombre");
+        if (visible) conjunto.add(visible.textContent);
+        if (rechazados.size === totalFichas && elegidos.size === 0) desbloquear("piedra");
+        if (elegidos.size === totalFichas) desbloquear("enamoradizo");
+    };
+    const btnNoLogro = document.getElementById("match-no"), btnSiLogro = document.getElementById("match-si");
+    if (btnNoLogro) btnNoLogro.addEventListener("click", () => anotar(rechazados));
+    if (btnSiLogro) btnSiLogro.addEventListener("click", () => anotar(elegidos));
+
+    // Sin miedo: abrir en Steam un juego de "¿Te atreves?" (el clic llega antes de que se abra la pestaña)
+    document.querySelectorAll("#atreverse .ver-steam").forEach(a =>
+        a.addEventListener("click", () => desbloquear("sinmiedo")));
+
     // Explorador del abismo: llegar al final de la página (con 5 px de margen)
     window.addEventListener("scroll", () => {
         if (innerHeight + scrollY >= document.documentElement.scrollHeight - 5) desbloquear("abismo");
