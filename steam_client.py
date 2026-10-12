@@ -2,6 +2,7 @@
 # Aquí no hay cálculos: solo pedir datos y devolverlos (los cálculos van en analysis.py).
 import json  # para escribir la consulta de GetItems en formato JSON
 import os  # para leer variables de entorno
+import time  # para saber cuándo caduca la caché de la tienda
 
 import requests  # librería para hacer peticiones HTTP
 from dotenv import load_dotenv  # lee el archivo .env
@@ -221,3 +222,74 @@ def get_tags(appids):
             for a in lote:  # los del lote que Steam no devolvió con ficha (retirados...): dato definitivo
                 _cache_etiquetas.setdefault(a, [])  # setdefault: pone [] solo si no tiene ya etiquetas
     return {a: _cache_etiquetas[a] for a in appids if a in _cache_etiquetas}
+
+
+# ===================== Tienda: buscar juegos para comprar (paso 5.1) =====================
+# URL de la Web API de Steam que busca en la tienda (no necesita API key; ver "Resultado 5.0" en CLAUDE.md)
+QUERY_URL = "https://api.steampowered.com/IStoreQueryService/Query/v1/"
+ORDEN_POPULARES = 10  # valores de "sort" SIN documentar, deducidos probando: 10 = más populares...
+ORDEN_VALORADOS = 21  # ...y 21 = mejor valorados
+CADUCIDAD_TIENDA = 3 * 3600  # segundos: los precios y las ofertas cambian, así que la caché caduca a las 3 h
+_cache_tienda = {}  # {búsqueda: (momento en que se guardó, juegos)}; datos de la tienda, no del usuario
+
+
+def _ficha_tienda(item):
+    """Convierte un juego de la respuesta de Steam en un diccionario sencillo."""
+    compra = item.get("best_purchase_option") or {}  # la mejor forma de comprarlo ({} si no se vende)
+    resenas = (item.get("reviews") or {}).get("summary_filtered") or {}
+    votadas = sorted(item.get("tags", []), key=lambda t: t.get("weight", 0), reverse=True)  # más votadas primero
+    return {
+        "appid": item["appid"],
+        "nombre": item.get("name", "?"),
+        "precio": compra.get("formatted_final_price"),  # "19,99€"; None = gratis o no está a la venta
+        "precio_original": compra.get("formatted_original_price"),  # solo viene si hay descuento
+        "descuento": compra.get("discount_pct", 0),  # % de descuento (0 = sin oferta)
+        "resenas": resenas.get("review_count", 0),
+        "pct": resenas.get("percent_positive"),  # % de reseñas positivas
+        "etiquetas": [_nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas],
+    }
+
+
+def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
+    """Juegos YA publicados de la tienda con esas etiquetas (nombres en español), con precio en euros.
+
+    todas=False: con ALGUNA de las etiquetas; todas=True: con TODAS a la vez (mezclas raras).
+    Devuelve una lista de diccionarios (ver _ficha_tienda); [] si ninguna etiqueta existe;
+    None si falla la consulta (no se guarda en caché).
+    """
+    if not _cargar_nombres_etiquetas():  # sin la lista de etiquetas no podemos traducir nombres a números
+        return None
+    numero_de = {nombre: tagid for tagid, nombre in _nombres_etiquetas.items()}  # al revés: nombre -> número
+    tagids = sorted({numero_de[e] for e in etiquetas if e in numero_de})  # {}: sin repetidos; sorted: mismo orden
+    if not tagids:
+        return []
+    clave = (tuple(tagids), todas, orden, cantidad)  # tupla: puede ser clave de diccionario (una lista no)
+    guardado = _cache_tienda.get(clave)
+    if guardado and time.time() - guardado[0] < CADUCIDAD_TIENDA:  # está y no ha caducado
+        return guardado[1]
+    # Dentro de un grupo vale CUALQUIERA de sus etiquetas; entre grupos hacen falta TODOS
+    grupos = [{"tagids": [t]} for t in tagids] if todas else [{"tagids": tagids}]
+    consulta = {
+        "query": {
+            "start": 0, "count": cantidad, "sort": orden,
+            "filters": {
+                "released_only": True,  # sin esto salen juegos "Próximamente", sin precio
+                "type_filters": {"include_games": True},  # solo juegos (ni DLC, ni bandas sonoras...)
+                "tagids_must_match": grupos,
+            },
+        },
+        "context": {"language": "spanish", "country_code": "ES"},  # textos en español y precios en euros
+        "data_request": {"include_all_purchase_options": True, "include_reviews": True, "include_tag_count": 20},
+    }
+    try:
+        respuesta = requests.get(QUERY_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
+        respuesta.raise_for_status()
+        items = respuesta.json()["response"].get("store_items", [])
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
+        return None
+    juegos = [_ficha_tienda(i) for i in items if i.get("success") == 1 and "appid" in i]
+    ahora = time.time()
+    for k in [k for k, (momento, _) in _cache_tienda.items() if ahora - momento >= CADUCIDAD_TIENDA]:
+        del _cache_tienda[k]  # limpieza: fuera las búsquedas caducadas (la memoria no crece sin fin)
+    _cache_tienda[clave] = (ahora, juegos)
+    return juegos

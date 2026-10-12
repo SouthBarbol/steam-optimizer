@@ -162,7 +162,19 @@ la librería de un usuario.
      STEAM en ¿Te atreves?) y README al día (paso 4, caché, límites, `ay-ay-ay.mp3`).
   4. IDEA DEL USUARIO (fase aparte, a valorar): usar ETIQUETAS en vez de géneros también en la afinidad
      y en el perfil gamer (los géneros son demasiado genéricos), y rehacer las frases de `PERFILES`.
-  Luego: paso 5 (qué comprar).
+  Luego: paso 5 (qué comprar). Sub-pasos: 5.0 investigación (HECHO) · 5.1 (HECHO y probado contra Steam)
+  `buscar_tienda(etiquetas, todas, orden, cantidad)` en `steam_client.py` (recibe NOMBRES de etiquetas;
+  caché 3 h; `None` si falla; precio None = gratis/F2P o no a la venta). Usuario eligió opción A: "tus
+  etiquetas favoritas" = etiquetas de tus juegos más jugados, ponderadas por horas · 5.2 puntuación y reparto mainstream/bizarras · 5.3 interfaz · 5.4 juego al azar de
+  la tienda con frase · 5.5 efectos/logros/docs.
+  Resultado 5.0: `IStoreQueryService/Query/v1` (input_json, SIN API key) sirve para todo en UNA llamada:
+  filtros `released_only`, `type_filters.include_games`, `tagids_must_match` (dentro de un grupo = O;
+  entre grupos = Y), `price_filters.only_discounted`; `context` spanish/ES -> `best_purchase_option` con
+  `formatted_final_price` (€), `discount_pct`, `formatted_original_price` (sin precio = gratis o no a la
+  venta); `include_reviews` -> `reviews.summary_filtered` (review_count, percent_positive);
+  `include_tag_count` -> etiquetas; `include_release`. `sort` sin documentar: 10-13 ≈ popularidad,
+  21 ≈ mejor valorados (también populares); 0-3 ≈ por fecha/alfabético (inútiles). count=100 -> 1,4 s
+  (~1 MB). Sin `released_only` salen juegos "Próximamente" sin precio. SteamSpy descartado (USD, atrasado).
   AL FINAL (antes de publicar): paso de PERSONALIZACIÓN DE FRASES. Rehacer las frases de broma
   (`BIOS_*`, `BIOS_ATREVIDO`, ruleta...) con humor bizarro y quitar TODAS las de alquileres, vivienda,
   Euríbor o capitalismo: al usuario no le gustan y "se nota que las ha escrito una IA". Proponer antes.
