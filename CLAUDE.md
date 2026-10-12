@@ -27,20 +27,19 @@ a trabajar con Claude Code.
 * Control de versiones con Git y GitHub Desktop. No hagas commits ni push
 sin que yo lo pida.
 
-## Estructura prevista
+## Estructura
 
 ```
 steam-optimizer/
-├── app.py              # servidor Flask
-├── steam_client.py     # capa de integración: llamadas a Steam (antes steam_service.py)
-├── analysis.py         # capa de lógica: cálculos puros
-├── templates/          # HTML
-├── static/css, js/     # estilos y scripts
-├── .env                # secretos (NO se sube a Git)
-├── .env.example        # nombres de variables, sin valores
-├── requirements.txt
-├── README.md
-└── SECURITY\_CHECKLIST.md
+├── app.py              # servidor Flask: rutas, validación y orquestación (pedir_*), cabeceras de seguridad
+├── steam_client.py     # capa de integración: TODAS las llamadas a Steam y sus cachés en memoria
+├── analysis.py         # capa de lógica: cálculos puros (estadísticas, qué jugar, qué comprar, frases)
+├── templates/index.html
+├── static/css/style.css, static/fonts/ (Press Start 2P), static/sonidos/ (clips privados, en .gitignore)
+├── static/js/          # sonido, efectos, carga, logros, match, atreverse, ruleta (tragaperras),
+│                       # navegacion (menú y cohete), libreria (buscar/ordenar/HIGH SCORES)
+├── ALGORITMO.md        # cómo recomiendan "qué jugar" y "qué comprar" (mantenerlo al día)
+├── .env / .env.example, requirements.txt, README.md, SECURITY_CHECKLIST.md
 ```
 
 ## Seguridad (prioridad alta)
@@ -87,282 +86,75 @@ Evolución prevista:
 
 ## Estado actual
 
-Fase 1 completada: repo en GitHub, clonado, venv, dependencias instaladas,
-`.gitignore`, `README.md`, `SECURITY\_CHECKLIST.md`.
+Fases 1 y 2 completadas (repo, venv, Steam Web API, librería en el navegador). Fase 3 casi terminada:
+todo lo de abajo está HECHO y probado por el usuario en el navegador (y con commit), salvo lo que se indique.
 
-Fase 2 completada: conectar con la Steam Web API (`GetOwnedGames`) y mostrar
-la librería de un usuario.
-* Hecho: `.env` y `.env.example` creados; `steam\_service.py` con
-  `get\_owned_games(steam_id)`.
-* Hecho también: `steam\_service.py` captura los errores sin exponer la API key
-  y está comentado línea a línea; `app.py` creado (ruta `/?steam_id=...`,
-  valida 17 dígitos, muestra juegos ordenados por horas).
-* Hecho además: plantilla `templates/index.html` (Jinja2) y estilo gamer en
-  `static/css/style.css` (fuente Press Start 2P de Google Fonts). Ruta temporal
-  `/demo` con juegos inventados para ver la página sin API key (probada, se ve bien);
-  BORRARLA antes de publicar. `SECURITY\_CHECKLIST.md` actualizado.
-* Hecho: API key nueva generada y puesta en `.env`; el problema del 401 está
-  resuelto. Probado `get_owned_games` desde terminal (95 juegos) y `app.py` en
-  el navegador (`/?steam_id=...`, incluida la validación): funciona.
-* Hecho: juegos de biblioteca familiar. `get_owned_games` usa
-  `include_played_free_games=1` (95 -> 102 juegos), se añadió
-  `get_recently_played_games` y `unir_juegos` (sin duplicados, marca
-  `propio`), y `index.html` muestra la etiqueta "Familia" en los no propios.
-* LIMITACIÓN conocida: la API oficial solo expone los juegos prestados
-  (biblioteca familiar) si se han jugado en las últimas 2 semanas
-  (`GetRecentlyPlayedGames`); no hay historial completo. La vía no oficial
-  (`IFamilyGroupsService`) exige un token de sesión personal y se descartó
-  por seguridad. Documentar también en el README.
-  Probado también `IPlayerService/GetSingleGamePlaytime`: da 403 (exige token
-  de sesión del usuario, no basta la API key). Pedir el token se descartó
-  (riesgo de robo de cuenta, parece phishing, términos de Valve). Limitación
-  DEFINITIVA: en juegos prestados no jugados en 2 semanas mostramos "—" (dato
-  desconocido), no 0.
-* Hecho: Google Fonts resuelto. La fuente Press Start 2P se aloja en
-  `static/fonts/` (`@font-face` en `style.css`); ya no hay peticiones a Google.
-* Pendiente: borrar la ruta `/demo` antes de publicar. (Opcional: añadir
-  un favicon; hoy `favicon.ico` da 404, es inofensivo.)
+* Biblioteca familiar (hasta 5 IDs, sin duplicados, dueños con nombre y color), estadísticas por persona
+  (Pile of Shame, abandonados, horas en perspectiva, duelo familiar), carátulas, géneros con caché,
+  perfil gamer, estadísticas de Stand (hexágono).
+* Capa de personalidad (3.6): `sonido.js` (SFX sintetizados, 🔇 empieza silenciado, `?sonido=1` para
+  mantenerlo), `efectos.js` (pato, trombón, terremoto, caos manual/Konami, pantallazo azul, DVD,
+  cascarrabias, glitch, 7 referencias a JoJo), `carga.js` (99 % con excusas de "tu mamá"), `logros.js`
+  (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 19 logros). Clips de JoJo y `ay-ay-ay.mp3` en
+  `static/sonidos/` (en .gitignore; si faltan, suenan los sintetizados).
+* Paso 4, qué jugar (detalle en `ALGORITMO.md`): 💘 Steam Match (`match.js`, ❌/💚 con confeti y
+  logros piedra/enamoradizo), 🧭 ¿Te atreves? (territorio inexplorado, logro sinmiedo), 🎰 ruleta del caos
+  (toda la librería con frase; absorbió al "juego sorpresa": cascarrabias, Dio, ORA/MUDA y logro
+  Ludópata cuelgan de `#ruleta-otra`/`#ruleta-dio`).
+* Paso 5, qué comprar (detalle en `ALGORITMO.md`): `buscar_tienda` y `tienda_al_azar` en
+  `steam_client.py` (`IStoreQueryService/Query`, sin API key, caché 3 h); en `analysis.py`
+  `tus_etiquetas` (amplias a mitad de peso, avisos de contenido fuera), `mezclas_raras`, `que_comprar`
+  (6 mainstream + 6 bizarras; sin lo que tenéis, sin adultos, máx. 1 gratis y 1 por desarrolladora) y
+  `tragaperras_tienda`; `pedir_compra` en `app.py`; sección 🛒 con macro `ficha_compra` y tragaperras
+  amarilla de la tienda (`ruleta.js` = `montarTragaperras` para toda `.tragaperras`).
+* Fase de estética (CERRADA): espaciado con variables `--hueco-seccion`, `--hueco-tarjetas`, `--relleno`;
+  menú fijo `[data-menu]` + cohete 🚀 (`navegacion.js`); librería plegable con buscador, orden y HIGH
+  SCORES (`libreria.js`, medallas `podio-1..3`, horas que cuentan); corazones ❤️🖤 y ofertas que
+  tiemblan; neón estropeado, botones `.arcade` con `SFX.clack`, modo CRT 📺 (`html.crt body::after`).
+  Descartado por el usuario: telarañas/sepia, precios en unidades absurdas, fichas 3D (E5).
 
-## Próxima sesión (empezar aquí)
+## Decisiones y limitaciones vigentes
 
-* Fase 3 en curso: pasos 0, 1, 2 y 3 (3.1-3.6) HECHOS y probados por el usuario en el navegador.
-  Resumen del 3.6 (capa de personalidad, ver detalle en "Fase 3"): sonido.js (SFX sintetizados, botón 🔇,
-  sonido que se mantiene al analizar con `?sonido=1`, cartel "el sonidito está apagao"), efectos.js (reveal
-  manual del perfil, confeti, letra a letra, pato, Pile of Shame con trombón, juegos olvidados, glitch,
-  terremoto, caos manual/Konami con trance ORIGINAL, pantallazo azul, DVD, cascarrabias), carga.js (99 % con
-  excusas de tu mamá), logros.js (16 logros, `desbloquear(id)`), Stand con hexágono SVG y 7 referencias a JoJo
-  (ZA WARUDO acepta "za warudo"/"the world"; ORA/MUDA con una ráfaga a la vez y clips cortados a 3 s).
-* HECHO: clips de JoJo en `static/sonidos/` (en .gitignore) y probados. Además `ay-ay-ay.mp3` suena en el
-  modo caos (empieza en el segundo 0,9 por un silencio inicial; si falta, suena el trance sintetizado).
-* Git: había `README.MD` y `README.md` duplicados en el índice (Windows no distingue mayúsculas); se quitó
-  `README.MD` con `git rm --cached` (pendiente de commit del usuario).
-* ROADMAP DEL PASO 4 (qué jugar). Detalle del algoritmo en `ALGORITMO.md` (mantenerlo al día; no repetirlo aquí).
-  HECHO y probado: 4.1-4.2 lógica base · reglas R1-R4 (racha 60/40, variedad, consejo del primo, joya
-  oculta, nota de reseñas, anti-gustos) · 4.3a bios bizarras (`BIOS_*`, vivienda/capitalismo SOLO con
-  Cádiz y Madrid) · 4.3b sección 💘 Steam Match en `index.html` (fichas + desglose, pintadas por Jinja) ·
-  4.3c `static/js/match.js` (probado por el usuario: funciona) · seguridad: logs sin Steam IDs y
-  cabeceras (CSP...) en `app.py` · **4.R5 lógica de "territorio inexplorado"** (etiquetas por lotes con
-  `get_tags`; los juegos con etiquetas que nunca has jugado, p. ej. Terror, salen del top y van a
-  `recomendacion["atreverse"]`) · **4.R5 interfaz** (tarjeta "🧭 ¿Te atreves?" en `index.html`,
-  frases `BIOS_ATREVIDO` con `poner_retos`, botón "Otro" en `static/js/atreverse.js`).
-  SIGUIENTE (en orden, proponer código antes de cada uno):
-  1. HECHO: "¿Te atreves?" probado por el usuario en el navegador (funciona) y con commit.
-  2. **4.4** 🎰 ruleta del caos: HECHA y probada con datos falsos; FALTA que el usuario la pruebe en el
-     navegador y el commit. `ruleta(juegos, etiquetas)` en `analysis.py` (frase ya rellena por juego;
-     huecos nombre, etiqueta, horas, `{duenos}` = todos con `juntar_nombres`; sin año: no lo tenemos),
-     tarjeta verde lima bajo "¿Te atreves?" y `static/js/ruleta.js`. El "Juego sorpresa" del paso 1 se
-     FUSIONÓ en la ruleta (eran redundantes): se borraron su sección, `sorpresa.js` y `candidatos_sorpresa`;
-     el cascarrabias, Dio, ORA/MUDA y el logro Ludópata cuelgan ahora de `#ruleta-otra` / `#ruleta-dio`.
-     Baldur's Gate "recomendado" con 30 h = préstamo con horas desconocidas (limitación conocida): no se toca.
-  3. **4.5** efectos/sonidos/logros (elegidos por el usuario). 4.5a HECHO (falta prueba en navegador):
-     💚 confeti + fanfarria y ❌ 💔 + error (listeners en `efectos.js`, sin tocar `match.js`); logros
-     "piedra" y "enamoradizo" en `logros.js` + `LOGROS` (probado: funciona). 4.5b HECHO y probado: ruleta
-     tragaperras en `ruleta.js` (giro 1 s, `SFX.tic`, `.girando` desenfoca; reduced-motion = directo; clic
-     durante el giro lo reinicia). 4.5c HECHO (falta prueba en navegador y commit): logro "sinmiedo" (VER EN
-     STEAM en ¿Te atreves?) y README al día (paso 4, caché, límites, `ay-ay-ay.mp3`).
-  4. IDEA DEL USUARIO (fase aparte, a valorar): usar ETIQUETAS en vez de géneros también en la afinidad
-     y en el perfil gamer (los géneros son demasiado genéricos), y rehacer las frases de `PERFILES`.
-  Luego: paso 5 (qué comprar). Sub-pasos: 5.0 investigación (HECHO) · 5.1 (HECHO y probado contra Steam)
-  `buscar_tienda(etiquetas, todas, orden, cantidad)` en `steam_client.py` (recibe NOMBRES de etiquetas;
-  caché 3 h; `None` si falla; precio None = gratis/F2P o no a la venta). Usuario eligió opción A: "tus
-  etiquetas favoritas" = etiquetas de tus juegos más jugados, ponderadas por horas · 5.2 lógica
-  ACORDADA (pasarla a `ALGORITMO.md`, sección "Qué comprar"): favoritas = 5 etiquetas principales sin
-  neutras de tus juegos de 2 h o más, horas completas a cada una; 3 búsquedas (mainstream: top 5 favoritas
-  con "alguna", populares; bizarras: 2 mezclas n.º 1/n.º 2 + rareza de puestos 6-10 con "todas",
-  valorados); fuera lo que tenéis tú y la familia; mainstream ≥ 10.000 reseñas; bizarras < 10.000 y
-  ≥ 80 %; puntos = afinidad (tus % en las 3 comunes que más pesan) × `multiplicador_valoracion` × oferta (hasta ×1,2 por
-  descuento; el PRECIO no puntúa: lo gratis no gana puntos); máx. 1 gratis por lista; 6 + 6 con
-  variedad. 5.2a HECHO y probado: `principales`, `tus_etiquetas`, `mezclas_raras`. Tras probar con la
-  librería real del usuario: `ETIQUETAS_AMPLIAS` (Acción, Rol, Estrategia...) cuentan a mitad de peso
-  (`PESO_AMPLIAS` = 0,5, función `amplias`, sin quitar hueco a las 5 específicas; idea del usuario) y
-  `ETIQUETAS_CONTENIDO` no cuentan como gusto; el usuario pidió EXCLUIR juegos adultos (`ETIQUETAS_ADULTAS`
-  en sus 5 etiquetas más votadas; la violencia no excluye). 5.2b HECHO y probado (datos falsos y
-  librería real): `que_comprar` y ayudantes; `gratis` (`is_free`) en `buscar_tienda`; nuevo
-  `MIN_RESENAS_BIZARRA` = 50; `TOP_AFINIDAD` = 3 y 6 + 6 (pedido del usuario: rejilla completa); máx. 1 juego por DESARROLLADORA en las dos listas (campo `desarrolladores` vía `include_basic_info`; evita sagas repetidas); documentado en `ALGORITMO.md`. 5.3 HECHO (probado con datos falsos y por el usuario en
-  navegador): `pedir_compra` en `app.py` (3 búsquedas; aviso si alguna falla), sección "🛒 ¿Qué comprar?"
-  bajo la ruleta (macro `ficha_compra`, rejillas cian/morado, precio tachado, "−X %", GRATIS, motivo).
-  Las pruebas de extremo a extremo deben sustituir también `app.buscar_tienda`. SIGUIENTE (en orden):
-  5.4a HECHO y probado (datos falsos y Steam real): `tienda_al_azar` en `steam_client.py` (1 llamada por
-  visita a un punto al azar de ~132.000 juegos; total en caché 3 h; `_pedir_tienda` común con
-  `buscar_tienda`; campo `anio`), `tragaperras_tienda` + `PLANTILLAS_TIENDA` en `analysis.py` (mín. 10
-  reseñas, sin tuyos ni adultos). 5.4b HECHO (probado con datos falsos; FALTA prueba del usuario en navegador): `ruleta.js` =
-  `montarTragaperras(seccion)` para toda sección `.tragaperras` (clases `tragaperras-img/-frase/-detalle/
-  -otra`); la ruleta de la librería conserva sus ids (`ruleta-otra`, `ruleta-dio`: ORA/MUDA, Dio, Ludópata);
-  tarjeta amarilla "🎰 Tragaperras de la tienda" al final de ¿Qué comprar? (`azar` en `app.py`; las
-  pruebas deben sustituir también `app.tienda_al_azar`); probado por el usuario. Espaciado general
-  ampliado a petición del usuario ("todo apelotonado"): variables `--hueco-seccion`, `--hueco-tarjetas`
-  y `--relleno` en `:root` de `style.css`, `letter-spacing` en `body`; `.atreverse` igualada al resto.
-  FASE E (ESTÉTICA, elegida por el usuario; CERRADA):
-  E1a HECHO y probado: `static/js/navegacion.js` construye el menú fijo con los elementos `[data-menu]`
-  (resalta el actual con IntersectionObserver) + cohete 🚀 abajo a la izquierda · E1b HECHO y probado:
-  tabla dentro de `<details id="libreria-plegable">` (cerrada; se abre sola al saltar desde el menú),
-  `static/js/libreria.js` (buscador sin tildes con contador; cabeceras `th[data-orden]` -> botones ▲▼;
-  filas con `data-nombre` y `data-horas`, -1 = "—" siempre al final). Con la librería cerrada, To Be
-  Continued y "abismo" salen antes · E2 HECHO y probado: corazones ❤️🖤 (1 por cada 20 %; sin % no hay)
-  y ofertas que tiemblan (`--temblor` = descuento/25 px; precio tachado colgando), macro `ficha_compra`
-  + CSS, sin JS (precios en unidades absurdas: DESCARTADO por el usuario) · E3 HECHO y
-  probado: neón estropeado (efectos.js parte cada h2 de texto puro en nodos de texto), clase `arcade`
-  en botones de acción (NO en btn-revelar: su animación `latir` usa box-shadow) + `SFX.clack`, botón 📺
-  `#btn-crt` -> `html.crt body::after` (capa, no filter: un filter rompería lo fijo) · E4 HECHO y probado: cartel ★ HIGH SCORES ★, medallas en filas `podio-1..3` (solo con
-  horas), horas que cuentan al abrir la librería la 1.ª vez (`toggle` en libreria.js); las telarañas y el
-  sepia en juegos con 0 h se QUITARON (no le gustaron al usuario). FASE E CERRADA por el usuario: la E5
-  (fichas 3D que se inclinan y se dan la vuelta) NO se hizo; retomarla solo si lo pide.
-  SIGUIENTE: 5.5 efectos/logros/docs del paso 5 (EMPEZAR AQUÍ; sugerir antes el commit de la fase E)
-  · 5.6 (IDEA DEL USUARIO) sección aparte "juego malísimo": recomendar un juego con MUCHÍSIMAS reseñas
-  negativas, al azar entre varios para que no salgan siempre los mismos. A investigar: `Query` no tiene
-  orden "peor valorados"; probar populares/valorados con muchas reseñas y filtrar % positivo bajo
-  (p. ej. < 40 %), o varias páginas; sin adultos ni lo que tenéis; frase absurda y efectos propios.
-  Resultado 5.0: `IStoreQueryService/Query/v1` (input_json, SIN API key) sirve para todo en UNA llamada:
-  filtros `released_only`, `type_filters.include_games`, `tagids_must_match` (dentro de un grupo = O;
-  entre grupos = Y), `price_filters.only_discounted`; `context` spanish/ES -> `best_purchase_option` con
-  `formatted_final_price` (€), `discount_pct`, `formatted_original_price` (sin precio = gratis o no a la
-  venta); `include_reviews` -> `reviews.summary_filtered` (review_count, percent_positive);
-  `include_tag_count` -> etiquetas; `include_release`. `sort` sin documentar: 10-13 ≈ popularidad,
-  21 ≈ mejor valorados (también populares); 0-3 ≈ por fecha/alfabético (inútiles). count=100 -> 1,4 s
-  (~1 MB). Sin `released_only` salen juegos "Próximamente" sin precio. SteamSpy descartado (USD, atrasado).
-  AL FINAL (antes de publicar): paso de PERSONALIZACIÓN DE FRASES. Rehacer las frases de broma
-  (`BIOS_*`, `BIOS_ATREVIDO`, ruleta...) con humor bizarro y quitar TODAS las de alquileres, vivienda,
-  Euríbor o capitalismo: al usuario no le gustan y "se nota que las ha escrito una IA". Proponer antes.
-* Pruebas del paso 4: scripts `prueba_*.py` en el scratchpad (se pierden al cerrar la sesión; si hacen
-  falta, rehacerlos). Las pruebas de extremo a extremo sustituyen TODAS las funciones de Steam de `app`
-  (`get_owned_games`, `get_genres`, `en_cache`, `get_resenas`, `get_valoracion`, `get_tags`...).
-  Ojo: un nombre malicioso escapado contiene el texto "onerror=", así que las comprobaciones de CSP por
-  expresión regular deben quitar antes ese texto (también en su forma `|tojson`, `<img ...`).
-  Optimizaciones (p. ej. consultas de géneros en paralelo) al final, con el resultado completo. Proponer
-  primero el código de cada sub-paso, como siempre.
-* Modelo: Opus. Para el paso 3 (géneros, caché) y siguientes, effort high
-  (comprobar que el usuario lo ha subido).
-* Recordar al usuario reiniciar el servidor (Ctrl+C y `python app.py`) tras
-  cambiar `.py` o plantillas: con `debug=False` Flask no recarga solo (el CSS
-  y el JS sí se ven con Ctrl+F5).
-* Pruebas: con datos falsos sustituyendo `app.get_owned_games`, etc. por
-  lambdas y usando `app.app.test_client()`; scripts de prueba en el scratchpad
-  (no en el repo). Para no ver Steam IDs reales, el usuario prueba con los suyos
-  en el navegador.
+* Préstamos de la familia: la API solo da tus horas si los jugaste en las últimas 2 semanas; si no, "—"
+  (desconocido, no 0). Por eso Steam Match puede recomendar un préstamo que ya jugaste. Descartados
+  `IFamilyGroupsService` y `GetSingleGamePlaytime` (exigen token de sesión: riesgo de robo de cuenta).
+* APIs no documentadas aceptadas (`appdetails`, `appreviews`, `Query` con `sort` deducido: 10 = populares,
+  21 = valorados), vigilando límites. SteamSpy descartado. Logros completados de Steam descartados (coste).
+* Juegos adultos excluidos de lo que se recomienda comprar (la página la puede ver la familia).
+* Tono de los textos: humano, de colega; humor bizarro. NADA de alquileres, vivienda, Euríbor ni
+  capitalismo (al usuario no le gustan y "se notan escritas por una IA").
+* Sin imágenes, gifs ni música con derechos en el repo; sin `localStorage` ni cookies.
 
-## Fase 3 (plan acordado, en curso: paso 3 HECHO)
+## Cómo trabajar y probar
 
-Idea central: de la enorme librería (gran parte es de la familia), recomendar
-qué jugar. Lo más importante es el sistema de recomendaciones; debe basarse
-en hechos (horas, géneros, datos reales), no en suposiciones. Se irá validando
-si la lógica es correcta según se construya.
+* Proponer el código de cada sub-paso antes de escribirlo; un paso cada vez.
+* Recordar reiniciar el servidor (Ctrl+C y `python app.py`) tras cambiar `.py` o plantillas (con
+  `debug=False` no recarga solo); el CSS y el JS se ven con Ctrl+F5.
+* Pruebas en scripts `prueba_*.py` del scratchpad (se pierden al cerrar la sesión; rehacerlos si hacen
+  falta): datos falsos + `app.app.test_client()`, sustituyendo TODAS las funciones de Steam de `app`
+  (`get_owned_games`, `get_recently_played_games`, `get_player_names`, `get_genres`, `en_cache`,
+  `get_resenas`, `get_valoracion` (devuelve `{"total", "pct"}`), `get_tags`, `buscar_tienda`,
+  `tienda_al_azar`). Ojo: un nombre malicioso escapado contiene el texto "onerror=".
+* El usuario permitió usar su Steam ID para probar con su librería real; no apuntarlo en archivos.
+* No hay Node instalado: el JavaScript no se puede comprobar en terminal; probarlo en el navegador.
+* Modelo: Opus, effort high.
 
-Recomendaciones: dos estilos, **mainstream** (populares, afines a tus géneros)
-y **bizarras** (raras o poco convencionales pero relacionadas con tus gustos).
+## Roadmap restante (en orden)
 
-Biblioteca familiar: la librería familiar = unión de las librerías de los
-miembros. El formulario pedirá el Steam ID propio y, opcionalmente, los de
-familiares (hasta ~5, separados por comas; se escriben cada vez, no se guardan).
-Cada miembro necesita perfil y detalles de juegos públicos. Se marca de quién
-es cada juego. Limitación: no se sabe qué juegos el editor excluye del
-préstamo. Se descartó el endpoint no oficial con token de sesión (seguridad).
-
-Orden de trabajo (un paso cada vez):
-0. Biblioteca familiar con varios IDs en el formulario (validar cada ID).
-   Sin duplicados: un juego aparece una vez con la lista de todos sus dueños.
-   HECHO: dueños con su nombre de Steam (`get_player_names`, una llamada a
-   `GetPlayerSummaries`; si falla, "Tú"/"Familiar N"; nombres repetidos llevan
-   "(N)"), un color por dueño, horas con un decimal y "—" si se desconocen.
-1. Estadísticas con datos ya disponibles: Pile of Shame (% con 0 h), juegos
-   abandonados (<2 h), horas en perspectiva, juego sorpresa (aleatorio entre
-   pendientes) y duelo familiar (ranking de juegos y horas).
-   HECHO: `analysis.py` (capa de lógica), una tarjeta por persona con su color,
-   comparaciones bizarras, juego sorpresa con botón "Otro" en JS
-   (`static/js/sorpresa.js`, sin llamar a Steam) y duelo familiar (horas,
-   colección, favoritos; incluye recientes de cada familiar).
-2. Carátulas en la tabla (URL pública a partir del `appid`).
-   HECHO: `preparar_juegos` pasa el `appid`; `<img class="caratula">` en la celda
-   "Juego" con `header.jpg` del CDN de Steam (`loading="lazy"`, sin imagen en /demo).
-   El navegador pide las imágenes a Steam directamente (decisión aceptada y
-   anotada en `SECURITY_CHECKLIST.md`; proxy en Flask descartado por ahora).
-3. Géneros con caché en memoria (por `appid`, datos del juego, no del usuario),
-   gráfico de horas por género y perfil gamer. Solo pedir el top por horas.
-4. Qué jugar: puntuación por géneros y horas, con pendientes.
-5. Qué comprar: mainstream y bizarras, con precio y descuentos.
-Paso 3 acordado: géneros de Steam Store `appdetails` (`l=spanish`, sin key);
-caché en memoria {appid: géneros} sin guardar fallos; horas COMPLETAS de cada juego
-a cada uno de sus géneros (los % no suman 100, avisarlo); gráfico con barras CSS;
-perfil gamer con frases-plantilla. Para TODOS los perfiles (tú y cada familiar),
-top `TOP_GENEROS = 10` por persona, appids sin repetir; mostrar % de horas que cubre
-el top; si Steam limita (429) -> "Sin datos" y aviso.
-Sub-pasos: 3.1 separar `steam_client.py` (HECHO) · 3.2 `get_genres(appid)` + caché
-en `steam_client.py` (HECHO; devuelve lista, `[]` si el juego no tiene ficha, `None`
-si falla la consulta, que no se guarda en caché) ·
-3.3 `top_jugados`, `horas_por_genero` y `perfil_gamer` en `analysis.py` (HECHO y
-probado con datos falsos). "Indie" NO decide el perfil (`NO_DEFINEN_PERFIL`), va como
-pegatina: en el perfil si supera `UMBRAL_INDIE` = 50 % de las horas del top, y en la
-tabla en cada juego con género Indie (comprobación pendiente en 3.4) ·
-3.4 app + plantilla (HECHO: `pedir_generos` en `app.py`; pegatina INDIE en tabla y perfil, solo
-en juegos del top de alguien; aviso de carga + bloques animados con `static/js/carga.js`, base de la
-carga 99 % del 3.6; logro en cuadro RPG, sello INDIE y barras de 10 bloques solo CSS con macro
-`barra`, 5 visibles + plegable `<details>`; texto letra a letra, confeti y sonidos pasan al 3.6), con estilo elegido A + C (A: barras "de vida" de 10 bloques que se
-rellenan con "blip" y perfil en cuadro de diálogo RPG con texto letra a letra; C: perfil
-revelado como "logro desbloqueado" con destello, confeti y pegatina Indie como sello).
-Página de muestra con datos inventados (fuera del repo):
-`<scratchpad>/muestra/muestra.html` (si no existe en una sesión nueva, rehacerla) ·
-3.6 (NUEVO) capa de personalidad: `static/js/efectos.js` y `sonido.js` propios (Web
-Audio API, sin archivos ni librerías), botón 🔇 que empieza silenciado,
-`prefers-reduced-motion`, y efectos bizarros elegidos por el usuario de la muestra
-(pato errante, carga 99 %, Pile of Shame con trombón, terremoto, modo caos/Konami,
-pantallazo azul, salvapantallas DVD, logros absurdos, tarjeta cascarrabias, juegos
-olvidados que lloran, título glitch). Los efectos de los pasos 4 y 5, cuando existan.
-Al usuario le gustaron TODOS. Apuntes suyos para el 3.6:
-  - Pato: que pase "de vez en cuando" (p. ej. a intervalos aleatorios), no 1 de cada 10 visitas.
-  - Modo caos: SOLO manual (botón o Konami), nunca automático; es muy intenso.
-  - Carga del 99 %: le encanta. Más énfasis en "preguntando a tu mamá" y añadir "me estoy
-    echando a tu mamá". TONO para TODOS los textos: humano, de colega, tontería entre
-    amigos (ej.: "Tu mamá dice que es tarde", "Vale, ya. Tu mamá te manda saludos").
-  - Logros absurdos: profundizar. Ideas basadas en datos reales (calculados en la visita,
-    NO se guardan; nada de localStorage): Coleccionista de polvo (muchos sin jugar), Fiel
-    hasta la muerte (un juego >50 % de tus horas), Picaflor (muchos <2 h), Toca césped
-    (>1.000 h), Indie hasta la médula, Lobo solitario / Familia numerosa (0 o 5 familiares),
-    Insomne (visita de madrugada, hora del navegador), Ludópata del azar ("Otro" 10 veces),
-    Paciencia infinita (esperar la carga), Susurrador de patos, Esquina perfecta (DVD),
-    Clic compulsivo (cascarrabias), Explorador del abismo (scroll al final). Contador
-    "logros X/N" de la visita.
-  - Referencias a JoJo (idea del usuario), también en el 3.6:
-    · Efectos: ゴゴゴゴ morados flotando alrededor de la tarjeta líder del duelo; "To Be Continued ⟸"
-      con sepia (`filter: sepia()`) al final de la tabla o si Pile of Shame > 50 % ("Tus juegos
-      pendientes... continuarán"); ZA WARUDO como código secreto (congela animaciones, `filter: invert()`,
-      "Toki wo tomare!"); ORA ORA / MUDA MUDA al pulsar "Otro" muchas veces seguidas.
-    · Textos: sorpresa "¿Esperabas una recomendación sensata? ¡Pero era yo, Dio!"; cascarrabias
-      "Yare yare daze..."; carga 99 % "Tu mamá está usando su Stand para frenar la barra".
-    · Estadísticas de Stand (la favorita, datos reales): hexágono con notas A-E en el perfil. Poder =
-      horas totales; Velocidad = juegos abandonados/terminados rápido; Alcance = variedad de géneros;
-      Persistencia = horas del favorito; Precisión = Pile of Shame bajo; Potencial = pendientes.
-      Los umbrales de cada nota se decidirán al implementarlo (cálculo en `analysis.py`).
-    · Logro absurdo "¿Eso es una JoJo referencia??" al encontrar las 7 detectables en la visita (Stand,
-      ゴゴゴ, To Be Continued, ZA WARUDO, ORA, Dio, Yare yare).
-    · Apuntes del usuario (3.6f): ZA WARUDO necesita pistas (reloj 🕰️ en el pie con tooltip, excusa del 99 %
-      "Tu mamá dice que escribas «za warudo»", frase de la cascarrabias); aceptar "zawarudo" y "za warudo".
-      Sonidos "como en la serie": los clips reales tienen derechos (no hay versiones libres de verdad), así que
-      SFX sintetizados que los imitan + voces con `speechSynthesis` del navegador (voz japonesa si existe).
-    · Partido en 3.6f-1 (estadísticas de Stand: notas A-E en analysis.py, hexágono SVG con puntos calculados
-      en app.py, nombre del Stand = juego favorito) y 3.6f-2 (efectos, textos, pistas, sonidos y logro).
-    · SIN imágenes, gifs ni música del anime (p. ej. "Roundabout" tiene derechos); sonidos con Web
-      Audio y solo textos/memes ·
-3.5 `SECURITY_CHECKLIST.md` y `README.md`.
-
-Extra en pasos 4 y 5: además de las recomendaciones razonadas, un juego
-totalmente aleatorio (de la librería en el 4, de la tienda en el 5) con una
-descripción bizarra de por qué se recomienda, generada DESPUÉS de elegir el
-juego. Método decidido: plantillas de frases absurdas con huecos rellenados
-con datos del juego (nombre, género, año...). Sin IA, para evitar costes.
-Distinto del "juego sorpresa" del paso 1 (azar solo entre pendientes, sin texto).
-
-Fuentes de datos: Steam Store `appdetails` (no oficial, una llamada por juego,
-con límite de peticiones) y/o SteamSpy (etiquetas). Aceptamos usar APIs no
-documentadas, vigilando límites de velocidad y posibles cambios.
-
-Descartado: logros completados (coste de recursos: una llamada por juego),
-aceptar nombre de perfil y comparar con un amigo. Reconsiderar los logros solo
-si sobran recursos.
-
-## Después
-
-Formulario más cómodo para los IDs familiares (idea futura), borrar `/demo`
-y publicación. Antes de publicar: quitar o generalizar las comparaciones con
-bromas internas sobre personas reales (Calero, Mauri, Navarro) en `analysis.py`, y
-revisar el tono de las bromas de "tu mamá" (pensadas para amigos) y de las bios satíricas de
-Steam Match (vivienda, capitalismo, fondos buitre; `BIOS_*` en `analysis.py`) por si se publica.
-
+1. **5.5** (EMPEZAR AQUÍ): efectos, sonidos y logros de "¿Qué comprar?" y de la tragaperras de la
+   tienda (proponer ideas al usuario para que elija, como en la 4.5). La documentación del paso 5
+   (README, SECURITY_CHECKLIST, ALGORITMO) ya está al día.
+2. **5.6** (idea del usuario): sección "juego malísimo": uno con MUCHÍSIMAS reseñas negativas, al azar
+   entre varios para que no salgan siempre los mismos. Investigar: `Query` no tiene orden "peor
+   valorados"; probar populares/valorados con muchas reseñas y % positivo bajo (p. ej. < 40 %), o varias
+   páginas; sin adultos ni lo que tenéis; frase absurda y efectos propios.
+3. Idea del usuario (a valorar): usar ETIQUETAS en vez de géneros en la afinidad de Steam Match y en el
+   perfil gamer, y rehacer las frases de `PERFILES` (se puede reutilizar `tus_etiquetas`).
+4. Optimizaciones: consultas a Steam en paralelo (la primera visita tarda); acotar consultas por visita.
+5. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
+   `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro; quitar las de
+   alquileres/vivienda/capitalismo; quitar o generalizar las bromas sobre personas reales (Calero, Mauri,
+   Navarro) en `analysis.py`; revisar el tono de "tu mamá". Proponerlas antes.
+6. Publicar: borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
+   publicar"), elegir hosting y cómo guardar allí la API key. Opcional: formulario más cómodo para los
+   IDs familiares y favicon (hoy 404).

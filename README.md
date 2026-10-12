@@ -1,7 +1,7 @@
 # Steam Optimizer
 
 Web app en Python (Flask) que analiza tu librería de Steam y recomienda
-a qué jugar y qué comprar según tus géneros y horas jugadas.
+a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
 
 > Proyecto de aprendizaje: Python, Flask y Claude Code.
 
@@ -16,14 +16,21 @@ a qué jugar y qué comprar según tus géneros y horas jugadas.
 - Qué jugar (Steam Match): tus pendientes puntuados según tus géneros, tu racha reciente,
   los consejos de la familia y las reseñas de Steam. Detalle en `ALGORITMO.md`.
 - ¿Te atreves?: pendientes con etiquetas a las que nunca has jugado.
-- Personalidad: efectos, sonidos sintetizados (empiezan silenciados), logros absurdos y
-  referencias a JoJo.
+- Qué comprar: 6 juegos mainstream (populares y afines a tus etiquetas favoritas) y 6 bizarros
+  (mezclas raras de tus gustos, poco conocidos pero bien valorados), con precio, descuento y reseñas.
+  Nunca recomienda lo que ya tenéis tú o tu familia ni juegos para adultos. Detalle en `ALGORITMO.md`.
+- Tragaperras de la tienda: un juego al azar de toda la tienda de Steam con una frase absurda.
+- Navegación: menú fijo de secciones, botón para volver arriba y librería plegable con buscador,
+  orden por nombre u horas y tabla de récords (HIGH SCORES).
+- Personalidad: efectos, sonidos sintetizados (empiezan silenciados), logros absurdos,
+  referencias a JoJo, botones de recreativa y modo tele antigua (CRT).
 
 ## Privacidad
 
 No almacenamos ningún dato. Solo consultamos tu perfil público de Steam.
-El servidor guarda en memoria los géneros, etiquetas y reseñas de cada juego (datos del juego, no tuyos)
-para no repetir consultas. Las carátulas las descarga tu navegador del CDN de Steam.
+El servidor guarda en memoria los géneros, etiquetas y reseñas de cada juego, y las búsquedas en la
+tienda durante 3 horas (datos de los juegos, no tuyos), para no repetir consultas.
+Las carátulas las descarga tu navegador del CDN de Steam.
 
 ## Limitaciones
 
@@ -38,6 +45,9 @@ para no repetir consultas. Las carátulas las descarga tu navegador del CDN de S
 - La etiqueta INDIE de la tabla solo aparece en juegos del top 10 de alguien.
 - Steam Match puede recomendarte un préstamo de la familia al que ya jugaste hace más de
   2 semanas: no podemos saber tus horas en él.
+- "Qué comprar" usa la búsqueda de la tienda de Steam (`IStoreQueryService/Query`), poco
+  documentada: el orden por popularidad o valoración se dedujo probando y puede cambiar.
+  Los precios son los de España (euros) y se refrescan cada 3 horas.
 
 ## Instalación
 

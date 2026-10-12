@@ -269,3 +269,11 @@ plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis 
 | `MAX_GRATIS` | 1 | gratis como mucho por lista |
 | `TOP_MAINSTREAM` / `TOP_BIZARRAS` | 6 / 6 | recomendaciones mostradas |
 | `TOP_AFINIDAD` | 3 | etiquetas en común que suman afinidad (si sumaran todas, ganarían siempre los juegos con muchas etiquetas, como los de gestión) |
+
+## Tragaperras de la tienda (5.4)
+
+No es una recomendación ni puntúa nada: `tienda_al_azar` salta a un punto al azar de todo el catálogo
+publicado (~132.000 juegos) y trae 50 seguidos; `tragaperras_tienda` les aplica los mismos filtros que
+"Qué comprar" (`candidatos_compra`: sin lo que tenéis, sin adultos, solo a la venta o gratis), exige al
+menos `MIN_RESENAS_AZAR` = 10 reseñas y rellena una frase absurda (`PLANTILLAS_TIENDA`). "Otra" sortea en
+el navegador entre esos juegos, sin volver a llamar a Steam.

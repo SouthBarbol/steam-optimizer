@@ -73,11 +73,27 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [ ] Antes de publicar: formulario con `method="post"` para que los IDs no queden en la URL
   (historial del navegador y registros del hosting)
 
+## Qué comprar (paso 5)
+- [x] Búsquedas en la tienda (`IStoreQueryService/Query`) desde Flask, sin API key, con `timeout` de 15 s.
+  A Steam solo se le envían etiquetas ("Roguelike", "Terror"...) y filtros, nunca Steam IDs ni la librería
+- [x] Caché en memoria de 3 h solo con datos de la TIENDA (búsqueda -> juegos); las entradas caducadas se
+  borran al guardar otra (la memoria no crece sin fin) y las consultas fallidas no se guardan
+- [x] Coste por visita: 3 búsquedas (en caché 3 h) + 1 de la tragaperras de la tienda (sin caché)
+- [x] Juegos adultos fuera de las recomendaciones de compra y de la tragaperras (etiquetas sexuales
+  entre sus 5 más votadas); tampoco se recomienda lo que ya tenéis tú o tu familia
+- [x] Nombre, precio, estudio y etiquetas (datos externos) se pintan con Jinja2 (escapado automático);
+  probado con un nombre malicioso. El `style="--temblor: Npx"` de las ofertas solo lleva un número
+  calculado por nosotros; el `appid` va en las URLs solo si es un número entero (también en el JS)
+
 ## JavaScript del navegador
 - [x] El JavaScript no llama a Steam ni a ninguna otra web (solo usa datos ya presentes en la página)
 - [x] Los datos se pasan de Jinja2 a JavaScript solo con `|tojson` (escapa `<`, `>`, `'`, `&`)
-- [x] El JavaScript escribe en la página solo con `textContent`, nunca con `innerHTML`
-- [x] El JavaScript no guarda nada (ni `localStorage` ni cookies): sonido, contadores y logros duran solo la visita
+- [x] El JavaScript escribe en la página solo con `textContent`, nunca con `innerHTML`; los elementos
+  nuevos (menú, cabeceras-botón, letra del neón) se crean con `createElement` y nodos de texto
+- [x] Scripts propios en `static/js/` (sonido, efectos, carga, logros, match, atreverse, ruleta,
+  navegacion, libreria): nada de `<script>` ni `onclick=` dentro del HTML (lo bloquearía la CSP)
+- [x] El JavaScript no guarda nada (ni `localStorage` ni cookies): sonido, modo CRT, contadores y logros duran
+  solo la visita
   (el sonido encendido pasa a la siguiente página como `?sonido=1` en la URL; Flask lo ignora)
 
 ## Antes de publicar
@@ -88,9 +104,10 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   respaldos sintetizados o por sonidos con licencia libre. Están en `.gitignore`: no subirlos nunca a un repo
   público. El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
 - [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor
-  (una visita nueva puede costar ~70 consultas); valorar acotar peticiones por visita/minuto o el
-  tamaño de la caché
-- [ ] Revisar el tono de las bios satíricas de Steam Match (vivienda, capitalismo, fondos buitre)
+  (una visita nueva puede costar ~70 consultas + 4 de la tienda); valorar acotar peticiones por
+  visita/minuto o el tamaño de las cachés
+- [ ] Personalización de frases: quitar las bios satíricas (vivienda, capitalismo, fondos buitre) y revisar
+  todas las frases de broma (ver roadmap en `CLAUDE.md`)
 - [ ] `debug=False` en producción
 - [ ] HTTPS activo en el hosting
 - [ ] Dependencias actualizadas (`pip list --outdated`)
