@@ -86,8 +86,8 @@ Evolución prevista:
 
 ## Estado actual
 
-Fases 1 y 2 completadas (repo, venv, Steam Web API, librería en el navegador). Fase 3 casi terminada:
-todo lo de abajo está HECHO y probado por el usuario en el navegador (y con commit), salvo lo que se indique.
+Fases 1, 2 y 3 completadas (repo, venv, Steam Web API, librería, recomendaciones, optimización, frases).
+Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado, salvo lo que se indique.
 
 * Biblioteca familiar (hasta 5 IDs, sin duplicados, dueños con nombre y color), estadísticas por persona
   (Pile of Shame, abandonados, horas en perspectiva, duelo familiar), carátulas, géneros con caché,
@@ -125,6 +125,25 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   SCORES (`libreria.js`, medallas `podio-1..3`, horas que cuentan); corazones ❤️🖤 y ofertas que
   tiemblan; neón estropeado, botones `.arcade` con `SFX.clack`, modo CRT 📺 (`html.crt body::after`).
   Descartado por el usuario: telarañas/sepia, precios en unidades absurdas, fichas 3D (E5).
+* Etiquetas en vez de géneros (2026-10-13; detalle en `ALGORITMO.md`): perfil gamer = n.º 1 de `tus_etiquetas`
+  (toda la librería jugada), `PERFILES` con 30 etiquetas (nombres exactos de Steam: "Tipo «Dark Souls»",
+  "Construcción de barajas") + `PERFILES_GENERICOS`. Steam Match con `que_cuentan` + `tus_etiquetas`, todos
+  los pendientes en cada visita; reseñas en el mismo lote que las etiquetas (`get_valoraciones`); variedad
+  por las 3 etiquetas principales (`MAX_IGUALES` = 1); anti-gustos 15 % / 10 %. Siguen con géneros (solo el
+  top 10 de cada persona, `get_genres_varios`): barras, nota de Alcance y pegatina INDIE (la etiqueta
+  "Indie" falla 1 de cada 4).
+* Consultas en paralelo (2026-10-13), en `steam_client.py`: semáforo global `_semaforo_steam`
+  (`MAX_A_LA_VEZ` = 5), `en_paralelo(funcion, elementos)` (la función solo devuelve, no escribe nada
+  compartido ni llama a otra `en_paralelo`/`get_tags`/`get_genres_varios`: deadlock) y un cerrojo por
+  caché (`_cerrojo_vendidos`, `_cerrojo_generos`, `_cerrojo_etiquetas`, `_cerrojo_nombres`, `_cerrojo_tienda`;
+  red siempre FUERA del cerrojo). En paralelo: páginas de `mas_vendidos`, géneros, lotes de etiquetas,
+  familia (`datos_familiar` en `app.py`) y búsquedas de la tienda (`buscar_en_tienda`). Con 4 personas:
+  23,8 s -> ~10-11 s en frío y ~3,7 s después. Descartado: solapar secciones enteras.
+* Frases rehechas (2026-10-13) con el tono del usuario (memorias "tono-frases-bizarras" y
+  "referencias-webseries"): `BIOS_*`, `BIOS_ATREVIDO`, `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, frases de
+  `PERFILES`, `LOGROS` y `penas` de la plantilla. Sin tocar a propósito: excusas de `carga.js` (son suyas),
+  `PLANTILLAS_MALISIMO` y el pantallazo azul.
+* COMMITS PENDIENTES: lo de etiquetas, paralelo y frases puede no estar commiteado; preguntar al usuario.
 
 ## Decisiones y limitaciones vigentes
 
@@ -136,8 +155,11 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   con 0 % y casi sin reseñas, inútil; `Query` ignora filtros desconocidos y no filtra por reseñas),
   vigilando límites. SteamSpy descartado. Logros completados de Steam descartados (coste).
 * Juegos adultos excluidos de lo que se recomienda comprar (la página la puede ver la familia).
-* Tono de los textos: humano, de colega; humor bizarro. NADA de alquileres, vivienda, Euríbor ni
-  capitalismo (al usuario no le gustan y "se notan escritas por una IA").
+* Tono de los textos: de grupo de colegas, con referencias a webseries (Malviviendo, Qué vida más triste,
+  Vete a la Versh), juegos míticos y algo de ESDLA. NADA de alquileres, vivienda, Euríbor, capitalismo ni
+  USA en positivo; nada de animales random ni lógica "de IA". Detalle en la memoria "tono-frases-bizarras".
+* Público: de momento solo sus amigos (por eso se quedan las bromas de Calero, Mauri y Navarro en
+  `COMPARACIONES`); quitarlas o generalizarlas si algún día se abre al público.
 * Sin imágenes, gifs ni música con derechos en el repo; sin `localStorage` ni cookies.
 
 ## Cómo trabajar y probar
@@ -156,7 +178,20 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 
 ## Roadmap restante (en orden)
 
-1. ~~5.5~~ y ~~5.6~~ HECHOS (efectos de "¿Qué comprar?" y rincón de la pesturria). Paso 5 cerrado.
+Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; resumen en "Estado actual").
+
+5. **EMPEZAR AQUÍ: publicar** (de momento solo para que la prueben sus amigos; quizá al público más
+   adelante si les gusta). Tareas: elegir hosting y cómo guardar allí la API key, borrar `/demo`, formulario
+   con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de publicar"). Opcional: formulario más cómodo
+   para los IDs familiares, favicon (hoy 404) y precalentar la caché al arrancar (hilo en segundo plano con
+   `mas_vendidos` y nombres de etiquetas).
+   **El usuario quiere DECIDIR él el hosting**: primero explicarle bien TODAS las opciones razonables con
+   sus pros y contras (precio, dificultad, si se duerme el servidor y tarda en despertar, límites, HTTPS,
+   dónde va la API key, que la caché en memoria se pierde al reiniciar, que los hilos y cerrojos del paso 3
+   necesitan UN solo proceso o se duplica la caché, etc.) y que elija. No elegir por él.
+
+HISTÓRICO DE LOS PASOS 2-4 (detalle por si hace falta):
+
 2. ~~Etiquetas en vez de géneros~~ HECHO (falta que el usuario lo pruebe en el navegador y haga commit).
    2a: `perfil_gamer` usa la n.º 1 de `tus_etiquetas` (toda la librería jugada; "Comedia" vale), `PERFILES`
    con 30 etiquetas (nombres exactos: "Tipo «Dark Souls»", "Construcción de barajas") y
@@ -184,8 +219,7 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
    teórico, no se pudo reproducir). Con familia: en frío 9,8 s, segunda visita 3,7 s (antes del paso 3:
    23,8 s; el usuario mide ~11 s en el navegador). PASO 3 CERRADO (falta commit). Descartado: solapar
    secciones enteras (~3 s más, código complejo y riesgo de deadlock con el semáforo). Idea para el paso 5:
-   precalentar la caché al arrancar (hilo en segundo plano: `mas_vendidos` y nombres de etiquetas). (la primera visita tarda; `mas_vendidos` hace 5
-   consultas seguidas, ~13 s, una vez al día); acotar consultas por visita.
+   precalentar la caché al arrancar (hilo en segundo plano: `mas_vendidos` y nombres de etiquetas).
 4. ~~Personalización de frases~~ HECHO. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
    `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro, al estilo de
    `PLANTILLAS_MALISIMO` (exageración burra + confesión absurda, que al usuario SÍ le gusta); quitar las de
@@ -196,6 +230,3 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
    iguales), Cum laude de `PERFILES_GENERICOS`, textos de `LOGROS` y reproches `penas` de la plantilla, con
    referencias a webseries y juegos míticos (memoria "referencias-webseries"). Sin tocar a propósito: excusas
    de `carga.js` (son del usuario), `PLANTILLAS_MALISIMO` y el pantallazo azul.
-5. **EMPEZAR AQUÍ**. Publicar (de momento, para que la prueben sus amigos): borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
-   publicar"), elegir hosting y cómo guardar allí la API key. Opcional: formulario más cómodo para los
-   IDs familiares y favicon (hoy 404).
