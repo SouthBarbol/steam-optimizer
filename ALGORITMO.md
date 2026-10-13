@@ -4,8 +4,9 @@ Recomienda juegos **pendientes** de tu librería (incluida la familiar) según t
 de siempre, lo que juegas últimamente y lo que ha jugado tu familia. Todo se calcula en
 cada visita con datos reales de Steam; no se guarda nada del usuario.
 
-El código está en `analysis.py` (sección "Qué jugar") y `app.py` (`pedir_generos_presupuesto`
-y el bloque "Qué jugar" de `index`).
+El código está en `analysis.py` (sección "Qué jugar") y `app.py` (bloque "Qué jugar" de `index`).
+Desde el paso 2b todo se calcula con **etiquetas** de la comunidad, no con géneros: son más precisas
+y llegan por lotes de 50 (con las reseñas en el mismo lote), así que se analizan todos los pendientes.
 
 ## Fórmula completa (resumen)
 
@@ -14,7 +15,7 @@ puntos = redondear( mezcla × primo × anti × fama × nota )
 
 mezcla = 0,4 × afinidad_siempre + 0,6 × afinidad_racha
 primo  = 1,25 si un familiar le echó ≥ 20 h; si no, 1
-anti   = 0,8  si tiene algún género que sueles abandonar; si no, 1
+anti   = 0,8  si tiene alguna etiqueta que sueles abandonar; si no, 1
 fama   = 1,2 (< 1.000 reseñas) · 1 · 0,9 (> 100.000 reseñas)
 nota   = 1,15 (≥ 90 % positivas) · 1 (70-89 %) · 0,9 (50-69 %) · 0,75 (< 50 %)
 ```
@@ -30,9 +31,8 @@ En la web los puntos se muestran sin explicar de dónde salen (es un misterio a 
 | Tus juegos y horas | `GetOwnedGames` (+ `GetRecentlyPlayedGames` para préstamos jugados en 2 semanas) |
 | Fecha de tu última partida de cada juego | `rtime_last_played` de `GetOwnedGames` |
 | Minutos jugados en las últimas 2 semanas | `playtime_2weeks` de `GetOwnedGames` |
-| Géneros y nº de reseñas de cada juego | Steam Store `appdetails` (una consulta por juego, con caché en memoria) |
-| % de reseñas positivas | Steam Store `appreviews` (solo los 15 finalistas, con caché en memoria) |
 | Etiquetas de la comunidad (Terror, Metroidvania...) | API oficial `IStoreBrowseService/GetItems` (por lotes de 50) + `IStoreService/GetTagList` (nombres en español) |
+| Nº de reseñas y % positivo | El mismo lote de `GetItems` (`include_reviews`; `get_valoraciones`): 0 llamadas extra |
 | Horas de cada familiar | `GetOwnedGames` de cada familiar |
 
 ## Paso a paso
@@ -41,25 +41,27 @@ En la web los puntos se muestran sin explicar de dónde salen (es un misterio a 
 Juegos con **0 h** o con horas **desconocidas** (préstamos de la familia que no has jugado
 en las últimas 2 semanas: quizá ya los probaste). Función `pendientes()`.
 
-### 2. Géneros de los candidatos (con presupuesto)
-Pedir los géneros de cientos de juegos sería lento y Steam cortaría (error 429), así que en
-cada visita se usan **todos los que ya están en caché** y se piden **20 nuevos al azar**
-(`PRESUPUESTO_GENEROS`). Cada visita cubre más librería ("analizados X de Y").
-Un juego cuya consulta falla no se puntúa (se reintenta en otra visita).
+### 2. Etiquetas que cuentan de cada juego
+Las etiquetas (y las reseñas) de toda la librería llegan por lotes de 50, así que se analizan
+**todos** los pendientes en cada visita ("analizados X de Y"; solo falta alguno si falla un lote).
+De cada juego cuentan las mismas que en "¿Qué comprar?" (`que_cuentan`): sus **5 más votadas** que
+dicen algo de cómo se juega (sin `ETIQUETAS_NEUTRAS` ni avisos de contenido) **+ las amplias**
+(Acción, Rol, Estrategia...) que tenga entre ellas.
 
 ### 3. Tus gustos de siempre
-De tus **10 juegos con más horas**, el % de esas horas que tiene cada género
-(`horas_por_genero`). Un juego suma sus horas a **todos** sus géneros (los % no suman 100).
-Ej.: Acción 80 %, Aventura 60 %, Rol 30 %.
+`tus_etiquetas` (explicado en "¿Qué comprar?", paso 1): de **todos** tus juegos jugados 2 h o más,
+el % de tus horas que tiene cada etiqueta (las amplias, a mitad de peso). Un juego suma sus horas a
+**todas** sus etiquetas (los % no suman 100). Es lo mismo que decide tu perfil gamer.
+Ej.: Comedia 27 %, Combate por turnos 19 %, Sandbox 17 %.
 
 ### 4. Tu racha actual
 De tus **últimos 10 juegos jugados** (por fecha; los préstamos recientes cuentan como
-"ahora mismo"), el % que tiene cada género. **Un voto por juego**, sin mirar horas, para que
+"ahora mismo"), el % que tiene cada etiqueta. **Un voto por juego**, sin mirar horas, para que
 un juego de 1.000 h no aplaste lo que juegas ahora (`ultimos_jugados`, `racha_actual`).
-Ej.: 7 de Rol y 3 de Acción → Rol 70 %, Acción 30 %.
+Ej.: 3 de 10 con "Oscuros" → Oscuros 30 %.
 
 ### 5. Afinidad de cada pendiente
-Para cada lista de gustos (siempre y racha): **suma de tus % en los géneros que tiene el
+Para cada lista de gustos (siempre y racha): **suma de tus % en las etiquetas que tiene el
 juego** (`afinidad`). "Indie", "Free to Play" y "Acceso anticipado" no suman: no dicen cómo
 se juega (`NO_DEFINEN_PERFIL`). Después se mezclan:
 
@@ -71,8 +73,7 @@ Si tu perfil no trae fechas (no hay racha), solo cuenta la afinidad de siempre.
 Un juego con **0 puntos** no se parece a nada de lo que juegas y no se recomienda.
 
 ### 5b. Territorio inexplorado → "¿Te atreves?"
-Los géneros de Steam son muy amplios (Resident Evil 2 es solo "Acción"). Las **etiquetas** de
-la comunidad son mucho más precisas (Zombis, Terror...). Con ellas (`territorio_inexplorado`):
+Pendientes con algo que **nunca** has jugado (Zombis, Piratas...) (`territorio_inexplorado`):
 - **Lo que conoces** (`experiencia`): las 10 etiquetas más votadas (`TOP_EXPERIENCIA`) de cada
   juego que has jugado de verdad (2 h o más). Las de la familia no cuentan.
 - **Lo que define a un pendiente** (`etiquetas_nuevas`): sus 3 etiquetas más votadas
@@ -84,8 +85,7 @@ la comunidad son mucho más precisas (Zombis, Terror...). Con ellas (`territorio
   (`elegir_atrevidos`, `TOP_ATREVIDOS`).
 - En la web: tarjeta "🧭 ¿Te atreves?" con 1 juego visible y botón "Otro" (`atreverse.js`). Muestra
   "Nunca has jugado a nada de: ..." (hasta 3 etiquetas nuevas) y una frase absurda de `BIOS_ATREVIDO`
-  (`poner_retos`, hueco `{nueva}` = su etiqueta nueva más votada). Sin puntos (pueden ser 0) y sin
-  👍 % (la nota solo se pide para los finalistas del top).
+  (`poner_retos`, hueco `{nueva}` = su etiqueta nueva más votada). Sin puntos (pueden ser 0) ni 👍 %.
 - Sin etiquetas de lo que conoces (p. ej. Steam falló), no se aparta nada.
 
 Ej.: has jugado Hollow Knight (Metroidvania, Plataformas...). Resident Evil 2 (Zombis,
@@ -98,24 +98,24 @@ siempre tus gustos. Si varios familiares llegan al umbral, cuenta el que más ho
 Se muestra el dato real: *"Primo le echó 87 h"* (`consejos_familia`).
 
 ### 6a. Anti-gustos
-Géneros que sueles **probar y dejar**. Un juego **abandonado** es uno con menos de 2 h
+Etiquetas que sueles **probar y dejar**. Un juego **abandonado** es uno con menos de 2 h
 (`UMBRAL_ABANDONO`) que **no has tocado en las últimas 2 semanas** (sin `playtime_2weeks`:
-un juego recién empezado no está abandonado) (`abandonados`). Sus géneros se piden con un
-presupuesto propio de **10 consultas nuevas por visita** (`PRESUPUESTO_ABANDONOS`).
+un juego recién empezado no está abandonado) (`abandonados`).
 
-Un género es anti-gusto si cumple las tres condiciones (`anti_gustos`):
+Una etiqueta es anti-gusto si cumple las tres condiciones (`anti_gustos`):
 - aparece en **al menos 3** de tus abandonados analizados (`MIN_ABANDONOS_ANTI`);
-- y en **al menos el 25 %** de ellos (`PCT_ABANDONOS_ANTI`);
-- y tu % en ese género, de siempre o de la racha, es **menor del 20 %** (`MAX_GUSTO_ANTI`).
-  Así un género muy común que te gusta (p. ej. Acción) nunca es anti-gusto.
+- y en **al menos el 15 %** de ellos (`PCT_ABANDONOS_ANTI`);
+- y tu % en esa etiqueta, de siempre o de la racha, es **menor del 10 %** (`MAX_GUSTO_ANTI`).
+  Así una etiqueta común que te gusta (p. ej. Acción) nunca es anti-gusto.
+Los umbrales se bajaron (eran 25 % y 20 % con géneros) porque las etiquetas están más repartidas:
+probado con una librería real de 20 abandonados, con los viejos no salía ninguno.
 
-Indie, Free to Play y Acceso anticipado no cuentan. Un pendiente con algún anti-gusto:
-puntos × **0,8** (`CASTIGO_ANTI`), una sola vez aunque tenga varios.
-Ej.: 12 abandonados (5 de Estrategia, 7 de Acción, 3 de Deportes) y te gusta Acción →
-anti-gustos: Estrategia y Deportes. "Acción + Estrategia" pasa de 58 a 46.
+Un pendiente con algún anti-gusto: puntos × **0,8** (`CASTIGO_ANTI`), una sola vez aunque tenga varios.
+Ej. real: 3 de 20 abandonados con "Plataformas de puzles" (15 %), gusto 2 % y racha 0 % → anti-gusto.
+"Oscuros" (también 3) se libra porque la racha la tiene al 30 %.
 
 ### 6b. Joya oculta / superventas
-Según el **nº de reseñas en Steam** (llega en la misma consulta que los géneros, sin llamadas
+Según el **nº de reseñas en Steam** (llega en el mismo lote que las etiquetas, sin llamadas
 extra; `multiplicador_fama`):
 
 | Reseñas | Efecto |
@@ -126,10 +126,9 @@ extra; `multiplicador_fama`):
 | sin dato | nada (no se inventa) |
 
 ### 6c. Nota de las reseñas (% positivo)
-Del endpoint `appreviews` de Steam (una consulta por juego, con caché; `get_valoracion`).
-Para no consultar cientos de juegos, se hace en **dos pasadas** (`app.py`): se puntúa todo con
-los pasos anteriores, se piden las notas **solo de los 15 mejores** (`FINALISTAS`) y se vuelve
-a puntuar con ellas (`nota_fiable`, `multiplicador_valoracion`):
+También del lote de etiquetas (`get_valoraciones`), para todos los pendientes a la vez: basta
+**una pasada** (`nota_fiable`, `multiplicador_valoracion`). Es el resumen "filtrado" de Steam, sin
+reseñas fuera de tema (bombardeos); puede diferir en ±1 % de la cifra total de la tienda.
 
 | % de reseñas positivas | Efecto |
 |---|---|
@@ -149,13 +148,15 @@ Python redondea los ",5" al par más cercano (`round(72.5)` = 72).
 De más a menos puntos. A igualdad de puntos, orden **al azar** (se baraja antes de ordenar).
 
 ### 8. Variedad
-Se eligen los **5 mejores** (`TOP_RECOMENDACIONES`), pero como mucho **2 con los mismos
-géneros en común contigo** (`MAX_IGUALES`). Si no hay variedad suficiente, los huecos se
-rellenan con los saltados, en su orden (`con_variedad`).
+Se eligen los **5 mejores** (`TOP_RECOMENDACIONES`), pero como mucho **1 con las mismas 3
+etiquetas principales**, sin importar el orden (`MAX_IGUALES`, campo `mezcla`): que coincidan
+las 3 casi siempre es misma saga o clon. Probado con una librería real: sin esto salían 3 Half-Life
+seguidos. Si no hay variedad suficiente, los huecos se rellenan con los saltados, en su orden
+(`con_variedad`).
 
 ### 9. Bios de Steam Match (solo texto, NO afectan a los puntos)
 Cada recomendación lleva una frase absurda sacada de plantillas con huecos rellenados con
-datos reales (nombre, un género en común al azar, familiar y sus horas, dueño, % positivo)
+datos reales (nombre, una etiqueta en común al azar, familiar y sus horas, dueño, % positivo)
 (`bio`, `poner_bios`; plantillas `BIOS_*`). Si el juego tiene algo especial (consejo del
 primo, préstamo, joya, aclamado), hay un 50 % de usar una frase de ese tipo
 (`PROB_BIO_ESPECIAL`); si no, una general. En una visita no se repite ninguna frase.
@@ -165,7 +166,7 @@ primo, préstamo, joya, aclamado), hay un 50 % de usar una frase de ese tipo
 Gustos de siempre: Acción 100 %. Racha actual: Rol 70 %, Acción 30 %.
 Tu primo le echó 87 h a "Juego B".
 
-| Pendiente | Géneros | Reseñas | % positivo | Siempre | Racha | Mezcla 40/60 | Primo | Fama | Nota | Puntos |
+| Pendiente | Etiquetas | Reseñas | % positivo | Siempre | Racha | Mezcla 40/60 | Primo | Fama | Nota | Puntos |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Juego A | Acción + Rol | 20.000 | 80 % | 100 | 100 | 100 | — | — | — | **100** |
 | Juego B | Acción | 300 | 95 % | 100 | 30 | 58 | ×1,25 | 💎 ×1,2 | 👑 ×1,15 | **100** |
@@ -176,34 +177,30 @@ Tu primo le echó 87 h a "Juego B".
 | Juego D | Rol | 8.000 | 88 % | 0 | 70 | 42 | — | — | — | **42** |
 | Juego E | Estrategia | — | — | 0 | 0 | 0 | — | — | — | fuera |
 
-Top 5 con variedad (máx. 2 con solo "Acción"): A y B (empatan a 100, orden al azar), F, D,
-y se rellena con C.
+Top 5: A y B (empatan a 100, orden al azar), F, C y H/G (empatan a 52). Si F y C fueran de la
+misma saga (mismas 3 etiquetas principales), C se saltaría y entraría D.
 
 ## Constantes (todas en `analysis.py`)
 
 | Constante | Valor | Qué controla |
 |---|---|---|
-| `TOP_GENEROS` | 10 | juegos con más horas que definen tus gustos de siempre |
 | `ULTIMOS_JUGADOS` | 10 | juegos recientes que forman tu racha |
 | `PESO_RACHA` | 0.6 | peso de la racha frente a lo de siempre (60/40) |
-| `PRESUPUESTO_GENEROS` | 20 | consultas nuevas de géneros por visita |
 | `UMBRAL_PRIMO` / `PLUS_PRIMO` | 20 h / ×1,25 | consejo de la familia |
 | `UMBRAL_JOYA` / `PLUS_JOYA` | 1.000 reseñas / ×1,2 | joya oculta |
 | `UMBRAL_SUPERVENTAS` / `CASTIGO_SUPERVENTAS` | 100.000 reseñas / ×0,9 | superventas |
 | `UMBRAL_ABANDONO` | 120 min | menos de esto (y sin jugar en 2 semanas) = abandonado |
-| `PRESUPUESTO_ABANDONOS` | 10 | consultas nuevas de géneros de abandonados por visita |
-| `MIN_ABANDONOS_ANTI` / `PCT_ABANDONOS_ANTI` | 3 / 25 % | mínimo de abandonos para un anti-gusto |
-| `MAX_GUSTO_ANTI` / `CASTIGO_ANTI` | 20 % / ×0,8 | gusto máximo para ser anti-gusto y su castigo |
+| `MIN_ABANDONOS_ANTI` / `PCT_ABANDONOS_ANTI` | 3 / 15 % | mínimo de abandonos para un anti-gusto |
+| `MAX_GUSTO_ANTI` / `CASTIGO_ANTI` | 10 % / ×0,8 | gusto máximo para ser anti-gusto y su castigo |
 | `TOP_EXPERIENCIA` / `TOP_DEFINEN` | 10 / 3 | etiquetas de "lo que conoces" / que definen un pendiente |
 | `ETIQUETAS_NEUTRAS` | ~45 | etiquetas que no dicen de qué va un juego |
 | `TOP_ATREVIDOS` | 3 | juegos en "¿Te atreves?" |
-| `FINALISTAS` | 15 | juegos a los que se consulta la nota de las reseñas |
 | `UMBRAL_ACLAMADO` / `PLUS_ACLAMADO` | 90 % / ×1,15 | aclamado |
 | `UMBRAL_MIXTO` / `CASTIGO_MIXTO` | 70 % / ×0,9 | reseñas variadas |
 | `UMBRAL_MALO` / `CASTIGO_MALO` | 50 % / ×0,75 | más negativas que positivas |
 | `MIN_RESENAS_NOTA` | 10 | reseñas mínimas para que el % cuente |
 | `JOYA_MIN_PCT` | 80 % | % mínimo para la pegatina 💎 |
-| `MAX_IGUALES` | 2 | juegos con la misma mezcla de géneros en el top |
+| `MAX_IGUALES` | 1 | juegos con las mismas 3 etiquetas principales en el top |
 | `TOP_RECOMENDACIONES` | 5 | recomendaciones mostradas |
 
 ## Ruleta del caos (4.4)
@@ -251,7 +248,7 @@ plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis 
    **1 juego por desarrolladora** en las dos listas juntas (evita dos entregas de la misma saga; idea del
    usuario: el parecido de nombres se descartó porque falla con subtítulos y confunde "Dead Cells" con
    "Dead Space"; el publisher, porque los grandes publican juegos sin relación) y
-   variedad con `con_variedad` (máx. 2 con la misma mezcla de etiquetas en común). 6 + 6 (la rejilla queda completa).
+   variedad con `con_variedad` (máx. 2 con la misma mezcla de etiquetas en común, `MAX_IGUALES_COMPRA`). 6 + 6 (la rejilla queda completa).
 
 ## Constantes (todas en `analysis.py`)
 
@@ -267,6 +264,7 @@ plus de oferta  = 1 + 0,2 × descuento / 100   (el PRECIO no puntúa: lo gratis 
 | `MIN_PCT_BIZARRA` | 80 % | positivas mínimas de una bizarra |
 | `PLUS_OFERTA` | 0,2 | plus máximo por descuento (100 % = × 1,2) |
 | `MAX_GRATIS` | 1 | gratis como mucho por lista |
+| `MAX_IGUALES_COMPRA` | 2 | juegos con las mismas etiquetas en común contigo por lista |
 | `TOP_MAINSTREAM` / `TOP_BIZARRAS` | 6 / 6 | recomendaciones mostradas |
 | `TOP_AFINIDAD` | 3 | etiquetas en común que suman afinidad (si sumaran todas, ganarían siempre los juegos con muchas etiquetas, como los de gestión) |
 

@@ -131,7 +131,7 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 * Préstamos de la familia: la API solo da tus horas si los jugaste en las últimas 2 semanas; si no, "—"
   (desconocido, no 0). Por eso Steam Match puede recomendar un préstamo que ya jugaste. Descartados
   `IFamilyGroupsService` y `GetSingleGamePlaytime` (exigen token de sesión: riesgo de robo de cuenta).
-* APIs no documentadas aceptadas (`appdetails`, `appreviews`, `Query` con `sort` deducido: 10 = populares,
+* APIs no documentadas aceptadas (`appdetails`, `Query` con `sort` deducido: 10 = populares,
   21 = valorados, 11 = más vendidos de siempre; el 22 es "peor valorados" pero empieza por miles de juegos
   con 0 % y casi sin reseñas, inútil; `Query` ignora filtros desconocidos y no filtra por reseñas),
   vigilando límites. SteamSpy descartado. Logros completados de Steam descartados (coste).
@@ -147,8 +147,8 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
   `debug=False` no recarga solo); el CSS y el JS se ven con Ctrl+F5.
 * Pruebas en scripts `prueba_*.py` del scratchpad (se pierden al cerrar la sesión; rehacerlos si hacen
   falta): datos falsos + `app.app.test_client()`, sustituyendo TODAS las funciones de Steam de `app`
-  (`get_owned_games`, `get_recently_played_games`, `get_player_names`, `get_genres`, `en_cache`,
-  `get_resenas`, `get_valoracion` (devuelve `{"total", "pct"}`), `get_tags`, `buscar_tienda`,
+  (`get_owned_games`, `get_recently_played_games`, `get_player_names`, `get_genres_varios`, `get_tags`,
+  `get_valoraciones` (devuelve `{appid: {"total", "pct"}}`), `buscar_tienda`,
   `tienda_al_azar`, `mas_vendidos`; si falta esta última, la prueba llama a Steam de verdad y tarda). Ojo: un nombre malicioso escapado contiene el texto "onerror=".
 * El usuario permitió usar su Steam ID para probar con su librería real; no apuntarlo en archivos.
 * No hay Node instalado: el JavaScript no se puede comprobar en terminal; probarlo en el navegador.
@@ -157,16 +157,36 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 ## Roadmap restante (en orden)
 
 1. ~~5.5~~ y ~~5.6~~ HECHOS (efectos de "¿Qué comprar?" y rincón de la pesturria). Paso 5 cerrado.
-2. **EN CURSO**. Etiquetas en vez de géneros. 2a (perfil gamer): HECHO el código (`perfil_gamer` usa la
-   n.º 1 de `tus_etiquetas` de toda la librería jugada, "Comedia" vale; frases con `{pct}` y `{etiqueta}`;
-   `PERFILES_GENERICOS` si no hay frase propia; pegatina INDIE, barras y Alcance siguen con géneros).
-   2a.3 HECHO: `PERFILES` con 30 etiquetas (nombres exactos de Steam: ojo, "Tipo «Dark Souls»" y
-   "Construcción de barajas"); las amplias llevan los títulos viejos. Falta que el usuario lo pruebe y haga
-   commit. **SIGUIENTE: 2b** (el usuario lo quiere): etiquetas en Steam Match (ojo: `get_genres` da el
-   nº de reseñas del multiplicador de fama).
-3. Optimizaciones: consultas a Steam en paralelo (la primera visita tarda; `mas_vendidos` hace 5
+2. ~~Etiquetas en vez de géneros~~ HECHO (falta que el usuario lo pruebe en el navegador y haga commit).
+   2a: `perfil_gamer` usa la n.º 1 de `tus_etiquetas` (toda la librería jugada; "Comedia" vale), `PERFILES`
+   con 30 etiquetas (nombres exactos: "Tipo «Dark Souls»", "Construcción de barajas") y
+   `PERFILES_GENERICOS`. 2b: Steam Match con `que_cuentan` + `tus_etiquetas`; reseñas en el lote de
+   `get_tags` (`include_reviews`, `get_valoraciones`); borrados presupuestos, finalistas, `get_valoracion`,
+   `get_resenas`, `en_cache`; variedad por las 3 etiquetas principales (`MAX_IGUALES` = 1); anti-gustos
+   15 % / 10 %. Siguen con géneros (solo el top 10 de cada persona): barras, Alcance y pegatina INDIE
+   (la etiqueta "Indie" se probó y falla 1 de cada 4). Detalle en `ALGORITMO.md`.
+3. ~~Optimizaciones~~ HECHO. 3.1 HECHO: `mas_vendidos` pide sus 5 páginas a la vez (`ThreadPoolExecutor`, cerrojo
+   `_cerrojo_vendidos` para que dos visitas no la rellenen a la vez, semáforo global `_semaforo_steam` de
+   `MAX_A_LA_VEZ` = 5; los hilos no escriben nada compartido, solo devuelven). En frío: 20 s -> 12 s.
+   Steam reordena ~40 de los 5.000 entre consultas (no es fallo de los hilos). El usuario pide cuidado
+   con la concurrencia (cerrojos, semáforos). 3.2 HECHO: `get_genres_varios` (hilos + mismo semáforo;
+   `_cerrojo_generos` en cada lectura/escritura de la caché, la petición fuera del cerrojo; aceptado que
+   2 visitas simultáneas puedan pedir el mismo juego dos veces). 50 géneros: 15,4 s -> 3,7 s. Solo tú, en
+   frío: 12 s -> 9,4 s (el usuario medía 23,8 s con 4 familiares antes del 3.2).
+   Con familia (usuario, pestaña Red): 23,8 s -> 15,2 s. 3.3 HECHO: `en_paralelo(funcion, elementos)` en
+   `steam_client.py` (genérica, con el semáforo; la función no escribe nada compartido ni anida otra
+   `en_paralelo` -> deadlock); `datos_familiar` en `app.py`, y `pedir_familia` monta las listas en el hilo
+   principal (con familia: 15,2 -> 14,1 s). 3.4 HECHO: lotes de `get_tags` con `en_paralelo`
+   (`_pedir_lote_etiquetas` devuelve, `get_tags` escribe con `_cerrojo_etiquetas`; `_cerrojo_nombres` en
+   `_cargar_nombres_etiquetas`). Con familia (cronómetro del scratchpad, 412 juegos en 9 lotes): get_tags
+   4,2 -> 0,8 s; en frío 14,6 -> 11,3 s; segunda visita ~5 s. 3.5 HECHO: `buscar_en_tienda` + `en_paralelo`
+   en `pedir_compra`; `_cerrojo_tienda` en `buscar_tienda` (la limpieza recorría la caché sin cerrojo: riesgo
+   teórico, no se pudo reproducir). Con familia: en frío 9,8 s, segunda visita 3,7 s (antes del paso 3:
+   23,8 s; el usuario mide ~11 s en el navegador). PASO 3 CERRADO (falta commit). Descartado: solapar
+   secciones enteras (~3 s más, código complejo y riesgo de deadlock con el semáforo). Idea para el paso 5:
+   precalentar la caché al arrancar (hilo en segundo plano: `mas_vendidos` y nombres de etiquetas). (la primera visita tarda; `mas_vendidos` hace 5
    consultas seguidas, ~13 s, una vez al día); acotar consultas por visita.
-4. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
+4. **EMPEZAR AQUÍ**. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
    `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro, al estilo de
    `PLANTILLAS_MALISIMO` (exageración burra + confesión absurda, que al usuario SÍ le gusta); quitar las de
    alquileres/vivienda/capitalismo; quitar o generalizar las bromas sobre personas reales (Calero, Mauri,

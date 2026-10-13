@@ -1,6 +1,5 @@
 import logging  # registro de mensajes del servidor (para silenciar el de cada petición)
 import math  # funciones matemáticas (seno y coseno para el hexágono de Stand)
-import random  # para elegir al azar qué pendientes consultar (paso 4)
 import re  # módulo de expresiones regulares, para validar el Steam ID
 import time  # para medir cuánto tarda la página (logro "Paciencia infinita")
 
@@ -8,14 +7,13 @@ from flask import Flask, render_template, request  # render_template rellena una
 
 from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntesis = import en varias líneas)
     estadisticas, unir_juegos, unir_familia, top_jugados, horas_por_genero, perfil_gamer,
-    catalogo_logros, logros_datos, stand, pendientes, que_jugar, PRESUPUESTO_GENEROS,
-    ultimos_jugados, racha_actual, consejos_familia, FINALISTAS,
-    abandonados, anti_gustos, PRESUPUESTO_ABANDONOS, poner_bios, territorio_inexplorado, poner_retos,
+    catalogo_logros, logros_datos, stand, que_jugar, ultimos_jugados, racha_actual, consejos_familia,
+    abandonados, anti_gustos, poner_bios, territorio_inexplorado, poner_retos, que_cuentan,
     ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS, tragaperras_tienda, malisimos,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
-    get_owned_games, get_recently_played_games, get_player_names, get_genres, en_cache, get_resenas, get_valoracion, get_tags,
-    buscar_tienda, ORDEN_VALORADOS, tienda_al_azar, mas_vendidos,
+    get_owned_games, get_recently_played_games, get_player_names, get_genres_varios, get_tags, en_paralelo, get_valoraciones,
+    buscar_tienda, ORDEN_POPULARES, ORDEN_VALORADOS, tienda_al_azar, mas_vendidos,
 )
 
 app = Flask(__name__)  # crea la aplicación web
@@ -90,15 +88,11 @@ def index():
     # "if l": sin juegos (perfil privado) no hay tarjeta; ya sale en los avisos
     personas = [(yo, 0, juegos)] + [(e, colores[e], l) for e, l in jugados.items() if l]
     recientes = ultimos_jugados(juegos)  # tus últimos 10 jugados (para la racha actual)
-    # TODAS las consultas de géneros de una vez: el top de cada persona + tus recientes
-    # (son 10 y todos con horas, así que su "top 10" son ellos mismos)
-    generos = pedir_generos([lista for _, _, lista in personas] + [recientes])
-    # + géneros de tus pendientes y de tus abandonados, cada uno con su presupuesto de consultas nuevas
-    generos = pedir_generos_presupuesto(pendientes(juegos), generos, PRESUPUESTO_GENEROS)
+    # Géneros solo del top de cada persona (barras de la tarjeta y nota de Alcance del Stand)
+    generos = pedir_generos([lista for _, _, lista in personas])
     dejados = abandonados(juegos)  # menos de 2 h y sin tocar en 2 semanas (para los anti-gustos)
-    generos = pedir_generos_presupuesto(dejados, generos, PRESUPUESTO_ABANDONOS)
-    # Etiquetas de los juegos de TODAS las personas (por lotes de 50: pocas llamadas). Sirven para
-    # su perfil gamer y, las tuyas, para el territorio inexplorado de "¿Te atreves?"
+    # Etiquetas (y reseñas, en el mismo lote) de los juegos de TODAS las personas: por lotes de 50,
+    # pocas llamadas. Sirven para su perfil gamer y, las tuyas, para Steam Match y "¿Te atreves?"
     etiquetas = get_tags([j["appid"] for _, _, lista in personas for j in lista])
 
     tarjetas = []  # una tarjeta de estadísticas por persona
@@ -117,21 +111,19 @@ def index():
             "perfil": perfil_gamer(tus_etiquetas(lista, etiquetas), por_genero["generos"]),
         })
 
-    # Qué jugar: tus gustos de siempre (tarjetas[0] eres tú) + tu racha actual + consejos de la familia
-    # + nº de reseñas de cada juego consultado (get_resenas solo lee la caché: no llama a Steam)
-    # + géneros que sueles abandonar
-    mis_generos = tarjetas[0]["generos"]["generos"]
-    racha = racha_actual(recientes, generos)
-    # + territorio inexplorado (con las etiquetas pedidas antes de las tarjetas)
-    datos_reco = (juegos, generos, mis_generos, racha, consejos_familia(jugados),
-                  {a: get_resenas(a) for a in generos},
-                  anti_gustos(dejados, generos, mis_generos, racha),
-                  territorio_inexplorado(juegos, etiquetas))  # tupla con los 8 datos
-    # Dos pasadas: 1) puntuar todo y quedarse con los finalistas; 2) pedir la nota de SUS reseñas
-    # (una llamada por juego, solo ellos) y volver a puntuar. *datos_reco "despliega" la tupla en 8 argumentos
-    finalistas = que_jugar(*datos_reco, n=FINALISTAS)["recomendados"]
-    valoraciones = {r["appid"]: get_valoracion(r["appid"]) for r in finalistas}
-    recomendacion = que_jugar(*datos_reco, valoraciones=valoraciones)
+    # Qué jugar: tus gustos de siempre + tu racha actual + consejos de la familia + reseñas
+    # + etiquetas que sueles abandonar + territorio inexplorado. Todo con datos ya pedidos: 0 llamadas
+    gustos = dict(tus_etiquetas(juegos, etiquetas))  # {etiqueta: % de tus horas}
+    cuentan = que_cuentan(etiquetas)  # {appid: etiquetas que dicen algo de tus gustos}
+    racha = racha_actual(recientes, cuentan)
+    valoraciones = get_valoraciones(etiquetas)  # {appid: {"total", "pct"}}; recorrer un dict da sus claves
+    recomendacion = que_jugar(
+        juegos, cuentan, gustos, racha, consejos_familia(jugados),
+        {a: v["total"] for a, v in valoraciones.items()},  # nº de reseñas (joya oculta / superventas)
+        anti_gustos(dejados, cuentan, gustos, racha),
+        territorio_inexplorado(juegos, etiquetas),
+        valoraciones=valoraciones,  # % de positivas: ya las tenemos TODAS, así que basta una pasada
+    )
     poner_bios(recomendacion["recomendados"])  # una bio absurda por ficha de Steam Match
     poner_retos(recomendacion["atreverse"])  # una frase absurda por juego de "¿Te atreves?"
 
@@ -179,45 +171,51 @@ def pedir_familia(familia, nombres, yo):
     librerias, avisos = [], []  # dos listas vacías que iremos llenando
     jugados = {}  # diccionario vacío: etiqueta -> lista de juegos para estadísticas
     usadas = {yo}  # conjunto de etiquetas ya asignadas (empezando por la tuya)
-    for n, fid in enumerate(familia, start=1):  # enumerate numera desde 1: Familiar 1, 2...
+    # Todos los familiares a la vez (paso 3.3); "datos" sale en el MISMO orden que "familia" (Familiar 1, 2...).
+    # Los hilos solo devuelven datos: las listas de aquí las toca únicamente este hilo, en el bucle
+    datos = en_paralelo(datos_familiar, familia)
+    # zip empareja cada ID con sus datos; enumerate numera desde 1: Familiar 1, 2...
+    for n, (fid, (juegos_f, recientes_f)) in enumerate(zip(familia, datos), start=1):
         etiqueta = nombres.get(fid) or f"Familiar {n}"  # su nombre de Steam, o genérico si no hay
         if etiqueta in usadas:  # nombre repetido: sus juegos y colores se mezclarían...
             etiqueta = f"{etiqueta} ({n})"  # ...así que le añadimos su número
         usadas.add(etiqueta)  # la marcamos como usada
         # en los avisos usamos la etiqueta, nunca el ID
-        try:
-            juegos_f = get_owned_games(fid)  # una llamada a Steam por familiar
-        except RuntimeError:  # si falla, avisamos y seguimos con los demás
+        if juegos_f is None:  # no se pudo consultar su librería: avisamos y seguimos con los demás
             avisos.append(f"{etiqueta}: no se pudo consultar su librería.")
             continue  # salta al siguiente familiar
         if not juegos_f:  # lista vacía: perfil privado o sin juegos
             avisos.append(f"{etiqueta}: perfil privado o sin juegos.")
         librerias.append((etiqueta, juegos_f))  # guardamos el par (etiqueta, juegos)
-
-        try:  # sus juegos de las últimas 2 semanas (incluye préstamos): dato complementario
-            recientes_f = get_recently_played_games(fid)  # una llamada más por familiar
-        except RuntimeError:  # si falla, seguimos sin ellos (no hace falta avisar)
-            recientes_f = []
         jugados[etiqueta] = unir_juegos(juegos_f, recientes_f)  # misma unión que hacemos contigo
     return librerias, jugados, avisos
+
+
+def datos_familiar(fid):
+    """Juegos y recientes de UN familiar (se ejecuta en un hilo). No toca nada compartido: solo devuelve.
+    Devuelve (juegos, recientes); juegos = None si no se pudo consultar su librería."""
+    try:
+        juegos_f = get_owned_games(fid)  # una llamada a Steam
+    except RuntimeError:  # falla su librería: el hilo principal avisará (y sus recientes no se piden)
+        return None, []
+    try:  # sus juegos de las últimas 2 semanas (incluye préstamos): dato complementario
+        recientes_f = get_recently_played_games(fid)  # una llamada más
+    except RuntimeError:  # si falla, seguimos sin ellos (no hace falta avisar)
+        recientes_f = []
+    return juegos_f, recientes_f
 
 
 def pedir_generos(listas):
     """Pide a Steam los géneros del top de cada persona, sin repetir juegos. Devuelve {appid: géneros}."""
     # Conjunto {...}: como una lista pero sin repetidos (un juego en varios tops se pide una sola vez)
     appids = {j["appid"] for lista in listas for j in top_jugados(lista)}
-    return {a: get_genres(a) for a in appids}  # una consulta por juego (o la caché, si ya se pidió)
+    return get_genres_varios(appids)  # una consulta por juego (o la caché), varias a la vez
 
 
-def pedir_generos_presupuesto(lista, generos, presupuesto):
-    """Añade a generos los de los juegos de lista: todos los que ya están en caché (gratis)
-    y hasta "presupuesto" nuevos elegidos al azar. Devuelve un diccionario nuevo."""
-    faltan = [j["appid"] for j in lista if j["appid"] not in generos]  # aún sin géneros
-    gratis = [a for a in faltan if en_cache(a)]  # ya consultados en otra visita: no llaman a Steam
-    nuevos = [a for a in faltan if not en_cache(a)]  # costarían una llamada cada uno
-    # random.sample elige k elementos al azar sin repetir; min(): por si quedan menos que el presupuesto
-    elegidos = gratis + random.sample(nuevos, min(presupuesto, len(nuevos)))
-    return {**generos, **{a: get_genres(a) for a in elegidos}}  # ** "vuelca" ambos diccionarios en uno
+def buscar_en_tienda(busqueda):
+    """Una búsqueda de la tienda (se ejecuta en un hilo). busqueda = (etiquetas, todas, orden). Solo devuelve."""
+    etiquetas, todas, orden = busqueda  # "desempaqueta" la tupla en tres variables
+    return buscar_tienda(etiquetas, todas=todas, orden=orden)
 
 
 def pedir_compra(juegos, etiquetas):
@@ -226,16 +224,13 @@ def pedir_compra(juegos, etiquetas):
     favoritas = tus_etiquetas(juegos, etiquetas)
     if not favoritas:  # sin juegos jugados con etiquetas no sabemos qué te gusta
         return None
-    populares = buscar_tienda([e for e, _ in favoritas[:TOP_FAVORITAS]])  # mainstream: alguna de tus 5
-    fallo = populares is None  # None = Steam no respondió
     mezclas = mezclas_raras(favoritas)
-    raras = []
-    for mezcla in mezclas:  # bizarras: cada mezcla rara, con las dos etiquetas a la vez
-        encontrados = buscar_tienda(mezcla, todas=True, orden=ORDEN_VALORADOS)
-        if encontrados is None:
-            fallo = True
-        else:
-            raras += encontrados  # += une las listas
+    # Las búsquedas a la vez (paso 3.5): la mainstream (ALGUNA de tus 5) + una por mezcla rara (las DOS a la vez)
+    busquedas = [([e for e, _ in favoritas[:TOP_FAVORITAS]], False, ORDEN_POPULARES)]
+    busquedas += [(mezcla, True, ORDEN_VALORADOS) for mezcla in mezclas]
+    populares, *encontradas = en_paralelo(buscar_en_tienda, busquedas)  # "*": el resto, en una lista
+    fallo = any(r is None for r in [populares] + encontradas)  # None = Steam no respondió
+    raras = [j for r in encontradas if r for j in r]  # une las listas, saltándose las que fallaron
     compra = que_comprar(populares or [], raras, favoritas, {j["appid"] for j in juegos})
     compra.update(mezclas=mezclas, aviso=fallo)  # para la plantilla: qué se mezcló y si algo falló
     return compra
@@ -276,7 +271,8 @@ def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto (l
             "nombre": j.get("name", "?"),
             "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
             "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)
-            # True si Steam dice que es Indie; solo sabemos los géneros del top de alguien y de tus pendientes consultados
+            # True si Steam dice que es Indie; solo sabemos los géneros del top de alguien (la etiqueta
+            # "Indie" no es fiable: probado en el paso 2b, falla en 1 de cada 4 juegos)
             # ("or []": None, consulta fallida o juego no pedido, cuenta como lista vacía)
             "indie": "Indie" in (generos.get(j.get("appid")) or []),
         }

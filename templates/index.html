@@ -132,7 +132,7 @@
                Las animaciones CSS empiezan justo cuando el bloque se hace visible #}
             <button type="button" class="btn-revelar">▶ DESCUBRIR PERFIL GAMER</button>
             <div class="perfil-oculto" hidden>
-            {% if t.perfil %}  {# None si no hay géneros que definan un estilo #}
+            {% if t.perfil %}  {# None si no hay juegos jugados con etiquetas #}
                 <div class="logro">  {# las animaciones de entrada están en style.css #}
                     <p class="logro-cabecera">★ LOGRO DESBLOQUEADO ★</p>
                     <h3 class="logro-titulo">{{ t.perfil.titulo }}</h3>
@@ -231,7 +231,7 @@
         {% endmacro %}
         <section id="match" class="stats match-seccion" data-menu="💘 Match">
             <h2>💘 Steam Match</h2>
-            <p class="match-contador">Analizados {{ recomendacion.analizados }} de {{ recomendacion.pendientes }} pendientes · cada visita se miran más</p>
+            <p class="match-contador">Analizados {{ recomendacion.analizados }} de {{ recomendacion.pendientes }} pendientes</p>
             {% if recos %}
                 {% set mejor = recos[0].puntos %}  {# el 1.º tiene más puntos: las barras son relativas a él #}
                 <div class="match">
@@ -245,7 +245,7 @@
                             <div class="pegatinas">{{ pegatinas(r) }}</div>
                             <p class="ficha-bio">«{{ r.bio }}»</p>
                             {% if r.comunes %}
-                                {# géneros en común, sin %; loop.last: el último no lleva " · " detrás #}
+                                {# etiquetas en común, sin %; loop.last: el último no lleva " · " detrás #}
                                 <p class="ficha-gustos">Le gusta lo mismo que a ti:
                                     {% for g in r.comunes %}<b>{{ g }}</b>{% if not loop.last %} · {% endif %}{% endfor %}</p>
                             {% endif %}
@@ -289,7 +289,7 @@
                     {% endfor %}
                 </ol>
             {% else %}
-                <p class="match-vacio">Aún no hay candidatos con chispa. Vuelve a analizar: cada visita se miran más pendientes.</p>
+                <p class="match-vacio">Aún no hay candidatos con chispa: nada de lo que tienes pendiente se parece a lo que juegas.</p>
             {% endif %}
         </section>
 
@@ -484,7 +484,7 @@
                             {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
                             {% if medalla %}<span class="medalla">{{ medalla }}</span>{% endif %}
                             {{ juego.nombre }}
-                            {# Pegatina si el juego es Indie (solo tienen géneros los del top de alguien y tus pendientes consultados) #}
+                            {# Pegatina si el juego es Indie (solo tienen géneros los del top de alguien) #}
                             {% if juego.indie %}<span class="pegatina-indie">INDIE</span>{% endif %}
                         </td>
                         {# "is none": dato desconocido -> "—"; si no, número con coma decimal (2.1 -> 2,1) #}

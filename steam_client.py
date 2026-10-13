@@ -3,12 +3,36 @@
 import json  # para escribir la consulta de GetItems en formato JSON
 import os  # para leer variables de entorno
 import random  # para elegir un punto al azar del catálogo de la tienda
+import threading  # hilos: cerrojo (Lock) y semáforo para las consultas en paralelo (paso 3)
 import time  # para saber cuándo caduca la caché de la tienda
+from concurrent.futures import ThreadPoolExecutor  # reparte tareas entre varios hilos
 
 import requests  # librería para hacer peticiones HTTP
 from dotenv import load_dotenv  # lee el archivo .env
 
 load_dotenv()  # carga las variables de .env en el entorno
+
+# ===================== Consultas en paralelo (paso 3) =====================
+MAX_A_LA_VEZ = 5  # peticiones simultáneas a Steam como máximo en TODO el servidor (evita el error 429)
+# Semáforo: 5 "llaves"; cada petición en paralelo coge una y la devuelve al terminar.
+# Bounded: da error si alguien devuelve una llave de más (sería un fallo de programación)
+_semaforo_steam = threading.BoundedSemaphore(MAX_A_LA_VEZ)
+
+
+def en_paralelo(funcion, elementos):
+    """Como [funcion(e) for e in elementos], pero a la vez y con los resultados en el mismo orden.
+    Cada llamada espera turno en el semáforo (como mucho MAX_A_LA_VEZ en todo el servidor).
+
+    Reglas para no romper nada:
+    - funcion NO debe escribir nada compartido: solo devolver su resultado.
+    - funcion NO debe llamar a en_paralelo ni a get_genres_varios: tendría cogida una llave mientras
+      espera otras, y si las 5 están cogidas así, nadie avanza nunca (deadlock).
+    """
+    def con_turno(elemento):  # función dentro de otra: solo se usa aquí
+        with _semaforo_steam:  # coge una llave; al salir del with la devuelve (aunque haya error)
+            return funcion(elemento)
+    with ThreadPoolExecutor(max_workers=MAX_A_LA_VEZ) as hilos:  # al salir, espera a que acaben todos
+        return list(hilos.map(con_turno, elementos))  # map: resultados en el orden de "elementos"
 
 # URL del endpoint de Steam que lista los juegos de un usuario
 OWNED_GAMES_URL = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/"
@@ -107,16 +131,17 @@ STORE_DETAILS_URL = "https://store.steampowered.com/api/appdetails"
 # Caché en memoria: {appid: [géneros]}. Son datos del JUEGO, no del usuario.
 # Vive mientras el servidor está encendido; al reiniciarlo se vacía.
 _cache_generos = {}
-# Segunda caché con el nº de reseñas de cada juego {appid: nº o None}; se rellena a la vez que la de géneros
-_cache_resenas = {}
+_cerrojo_generos = threading.Lock()  # protege _cache_generos: varios hilos la leen y escriben a la vez
 
 
 def get_genres(appid):
     """Devuelve la lista de géneros (en español) de un juego, o None si no se pudo consultar."""
-    if appid in _cache_generos:  # ¿ya lo pedimos antes?...
-        return _cache_generos[appid]  # ...devolvemos lo guardado, sin llamar a Steam
+    with _cerrojo_generos:  # leer la caché: con el cerrojo, por si otro hilo está escribiendo
+        if appid in _cache_generos:  # ¿ya lo pedimos antes?...
+            return _cache_generos[appid]  # ...devolvemos lo guardado, sin llamar a Steam (el with suelta el cerrojo)
 
-    params = {"appids": appid, "filters": "genres,recommendations", "l": "spanish"}  # géneros (en español) y nº de reseñas
+    # La petición va FUERA del cerrojo: si no, los hilos irían de uno en uno y no ganaríamos nada
+    params = {"appids": appid, "filters": "genres", "l": "spanish"}  # solo los géneros (en español)
     try:  # intenta hacer la petición; si algo falla, salta al except
         respuesta = requests.get(STORE_DETAILS_URL, params=params, timeout=10)  # GET a la tienda, máx. 10 s
         respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx (p. ej. 429 = demasiadas peticiones)
@@ -128,50 +153,25 @@ def get_genres(appid):
     if datos.get("success"):  # el juego tiene ficha en la tienda
         info = datos.get("data") or {}  # "or {}": si no tiene géneros, Steam manda una lista vacía
         generos = [g["description"] for g in info.get("genres", [])]  # solo los nombres
-        _cache_resenas[appid] = (info.get("recommendations") or {}).get("total")  # nº de reseñas; None si Steam no lo da
     else:  # juego retirado o sin ficha: es un dato definitivo, no un fallo
         generos = []
-    _cache_generos[appid] = generos  # guardamos para no volver a pedirlo
+    with _cerrojo_generos:  # escribir: un hilo cada vez
+        _cache_generos[appid] = generos  # guardamos para no volver a pedirlo
     return generos
 
 
-def en_cache(appid):
-    """True si los géneros de este juego ya están en la caché (pedirlos no llamará a Steam)."""
-    return appid in _cache_generos
+def _generos_con_turno(appid):
+    """get_genres esperando turno en el semáforo (se ejecuta en un hilo)."""
+    with _semaforo_steam:  # como mucho MAX_A_LA_VEZ peticiones en marcha en todo el servidor
+        return get_genres(appid)
 
 
-def get_resenas(appid):
-    """Nº de reseñas de un juego ya consultado con get_genres (None si no se sabe). No llama a Steam."""
-    return _cache_resenas.get(appid)
-
-
-# URL (no oficial) con el resumen de reseñas de un juego; no necesita API key. {} = hueco para el appid
-REVIEWS_URL = "https://store.steampowered.com/appreviews/{}"
-
-# Caché en memoria: {appid: {"pct", "total"}}. Datos del JUEGO, no del usuario
-_cache_valoraciones = {}
-
-
-def get_valoracion(appid):
-    """{"pct": % de reseñas positivas (None si no tiene), "total": nº de reseñas}, o None si falla la consulta."""
-    if appid in _cache_valoraciones:  # ¿ya lo pedimos antes?
-        return _cache_valoraciones[appid]
-
-    # num_per_page=0: solo el resumen, sin descargar reseñas; language/purchase_type=all: todas
-    params = {"json": 1, "language": "all", "purchase_type": "all", "num_per_page": 0}
-    try:
-        # int(appid): el appid va dentro de la URL; así nos aseguramos de que solo es un número
-        respuesta = requests.get(REVIEWS_URL.format(int(appid)), params=params, timeout=10)
-        respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx (p. ej. 429)
-        resumen = (respuesta.json() or {}).get("query_summary") or {}
-    except (requests.exceptions.RequestException, ValueError):  # red, código de error o JSON inválido
-        return None  # fallo temporal: NO se guarda en caché
-
-    total = resumen.get("total_reviews") or 0
-    # % con el redondeo normal; sin reseñas no hay % (evita dividir entre 0)
-    pct = round(resumen.get("total_positive", 0) / total * 100) if total else None
-    _cache_valoraciones[appid] = {"pct": pct, "total": total}
-    return _cache_valoraciones[appid]
+def get_genres_varios(appids):
+    """{appid: géneros, o None si falló} de varios juegos, pedidos a la vez (paso 3.2)."""
+    unicos = list(dict.fromkeys(appids))  # sin repetidos: cada juego lo pide un solo hilo
+    with ThreadPoolExecutor(max_workers=MAX_A_LA_VEZ) as hilos:  # al salir, espera a que acaben todos
+        # map devuelve los resultados en el mismo orden que unicos; zip los empareja con su appid
+        return dict(zip(unicos, hilos.map(_generos_con_turno, unicos)))
 
 
 # API OFICIAL de Steam con las etiquetas de los juegos (las ponen los jugadores); no necesita API key
@@ -179,50 +179,84 @@ ITEMS_URL = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/"
 TAGLIST_URL = "https://api.steampowered.com/IStoreService/GetTagList/v1/"
 LOTE_ETIQUETAS = 50  # juegos por llamada (probado con 61 sin problema)
 _cache_etiquetas = {}  # {appid: [etiquetas en español, de más a menos votada]}; datos del JUEGO
+_cache_valoraciones = {}  # {appid: {"total": nº de reseñas, "pct": % positivas o None}}; datos del JUEGO
 _nombres_etiquetas = {}  # {número de etiqueta: nombre en español}; se pide una sola vez
+_cerrojo_etiquetas = threading.Lock()  # protege _cache_etiquetas y _cache_valoraciones (varias visitas a la vez)
+_cerrojo_nombres = threading.Lock()  # protege _nombres_etiquetas mientras se cargan (la primera vez)
 
 
 def _cargar_nombres_etiquetas():
-    """Pide a Steam los nombres de las ~450 etiquetas (solo la primera vez). True si los tenemos."""
-    if not _nombres_etiquetas:  # diccionario vacío: aún no los hemos pedido (o falló)
-        try:
-            respuesta = requests.get(TAGLIST_URL, params={"language": "spanish"}, timeout=10)
-            respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx
-            lista = respuesta.json()["response"]["tags"]  # [{"tagid": 1667, "name": "Terror"}, ...]
-        except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
-            return False  # sin nombres no podemos traducir: esta visita va sin etiquetas
-        _nombres_etiquetas.update({t["tagid"]: t["name"] for t in lista})  # update: añade todos
-    return True
+    """Pide a Steam los nombres de las ~450 etiquetas (solo la primera vez). True si los tenemos.
+    Con cerrojo: si dos visitas llegan a la vez, la segunda espera y encuentra los nombres ya cargados,
+    en vez de leerlos a medio escribir."""
+    with _cerrojo_nombres:
+        if not _nombres_etiquetas:  # diccionario vacío: aún no los hemos pedido (o falló)
+            try:
+                respuesta = requests.get(TAGLIST_URL, params={"language": "spanish"}, timeout=10)
+                respuesta.raise_for_status()  # error si Steam devolvió 4xx/5xx
+                lista = respuesta.json()["response"]["tags"]  # [{"tagid": 1667, "name": "Terror"}, ...]
+            except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):  # red, JSON raro...
+                return False  # sin nombres no podemos traducir: esta visita va sin etiquetas
+            _nombres_etiquetas.update({t["tagid"]: t["name"] for t in lista})  # update: añade todos
+        return True
+
+
+def _pedir_lote_etiquetas(lote):
+    """Etiquetas y reseñas de un lote de hasta 50 juegos (se ejecuta en un hilo). No toca nada compartido:
+    devuelve {appid: (etiquetas, valoración)} de los que tienen ficha, o None si el lote falla."""
+    consulta = {
+        "ids": [{"appid": int(a)} for a in lote],  # int(): solo números en la consulta
+        "context": {"language": "spanish", "country_code": "ES"},
+        # sus 20 etiquetas más votadas + sus reseñas (vienen en el mismo lote: gratis)
+        "data_request": {"include_tag_count": 20, "include_reviews": True},
+    }
+    try:
+        respuesta = requests.get(ITEMS_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
+        respuesta.raise_for_status()
+        items = respuesta.json()["response"].get("store_items", [])
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
+        return None  # este lote falla: no se guarda nada, se reintentará en otra visita
+    datos = {}  # diccionario LOCAL de este hilo: nadie más lo ve
+    for item in items:
+        if item.get("success") == 1:  # 1 = juego con ficha en la tienda
+            # Ordenamos por votos ("weight"), de más a menos, y traducimos número -> nombre (solo lectura)
+            votadas = sorted(item.get("tags", []), key=lambda t: t.get("weight", 0), reverse=True)
+            etiquetas = [_nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas]
+            # summary_filtered: reseñas sin las "fuera de tema" (p. ej. bombardeos de reseñas)
+            resenas = (item.get("reviews") or {}).get("summary_filtered") or {}
+            valoracion = {"total": resenas.get("review_count", 0), "pct": resenas.get("percent_positive")}
+            datos[item["appid"]] = (etiquetas, valoracion)
+    return datos
 
 
 def get_tags(appids):
     """{appid: [etiquetas, de más a menos votada]}, pidiendo a Steam por lotes de 50 solo lo que
-    no está en caché. Si un lote falla, sus juegos no salen (se reintentan en otra visita)."""
-    faltan = [a for a in dict.fromkeys(appids) if a not in _cache_etiquetas]  # sin repetidos ni los de caché
-    if faltan and _cargar_nombres_etiquetas():
-        for i in range(0, len(faltan), LOTE_ETIQUETAS):  # range(inicio, fin, paso): 0, 50, 100...
-            lote = faltan[i:i + LOTE_ETIQUETAS]  # [i:i+50]: los 50 siguientes
-            consulta = {
-                "ids": [{"appid": int(a)} for a in lote],  # int(): solo números en la consulta
-                "context": {"language": "spanish", "country_code": "ES"},
-                "data_request": {"include_tag_count": 20},  # sus 20 etiquetas más votadas
-            }
-            try:
-                respuesta = requests.get(ITEMS_URL, params={"input_json": json.dumps(consulta)}, timeout=15)
-                respuesta.raise_for_status()
-                items = respuesta.json()["response"].get("store_items", [])
-            except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
-                continue  # este lote falla: NO se guarda nada, se reintentará en otra visita
-            for item in items:
-                if item.get("success") == 1:  # 1 = juego con ficha en la tienda
-                    # Ordenamos por votos ("weight"), de más a menos, y traducimos número -> nombre
-                    votadas = sorted(item.get("tags", []), key=lambda t: t.get("weight", 0), reverse=True)
-                    _cache_etiquetas[item["appid"]] = [
-                        _nombres_etiquetas[t["tagid"]] for t in votadas if t["tagid"] in _nombres_etiquetas
-                    ]
-            for a in lote:  # los del lote que Steam no devolvió con ficha (retirados...): dato definitivo
-                _cache_etiquetas.setdefault(a, [])  # setdefault: pone [] solo si no tiene ya etiquetas
-    return {a: _cache_etiquetas[a] for a in appids if a in _cache_etiquetas}
+    no está en caché. Si un lote falla, sus juegos no salen (se reintentan en otra visita).
+    Los lotes se piden a la vez (paso 3.4). No llamarla desde en_paralelo (deadlock)."""
+    with _cerrojo_etiquetas:  # leer qué falta: con el cerrojo, por si otra visita está escribiendo
+        faltan = [a for a in dict.fromkeys(appids) if a not in _cache_etiquetas]  # sin repetidos ni los de caché
+    if faltan and _cargar_nombres_etiquetas():  # nombres cargados ANTES de los hilos: ellos solo los leen
+        # [i:i+50] para i = 0, 50, 100...: los lotes de 50
+        lotes = [faltan[i:i + LOTE_ETIQUETAS] for i in range(0, len(faltan), LOTE_ETIQUETAS)]
+        resultados = en_paralelo(_pedir_lote_etiquetas, lotes)  # varios lotes a la vez, resultados en orden
+        with _cerrojo_etiquetas:  # escribir: solo este hilo, todo de una vez
+            for lote, datos in zip(lotes, resultados):  # zip: cada lote con su resultado
+                if datos is None:  # lote fallido: sus juegos no se guardan (se reintentan en otra visita)
+                    continue
+                for appid, (etiquetas, valoracion) in datos.items():
+                    _cache_etiquetas[appid] = etiquetas
+                    _cache_valoraciones[appid] = valoracion
+                for a in lote:  # los del lote que Steam no devolvió con ficha (retirados...): dato definitivo
+                    _cache_etiquetas.setdefault(a, [])  # setdefault: pone [] solo si no tiene ya etiquetas
+    with _cerrojo_etiquetas:  # leer el resultado: con el cerrojo
+        return {a: _cache_etiquetas[a] for a in appids if a in _cache_etiquetas}
+
+
+def get_valoraciones(appids):
+    """{appid: {"total", "pct"}} de los juegos ya pedidos con get_tags (vienen en el mismo lote).
+    No llama a Steam: los juegos sin datos (retirados de la tienda o lote fallido) no salen."""
+    with _cerrojo_etiquetas:  # leer con el cerrojo, por si otra visita está escribiendo
+        return {a: _cache_valoraciones[a] for a in appids if a in _cache_valoraciones}
 
 
 # ===================== Tienda: buscar juegos para comprar (paso 5.1) =====================
@@ -232,6 +266,7 @@ ORDEN_POPULARES = 10  # valores de "sort" SIN documentar, deducidos probando: 10
 ORDEN_VALORADOS = 21  # ...y 21 = mejor valorados
 CADUCIDAD_TIENDA = 3 * 3600  # segundos: los precios y las ofertas cambian, así que la caché caduca a las 3 h
 _cache_tienda = {}  # {búsqueda: (momento en que se guardó, juegos)}; datos de la tienda, no del usuario
+_cerrojo_tienda = threading.Lock()  # protege _cache_tienda (varias búsquedas y visitas a la vez)
 
 
 def _ficha_tienda(item):
@@ -297,7 +332,8 @@ def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
     if not tagids:
         return []
     clave = (tuple(tagids), todas, orden, cantidad)  # tupla: puede ser clave de diccionario (una lista no)
-    guardado = _cache_tienda.get(clave)
+    with _cerrojo_tienda:  # leer la caché con el cerrojo, por si otro hilo está escribiendo o limpiando
+        guardado = _cache_tienda.get(clave)
     if guardado and time.time() - guardado[0] < CADUCIDAD_TIENDA:  # está y no ha caducado
         return guardado[1]
     # Dentro de un grupo vale CUALQUIERA de sus etiquetas; entre grupos hacen falta TODOS
@@ -307,10 +343,13 @@ def buscar_tienda(etiquetas, todas=False, orden=ORDEN_POPULARES, cantidad=100):
     if respuesta is None:  # falló: no se guarda nada
         return None
     juegos = respuesta[0]  # [0]: los juegos ([1] sería el total, que aquí no hace falta)
-    ahora = time.time()
-    for k in [k for k, (momento, _) in _cache_tienda.items() if ahora - momento >= CADUCIDAD_TIENDA]:
-        del _cache_tienda[k]  # limpieza: fuera las búsquedas caducadas (la memoria no crece sin fin)
-    _cache_tienda[clave] = (ahora, juegos)
+    # Limpiar y escribir: un hilo cada vez. Sin el cerrojo, si otra visita añadía una búsqueda mientras
+    # este bucle recorría la caché, Python fallaba ("dictionary changed size during iteration")
+    with _cerrojo_tienda:
+        ahora = time.time()
+        for k in [k for k, (momento, _) in _cache_tienda.items() if ahora - momento >= CADUCIDAD_TIENDA]:
+            del _cache_tienda[k]  # limpieza: fuera las búsquedas caducadas (la memoria no crece sin fin)
+        _cache_tienda[clave] = (ahora, juegos)
     return juegos
 
 
@@ -338,19 +377,30 @@ ORDEN_VENDIDOS = 11  # ...y 11 = más vendidos de siempre (también deducido; tr
 PAGINAS_VENDIDOS = 5  # páginas de 1.000 juegos (~2 s cada una)
 CADUCIDAD_VENDIDOS = 24 * 3600  # esta lista apenas cambia: se guarda 1 día
 _cache_vendidos = []  # [(momento en que se guardó, juegos)]: datos de la tienda, no del usuario
+_cerrojo_vendidos = threading.Lock()  # solo una visita a la vez puede rellenar la caché de los más vendidos
+
+
+def _pagina_vendidos(pagina):
+    """Pide UNA página de los más vendidos (se ejecuta en un hilo). No toca nada compartido: solo devuelve."""
+    with _semaforo_steam:  # espera turno si ya hay 5 peticiones en marcha; al salir del with, devuelve la llave
+        return _pedir_tienda({"start": pagina * 1000, "count": 1000, "sort": ORDEN_VENDIDOS, "filters": {}})
 
 
 def mas_vendidos():
-    """Los 5.000 juegos más vendidos de siempre (paso 5.6), guardados 24 h. None si falla."""
-    if _cache_vendidos and time.time() - _cache_vendidos[0][0] < CADUCIDAD_VENDIDOS:  # está y no ha caducado
-        return _cache_vendidos[0][1]
-    if not _cargar_nombres_etiquetas():  # sin etiquetas no se pueden quitar los adultos: mejor nada
-        return None
-    juegos = []
-    for pagina in range(PAGINAS_VENDIDOS):
-        respuesta = _pedir_tienda({"start": pagina * 1000, "count": 1000, "sort": ORDEN_VENDIDOS, "filters": {}})
-        if respuesta is None:  # falla una página: no se guarda nada (se reintenta en la próxima visita)
+    """Los 5.000 juegos más vendidos de siempre (paso 5.6), guardados 24 h. None si falla.
+    Las 5 páginas se piden a la vez (paso 3.1)."""
+    with _cerrojo_vendidos:  # si otra visita ya los está pidiendo, esta espera y luego usa su caché
+        if _cache_vendidos and time.time() - _cache_vendidos[0][0] < CADUCIDAD_VENDIDOS:  # está y no ha caducado
+            return _cache_vendidos[0][1]
+        # Sin etiquetas no se pueden quitar los adultos: mejor nada. Se cargan ANTES de los hilos,
+        # así ellos solo LEEN los nombres (nadie escribe mientras otros leen)
+        if not _cargar_nombres_etiquetas():
             return None
-        juegos += respuesta[0]  # +=: añade los de esta página a la lista
-    _cache_vendidos[:] = [(time.time(), juegos)]  # [:] = sustituye el contenido de la lista
-    return juegos
+        with ThreadPoolExecutor(max_workers=PAGINAS_VENDIDOS) as hilos:  # al salir, espera a que acaben todos
+            # map: reparte las páginas 0-4 entre los hilos y devuelve los resultados EN ORDEN de página
+            respuestas = list(hilos.map(_pagina_vendidos, range(PAGINAS_VENDIDOS)))
+        if any(r is None for r in respuestas):  # falla alguna página: no se guarda nada (se reintenta otra visita)
+            return None
+        juegos = [j for r in respuestas for j in r[0]]  # junta las 5 páginas (r[0]: los juegos de cada una)
+        _cache_vendidos[:] = [(time.time(), juegos)]  # [:] = sustituye el contenido; solo escribe este hilo, con el cerrojo
+        return juegos

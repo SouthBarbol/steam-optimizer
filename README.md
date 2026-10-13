@@ -14,7 +14,7 @@ a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
 - Ruleta del caos: un juego al azar de toda la librería con una frase absurda.
 - Horas por género (con los 10 juegos más jugados de cada persona) y perfil gamer según su etiqueta
   favorita de Steam (con todos sus juegos jugados 2 h o más).
-- Qué jugar (Steam Match): tus pendientes puntuados según tus géneros, tu racha reciente,
+- Qué jugar (Steam Match): tus pendientes puntuados según tus etiquetas favoritas, tu racha reciente,
   los consejos de la familia y las reseñas de Steam. Detalle en `ALGORITMO.md`.
 - ¿Te atreves?: pendientes con etiquetas a las que nunca has jugado.
 - Qué comprar: 6 juegos mainstream (populares y afines a tus etiquetas favoritas) y 6 bizarros
@@ -44,9 +44,9 @@ Las carátulas las descarga tu navegador del CDN de Steam.
   jugado en las **últimas 2 semanas**, porque la API oficial de Steam no
   expone un historial completo. Sus horas se muestran como "—" (desconocidas).
 - Los géneros salen de la tienda de Steam (API no oficial, con límite de peticiones):
-  se piden para el top 10 de cada persona y, con un máximo de consultas nuevas por visita
-  (20 y 10), para tus pendientes y tus abandonados. La primera carga puede tardar ~20 s;
-  las siguientes son casi instantáneas. Si Steam no responde, se avisa con "Sin datos".
+  solo se piden para el top 10 de cada persona (barras de géneros). Las etiquetas y las reseñas
+  llegan por lotes de 50 para toda la librería. Las consultas se hacen en paralelo (como mucho 5 a
+  la vez): la primera carga del día puede tardar ~10 s; las siguientes, unos 3-4 s. Si Steam no responde, se avisa con "Sin datos".
 - La etiqueta INDIE de la tabla solo aparece en juegos del top 10 de alguien.
 - Steam Match puede recomendarte un préstamo de la familia al que ya jugaste hace más de
   2 semanas: no podemos saber tus horas en él.
