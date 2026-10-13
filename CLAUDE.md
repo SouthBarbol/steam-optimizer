@@ -157,9 +157,13 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
 ## Roadmap restante (en orden)
 
 1. ~~5.5~~ y ~~5.6~~ HECHOS (efectos de "¿Qué comprar?" y rincón de la pesturria). Paso 5 cerrado.
-2. **EMPEZAR AQUÍ**. Idea del usuario (a valorar): usar ETIQUETAS en vez de géneros en la afinidad de
-   Steam Match y en el perfil gamer, y rehacer las frases de `PERFILES` (se puede reutilizar
-   `tus_etiquetas`). Primero explicar al usuario pros y contras y proponer; si no lo quiere, pasar al 3.
+2. **EN CURSO**. Etiquetas en vez de géneros. 2a (perfil gamer): HECHO el código (`perfil_gamer` usa la
+   n.º 1 de `tus_etiquetas` de toda la librería jugada, "Comedia" vale; frases con `{pct}` y `{etiqueta}`;
+   `PERFILES_GENERICOS` si no hay frase propia; pegatina INDIE, barras y Alcance siguen con géneros).
+   2a.3 HECHO: `PERFILES` con 30 etiquetas (nombres exactos de Steam: ojo, "Tipo «Dark Souls»" y
+   "Construcción de barajas"); las amplias llevan los títulos viejos. Falta que el usuario lo pruebe y haga
+   commit. **SIGUIENTE: 2b** (el usuario lo quiere): etiquetas en Steam Match (ojo: `get_genres` da el
+   nº de reseñas del multiplicador de fama).
 3. Optimizaciones: consultas a Steam en paralelo (la primera visita tarda; `mas_vendidos` hace 5
    consultas seguidas, ~13 s, una vez al día); acotar consultas por visita.
 4. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,

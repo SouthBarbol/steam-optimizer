@@ -114,20 +114,49 @@ NO_DEFINEN_PERFIL = {"Free to Play", "Acceso anticipado", "Indie"}
 # El perfil lleva la pegatina "Indie" si ese género supera este % de las horas del top
 UMBRAL_INDIE = 50
 
-# Perfil gamer según el género con más horas: (título, frase). {horas} se rellena con el dato real
+# Perfil gamer según tu etiqueta favorita: {etiqueta: (título, frase)}. {pct} = % de tus horas en ella.
+# Los nombres son los que da Steam en español (comprobados); si no coinciden exactos, no se usan
 PERFILES = {
-    "Acción": ("Gatillazo Gatillero Pistolerito", "{horas} h de reflejos, explosiones y cero paciencia para los menús."),
-    "Aventura": ("Willifó", "{horas} h mirando detrás de cada roca por si había un cofre."),
-    "Rol": ("Mega virgin plus", "{horas} h subiendo de nivel; la vida real sigue en nivel 1."),
-    "Estrategia": ("Imperio otomano enjoyer", "{horas} h planeando; seguro que ya tienes un plan para leer esto."),
-    "Simuladores": ("Funambulista a media jornada", "{horas} h trabajando en mundos que no pagan nómina."),
-    "Deportes": ("El pinche cuervo pendejo mamado", "{horas} h de deporte sin sudar una gota."),
-    "Carreras": ("Francesco Virgolini", "{horas} h de la maquina mas veloz de tutti ITALIE."),
-    "Casual": ("Putisimo Chill", "{horas} h de partidas de «solo una más»."),
-    "Multijugador masivo": ("Tauren nivel enseñame media aunque sea carla", "{horas} h con pajilleritos premium."),
+    # --- Etiquetas concretas ---
+    "Comedia": ("Payaso de guardia", "Un {pct} % de tus horas en juegos de risa. Te ríes solo en el sofá y el perro ya ha pedido el traslado."),
+    "Rol japonés": ("Protagonista de pelo pincho", "{pct} % de tus horas en JRPG. Te has leído más diálogos que el BOE y aún no sabes de qué iba la trama."),
+    "Combate por turnos": ("Ajedrecista con espada", "Un {pct} % de tus horas esperando tu turno. En la cola del súper te quedas quieto hasta que alguien te ataque."),
+    "Sandbox": ("Dios aburrido de domingo", "{pct} % de tus horas en sandbox. Has creado mundos enteros solo para tirarles una vaca desde muy alto."),
+    "Mundo abierto": ("Turista con el GPS roto", "Un {pct} % de tus horas en mundos abiertos. La misión principal te espera desde 2019, con el café frío."),
+    "FPS": ("Headshot andante", "{pct} % de tus horas en primera persona. Hace tanto que no te ves los pies que ya no sabes si tienes."),
+    "Históricos": ("Abuelo cebolleta con DLC", "Un {pct} % de tus horas en la historia. En las cenas explicas las guerras púnicas y la abuela se va a fregar por no oírte."),
+    "Construcción de ciudades": ("Alcalde de nadie", "{pct} % de tus horas haciendo ciudades. Planificas rotondas en sueños y anoche llamaste «zona industrial» a la almohada."),
+    "Gestión": ("Excel con patas", "Un {pct} % de tus horas gestionando cosas. Disfrutas más con una hoja de cálculo que con una paella, y lo sabes."),
+    "Tipo «Dark Souls»": ("Masoca certificado", "{pct} % de tus horas muriendo. Has palmado más que una mosca en un bar de carretera y aún dices que «es justo»."),
+    "Roguelike": ("Hámster en la rueda", "Un {pct} % de tus horas en «una partida más». Mueres, empiezas otra vez y lo llamas progreso. Como mi tío con las dietas."),
+    "Supervivencia": ("Superviviente de sofá", "{pct} % de tus horas sobreviviendo. Sabes hacer un hacha con dos piedras, pero no un huevo frito."),
+    "Terror": ("Cagueta profesional", "Un {pct} % de tus horas pasando miedo. Juegas con la luz encendida y aun así le pides al gato que te acompañe al baño."),
+    "Plataformas": ("Saltimbanqui de mando", "{pct} % de tus horas dando saltos. Has roto dos mandos y un poco de tu alma, en ese orden."),
+    "Metroidvania": ("Cartógrafo de pasillos", "Un {pct} % de tus horas volviendo al mismo sitio con un poder nuevo. Como tú abriendo la nevera cada 10 minutos por si ha aparecido algo."),
+    "Construcción de barajas": ("Tahúr de taberna", "{pct} % de tus horas barajando. Te dejan solo con una baraja española y sales con un combo infinito y sin camiseta."),
+    "Fútbol": ("Míster de barra de bar", "Un {pct} % de tus horas en el fútbol. Fichas a un lateral moldavo de 16 años y lo celebras más que tu boda."),
+    "Puzles": ("Cerebrito con ojeras", "{pct} % de tus horas en puzles. A las 4 de la mañana sigues pensando en una palanca. La palanca no piensa en ti."),
+    "Gran estrategia": ("Imperio otomano enjoyer", "Un {pct} % de tus horas conquistando el mundo en un mapa. En casa no conquistas ni el mando de la tele."),
+    # --- Etiquetas amplias (cuentan a mitad de peso, pero pueden ganar): los títulos de la época de los géneros ---
+    "Acción": ("Gatillazo Gatillero Pistolerito", "{pct} % de tus horas de reflejos, explosiones y cero paciencia para los menús."),
+    "Aventura": ("Willifó", "{pct} % de tus horas mirando detrás de cada roca por si había un cofre."),
+    "Rol": ("Mega virgin plus", "{pct} % de tus horas subiendo de nivel; la vida real sigue en nivel 1."),
+    "Estrategia": ("Imperio otomano enjoyer", "{pct} % de tus horas planeando; seguro que ya tienes un plan para leer esto."),
+    "Simulación": ("Funambulista a media jornada", "{pct} % de tus horas trabajando en mundos que no pagan nómina."),
+    "Deportes": ("El pinche cuervo pendejo mamado", "{pct} % de tus horas de deporte sin sudar una gota."),
+    "Carreras": ("Francesco Virgolini", "{pct} % de tus horas en la maquina mas veloz de tutti ITALIE."),
+    "Casuales": ("Putisimo Chill", "{pct} % de tus horas en partidas de «solo una más»."),
+    "Multijugador masivo": ("Tauren nivel enseñame media aunque sea carla", "{pct} % de tus horas con pajilleritos premium."),
 }
-# Para géneros que no están en PERFILES (p. ej. "Sin género" o alguno nuevo de Steam)
-PERFIL_DESCONOCIDO = ("Inclasificable", "{horas} h en géneros que ni Steam sabe nombrar.")
+PERFILES["Roguelite"] = PERFILES["Roguelike"]  # misma frase: apunta a la misma tupla, sin repetir el texto
+PERFILES["MMORPG"] = PERFILES["Multijugador masivo"]
+# Para etiquetas sin frase propia: una al azar. «» para que funcionen con cualquier nombre de etiqueta
+PERFILES_GENERICOS = [
+    ("Sommelier de «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Lo hueles en la portada antes de comprarlo. Te han visto hacerlo."),
+    ("Eminencia en «{etiqueta}»", "{pct} % de tus horas en «{etiqueta}». Si fuera una carrera ya tendrías el doctorado, con una mancha de Cheetos en el título."),
+    ("Posesión infernal de «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Vino el cura, echó una partida y ya tampoco sale de casa."),
+    ("Cum laude en «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Tu gato maúlla en el tono de la música del menú. Es preocupante."),
+]
 
 
 def top_jugados(juegos, n=TOP_GENEROS):
@@ -166,22 +195,23 @@ def horas_por_genero(juegos, generos):
     }
 
 
-def perfil_gamer(generos):
-    """Título y frase según el género con más horas; None si no hay datos suficientes.
+def perfil_gamer(favoritas, generos):
+    """Título y frase según tu etiqueta favorita (la n.º 1 de tus_etiquetas); None si no hay datos.
 
-    generos: la lista "generos" que devuelve horas_por_genero (ya ordenada de más a menos horas).
+    favoritas: lo que devuelve tus_etiquetas ([(etiqueta, %), ...], de más a menos).
+    generos: la lista "generos" de horas_por_genero (solo para la pegatina "Indie").
     """
-    estilos = [g for g in generos if g["nombre"] not in NO_DEFINEN_PERFIL]  # quita "Indie", "Free to Play"...
-    if not estilos:  # no queda ningún género que describa su estilo
+    if not favoritas:  # sin juegos jugados de verdad o sin etiquetas: no hay perfil
         return None  # la plantilla no mostrará perfil
-    principal = estilos[0]  # el primero es el de más horas
-    titulo, frase = PERFILES.get(principal["nombre"], PERFIL_DESCONOCIDO)  # si no está, el genérico
+    etiqueta, pct = favoritas[0]  # la que más pesa en tus horas
+    # Si tiene frase propia, esa; si no, una genérica al azar (sirven para cualquier etiqueta)
+    titulo, frase = PERFILES.get(etiqueta) or random.choice(PERFILES_GENERICOS)
     # next(...) busca el primer elemento que cumple la condición; 0 si no hay ninguno
     pct_indie = next((g["pct"] for g in generos if g["nombre"] == "Indie"), 0)
     return {
-        "titulo": titulo,
-        "frase": frase.format(horas=formatear(principal["horas"])),  # rellena el hueco {horas}
-        "genero": principal["nombre"],  # el género en el que se basa (para mostrarlo)
+        "titulo": titulo.format(etiqueta=etiqueta),  # rellena el hueco {etiqueta}
+        "frase": frase.format(etiqueta=etiqueta, pct=pct),  # y los huecos {etiqueta} y {pct}
+        "etiqueta": etiqueta,  # la etiqueta en la que se basa
         "indie": pct_indie > UMBRAL_INDIE,  # True = mostrar la pegatina "Indie"
     }
 

@@ -75,3 +75,4 @@ if (plegable) {
         if (e.target.closest('a[href="#libreria"]')) plegable.open = true;  // closest: el enlace o algo dentro
     });
 }
+

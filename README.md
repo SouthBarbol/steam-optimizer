@@ -12,7 +12,8 @@ a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
 - Estadísticas por persona: Pile of Shame, juegos abandonados, horas en perspectiva
   y duelo familiar.
 - Ruleta del caos: un juego al azar de toda la librería con una frase absurda.
-- Horas por género y perfil gamer, calculados con los 10 juegos más jugados de cada persona.
+- Horas por género (con los 10 juegos más jugados de cada persona) y perfil gamer según su etiqueta
+  favorita de Steam (con todos sus juegos jugados 2 h o más).
 - Qué jugar (Steam Match): tus pendientes puntuados según tus géneros, tu racha reciente,
   los consejos de la familia y las reseñas de Steam. Detalle en `ALGORITMO.md`.
 - ¿Te atreves?: pendientes con etiquetas a las que nunca has jugado.

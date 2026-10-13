@@ -97,6 +97,9 @@ def index():
     generos = pedir_generos_presupuesto(pendientes(juegos), generos, PRESUPUESTO_GENEROS)
     dejados = abandonados(juegos)  # menos de 2 h y sin tocar en 2 semanas (para los anti-gustos)
     generos = pedir_generos_presupuesto(dejados, generos, PRESUPUESTO_ABANDONOS)
+    # Etiquetas de los juegos de TODAS las personas (por lotes de 50: pocas llamadas). Sirven para
+    # su perfil gamer y, las tuyas, para el territorio inexplorado de "¿Te atreves?"
+    etiquetas = get_tags([j["appid"] for _, _, lista in personas for j in lista])
 
     tarjetas = []  # una tarjeta de estadísticas por persona
     for nombre, color, lista in personas:  # cada tupla se "desempaqueta" en tres variables
@@ -110,7 +113,8 @@ def index():
             "stand": ficha,
             "hexagono": hexagono(ficha["notas"]),  # coordenadas para dibujarlo en SVG
             "generos": por_genero,  # barras de géneros, cobertura y aviso "sin datos"
-            "perfil": perfil_gamer(por_genero["generos"]),  # título y frase (None si no hay datos)
+            # título y frase según su etiqueta favorita (None si no hay datos)
+            "perfil": perfil_gamer(tus_etiquetas(lista, etiquetas), por_genero["generos"]),
         })
 
     # Qué jugar: tus gustos de siempre (tarjetas[0] eres tú) + tu racha actual + consejos de la familia
@@ -118,8 +122,7 @@ def index():
     # + géneros que sueles abandonar
     mis_generos = tarjetas[0]["generos"]["generos"]
     racha = racha_actual(recientes, generos)
-    # + territorio inexplorado: etiquetas de TODOS tus juegos (por lotes de 50: pocas llamadas)
-    etiquetas = get_tags([j["appid"] for j in juegos])
+    # + territorio inexplorado (con las etiquetas pedidas antes de las tarjetas)
     datos_reco = (juegos, generos, mis_generos, racha, consejos_familia(jugados),
                   {a: get_resenas(a) for a in generos},
                   anti_gustos(dejados, generos, mis_generos, racha),
