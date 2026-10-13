@@ -186,11 +186,16 @@ todo lo de abajo está HECHO y probado por el usuario en el navegador (y con com
    secciones enteras (~3 s más, código complejo y riesgo de deadlock con el semáforo). Idea para el paso 5:
    precalentar la caché al arrancar (hilo en segundo plano: `mas_vendidos` y nombres de etiquetas). (la primera visita tarda; `mas_vendidos` hace 5
    consultas seguidas, ~13 s, una vez al día); acotar consultas por visita.
-4. **EMPEZAR AQUÍ**. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
+4. ~~Personalización de frases~~ HECHO. Personalización de frases (antes de publicar): rehacer todas las de broma (`BIOS_*`, `BIOS_ATREVIDO`,
    `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, textos de logros, `PERFILES`) con humor bizarro, al estilo de
    `PLANTILLAS_MALISIMO` (exageración burra + confesión absurda, que al usuario SÍ le gusta); quitar las de
-   alquileres/vivienda/capitalismo; quitar o generalizar las bromas sobre personas reales (Calero, Mauri,
-   Navarro) en `analysis.py`; revisar el tono de "tu mamá". Proponerlas antes.
-5. Publicar: borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
+   alquileres/vivienda/capitalismo; revisar el tono de "tu mamá". Proponerlas antes. Tono: ver la memoria
+   "tono-frases-bizarras". Las bromas de Calero, Mauri y Navarro SE QUEDAN: de momento la web es para sus
+   amigos (quitarlas o generalizarlas solo si algún día se publica). PASO 4 HECHO (falta commit):
+   `BIOS_*`, `BIOS_ATREVIDO`, `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, frases de `PERFILES` (títulos
+   iguales), Cum laude de `PERFILES_GENERICOS`, textos de `LOGROS` y reproches `penas` de la plantilla, con
+   referencias a webseries y juegos míticos (memoria "referencias-webseries"). Sin tocar a propósito: excusas
+   de `carga.js` (son del usuario), `PLANTILLAS_MALISIMO` y el pantallazo azul.
+5. **EMPEZAR AQUÍ**. Publicar (de momento, para que la prueben sus amigos): borrar `/demo`, formulario con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de
    publicar"), elegir hosting y cómo guardar allí la API key. Opcional: formulario más cómodo para los
    IDs familiares y favicon (hoy 404).

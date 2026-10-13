@@ -118,24 +118,24 @@ UMBRAL_INDIE = 50
 # Los nombres son los que da Steam en español (comprobados); si no coinciden exactos, no se usan
 PERFILES = {
     # --- Etiquetas concretas ---
-    "Comedia": ("Payaso de guardia", "Un {pct} % de tus horas en juegos de risa. Te ríes solo en el sofá y el perro ya ha pedido el traslado."),
-    "Rol japonés": ("Protagonista de pelo pincho", "{pct} % de tus horas en JRPG. Te has leído más diálogos que el BOE y aún no sabes de qué iba la trama."),
-    "Combate por turnos": ("Ajedrecista con espada", "Un {pct} % de tus horas esperando tu turno. En la cola del súper te quedas quieto hasta que alguien te ataque."),
-    "Sandbox": ("Dios aburrido de domingo", "{pct} % de tus horas en sandbox. Has creado mundos enteros solo para tirarles una vaca desde muy alto."),
-    "Mundo abierto": ("Turista con el GPS roto", "Un {pct} % de tus horas en mundos abiertos. La misión principal te espera desde 2019, con el café frío."),
-    "FPS": ("Headshot andante", "{pct} % de tus horas en primera persona. Hace tanto que no te ves los pies que ya no sabes si tienes."),
-    "Históricos": ("Abuelo cebolleta con DLC", "Un {pct} % de tus horas en la historia. En las cenas explicas las guerras púnicas y la abuela se va a fregar por no oírte."),
-    "Construcción de ciudades": ("Alcalde de nadie", "{pct} % de tus horas haciendo ciudades. Planificas rotondas en sueños y anoche llamaste «zona industrial» a la almohada."),
-    "Gestión": ("Excel con patas", "Un {pct} % de tus horas gestionando cosas. Disfrutas más con una hoja de cálculo que con una paella, y lo sabes."),
-    "Tipo «Dark Souls»": ("Masoca certificado", "{pct} % de tus horas muriendo. Has palmado más que una mosca en un bar de carretera y aún dices que «es justo»."),
-    "Roguelike": ("Hámster en la rueda", "Un {pct} % de tus horas en «una partida más». Mueres, empiezas otra vez y lo llamas progreso. Como mi tío con las dietas."),
+    "Comedia": ("Payaso de guardia", "{pct} % de tus horas haciendo el tonto. Tú no juegas a juegos, tú juegas a reírte de tus amigos."),
+    "Rol japonés": ("Protagonista de pelo pincho", "{pct} % de tus horas en JRPGs. Pelos de colores, 80 h de tutorial y tú tan feliz."),
+    "Combate por turnos": ("Ajedrecista con espada", "{pct} % de tus horas esperando tu turno. Ni una, ni dos, ni tres, sino tres horas por combate."),
+    "Sandbox": ("Dios aburrido de domingo", "{pct} % de tus horas en sandbox. Has construido de todo menos una vida social."),
+    "Mundo abierto": ("Turista con el GPS roto", "{pct} % de tus horas en mundos abiertos. La misión principal sigue ahí. Llorando."),
+    "FPS": ("Headshot andante", "{pct} % de tus horas pegando tiros. Tu K/D es mejor que tus notas de la ESO."),
+    "Históricos": ("Abuelo cebolleta con DLC", "{pct} % de tus horas en la historia. Sabes más de Roma que de lo que comiste ayer."),
+    "Construcción de ciudades": ("Alcalde de nadie", "{pct} % de tus horas haciendo ciudades. Tú sí que sabes poner rotondas, no como el alcalde de tu pueblo."),
+    "Gestión": ("Excel con patas", "{pct} % de tus horas gestionando cosas. Tu vida es un desastre, pero tu fábrica virtual va como un tiro."),
+    "Tipo «Dark Souls»": ("Masoca certificado", "{pct} % de tus horas muriendo. YOU DIED. Acepta tu mierda y vuelve a la hoguera."),
+    "Roguelike": ("Hámster en la rueda", "{pct} % de tus horas en «una partida más». Spoiler: nunca es una."),
     "Supervivencia": ("Superviviente de sofá", "{pct} % de tus horas sobreviviendo. Sabes hacer un hacha con dos piedras, pero no un huevo frito."),
-    "Terror": ("Cagueta profesional", "Un {pct} % de tus horas pasando miedo. Juegas con la luz encendida y aun así le pides al gato que te acompañe al baño."),
-    "Plataformas": ("Saltimbanqui de mando", "{pct} % de tus horas dando saltos. Has roto dos mandos y un poco de tu alma, en ese orden."),
-    "Metroidvania": ("Cartógrafo de pasillos", "Un {pct} % de tus horas volviendo al mismo sitio con un poder nuevo. Como tú abriendo la nevera cada 10 minutos por si ha aparecido algo."),
-    "Construcción de barajas": ("Tahúr de taberna", "{pct} % de tus horas barajando. Te dejan solo con una baraja española y sales con un combo infinito y sin camiseta."),
+    "Terror": ("Cagueta profesional", "{pct} % de tus horas cagado de miedo. Juegas con la luz encendida y aun así pides que te acompañen al baño."),
+    "Plataformas": ("Saltimbanqui de mando", "{pct} % de tus horas saltando. Mario estaría orgulloso. Tu mando, no tanto."),
+    "Metroidvania": ("Cartógrafo de pasillos", "{pct} % de tus horas volviendo al mismo pasillo con un poder nuevo. Te lo he contado ya setenta y siete veces."),
+    "Construcción de barajas": ("Tahúr de taberna", "{pct} % de tus horas barajando. Te sabes más combos que la tabla del 7."),
     "Fútbol": ("Míster de barra de bar", "Un {pct} % de tus horas en el fútbol. Fichas a un lateral moldavo de 16 años y lo celebras más que tu boda."),
-    "Puzles": ("Cerebrito con ojeras", "{pct} % de tus horas en puzles. A las 4 de la mañana sigues pensando en una palanca. La palanca no piensa en ti."),
+    "Puzles": ("Cerebrito con ojeras", "{pct} % de tus horas en puzles. A Joseba no le da, pero a ti sí. Por los pelos."),
     "Gran estrategia": ("Imperio otomano enjoyer", "Un {pct} % de tus horas conquistando el mundo en un mapa. En casa no conquistas ni el mando de la tele."),
     # --- Etiquetas amplias (cuentan a mitad de peso, pero pueden ganar): los títulos de la época de los géneros ---
     "Acción": ("Gatillazo Gatillero Pistolerito", "{pct} % de tus horas de reflejos, explosiones y cero paciencia para los menús."),
@@ -155,7 +155,7 @@ PERFILES_GENERICOS = [
     ("Sommelier de «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Lo hueles en la portada antes de comprarlo. Te han visto hacerlo."),
     ("Eminencia en «{etiqueta}»", "{pct} % de tus horas en «{etiqueta}». Si fuera una carrera ya tendrías el doctorado, con una mancha de Cheetos en el título."),
     ("Posesión infernal de «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Vino el cura, echó una partida y ya tampoco sale de casa."),
-    ("Cum laude en «{etiqueta}»", "Un {pct} % de tus horas en «{etiqueta}». Tu gato maúlla en el tono de la música del menú. Es preocupante."),
+    ("Cum laude en «{etiqueta}»", "{pct} % de tus horas en «{etiqueta}». Tu madre ya no pregunta qué haces. Lo sabe."),
 ]
 
 
@@ -220,29 +220,29 @@ def perfil_gamer(favoritas, generos):
 # Catálogo COMPLETO: id -> (icono, título, texto). Incluye los que da el navegador (logros.js) y los
 # de pasos futuros, para que el contador "X/N" conozca el total. Se calculan en cada visita; no se guardan.
 LOGROS = {
-    "polvo": ("🕸️", "Coleccionista de polvo", "La mitad de tu librería sigue con el plástico puesto."),
-    "fiel": ("💍", "Fiel hasta la muerte", "Un solo juego se lleva más de la mitad de tus horas. Eso es amor."),
-    "picaflor": ("🦋", "Picaflor", "Pruebas, te aburres y a otra cosa. Muchos juegos no pasan de 2 h."),
-    "cesped": ("🌱", "Toca césped", "Más de 1.000 h. Ahí fuera hay un sitio que se llama \"calle\"."),
-    "indie": ("🎨", "Indie hasta la médula", "Más de la mitad de tus horas son de estudios pequeñitos."),
-    "lobo": ("🐺", "Lobo solitario", "Ni un familiar. Tú contra el mundo."),
-    "familia": ("👨‍👩‍👧‍👦", "Familia numerosa", "Cinco familiares. Esto ya es una comuna gamer."),
-    "paciencia": ("⏳", "Paciencia infinita", "Más de 10 s esperando sin cerrar la pestaña. Respeto."),
+    "polvo": ("🕸️", "Coleccionista de polvo", "La mitad de tu librería sigue sin estrenar. Una marrona total."),
+    "fiel": ("💍", "Fiel hasta la muerte", "Un solo juego se lleva más de la mitad de tus horas. Cásate ya."),
+    "picaflor": ("🦋", "Picaflor", "Un montón de juegos sin pasar de 2 h. Picas de todo como en un bufé libre."),
+    "cesped": ("🌱", "Toca césped", "Más de 1.000 h. Flipa, flipa. Ahí fuera hay una cosa que se llama calle."),
+    "indie": ("🎨", "Indie hasta la médula", "Más de la mitad de tus horas son de estudios pequeñitos. Hipster de manual."),
+    "lobo": ("🐺", "Lobo solitario", "Ni un familiar. Fumar juntos, morir solos. Bueno, tú ni lo primero."),
+    "familia": ("👨‍👩‍👧‍👦", "Familia numerosa", "Cinco familiares. Esto ya no es una familia, es una mesa de Nochebuena."),
+    "paciencia": ("⏳", "Paciencia infinita", "Más de 10 s esperando. Ni los que esperan capítulo nuevo de Malviviendo."),
     "insomne": ("🦉", "Insomne", "¿Mirando tus horas de Steam a estas horas? Tu mamá te está buscando."),
     "ludopata": ("🎰", "Ludópata del azar", "10 veces \"Otra\". No te va a salir nada mejor, tío."),
-    "abismo": ("🕳️", "Explorador del abismo", "Has llegado al final de la página. Aquí no hay nada. ¿Contento?"),
+    "abismo": ("🕳️", "Explorador del abismo", "Has llegado al final de la página. Aquí no hay nada. No preguntes."),
     "patos": ("🦆", "Susurrador de patos", "Los patos te respetan."),  # paso 3.6d
     "esquina": ("📀", "Esquina perfecta", "Has visto el logo dar en la esquina. Ya puedes morir tranquilo."),  # 3.6e
-    "compulsivo": ("👆", "Clic compulsivo", "La tarjeta te ha pedido que pares. No has parado."),  # 3.6e
-    "konami": ("🎮", "Código Konami", "↑↑↓↓←→←→BA. Tienes una edad. Respeto."),  # 3.6e
+    "compulsivo": ("👆", "Clic compulsivo", "La tarjeta te ha pedido que pares y has seguido. Toma, toma."),  # 3.6e
+    "konami": ("🎮", "Código Konami", "↑↑↓↓←→←→BA. Tienes una edad."),  # 3.6e
     "jojo": ("⭐", "¿Eso es una JoJo referencia??", "Las has encontrado todas. Yare yare daze."),  # 3.6f
-    "piedra": ("💔", "Corazón de piedra", "Todos los juegos te han tirado ficha y los has rechazado a todos."),  # 4.5a
-    "enamoradizo": ("💘", "Enamoradizo", "Match con todos. Tienes el corazón más grande que el disco duro."),  # 4.5a
-    "sinmiedo": ("🧭", "Sin miedo", "Has abierto un juego de territorio inexplorado. Tu zona de confort te echa de menos."),  # 4.5c
-    "jackpot": ("💰", "Jackpot", "La tragaperras de la tienda te ha dado una joya del 95 %. Ya puedes retirarte."),  # 5.5a
+    "piedra": ("💔", "Corazón de piedra", "Has rechazado a todos. Ni Tinder te quiere ya."),  # 4.5a
+    "enamoradizo": ("💘", "Enamoradizo", "Match con todos. Tú no tienes estándares, tienes una biblioteca."),  # 4.5a
+    "sinmiedo": ("🧭", "Sin miedo", "Has abierto un juego de territorio inexplorado. Ya no eres un cagón. Del todo."),  # 4.5c
+    "jackpot": ("💰", "Jackpot", "La tragaperras te ha soltado una joya del 95 %. La suerte nunca se olvida."),  # 5.5a
     "arqueologo": ("🦴", "Arqueólogo", "Te ha salido un juego de antes de 2005. Huele a disquete."),  # 5.5a
-    "gusto": ("🦄", "Gusto raro", "Has abierto una bizarra. Tu algoritmo y tú tenéis que hablar."),  # 5.5d
-    "estomago": ("🤢", "Estómago de hierro", "Has abierto una pesturria en Steam. Tu médico quiere hablar contigo."),  # 5.6c
+    "gusto": ("🦄", "Gusto raro", "Has abierto una bizarra. Raruno de manual."),  # 5.5d
+    "estomago": ("🤢", "Estómago de hierro", "Has abierto una pesturria. Acepta tu mierda."),  # 5.6c
     "catador": ("🍷", "Catador de pesturria", "10 bazofias distintas. Notas de cartón mojado y final a calcetín."),  # 5.6c
 }
 
@@ -617,46 +617,41 @@ def que_jugar(juegos, etiquetas, gustos, racha, consejos=None, resenas=None, ant
 
 # ===================== Bios de Steam Match (paso 4.3a) =====================
 # Plantillas absurdas con huecos que se rellenan con datos reales del juego.
-# OJO: humor satírico (vivienda, capitalismo); revisar el tono antes de publicar.
+# Tono: perfil de Tinder escrito por un colega, con referencias a juegos míticos y webseries (paso 4).
 BIOS_GENERALES = [
     "Me gustan los paseos largos por la playa y «{etiqueta}». Sobre todo «{etiqueta}».",
-    "Llevo tanto tiempo en tu biblioteca que un fondo buitre ya quiere alquilarme por habitaciones.",
     "Busco a alguien de «{etiqueta}» que no me deje a las 2 h.",
-    "Mi signo es «{etiqueta}», con ascendente «pendiente de instalar».",
-    "Prometo no ocupar 60 GB. Bueno, igual sí. Bueno, seguro que sí.",
     "Soy {nombre}. Mis amigos me llaman «ese que nunca abres».",
-    "He visto cosas que no creerías. Principalmente tu escritorio, desde dentro de una carpeta.",
-    "Red flag: no me has jugado. Green flag: aún estás a tiempo.",
-    "Mi terapeuta dice que deje de esperar tu doble clic.",
-    "No soy como los otros juegos. Yo también soy «{etiqueta}», pero con sentimientos.",
-    "Un pato me dijo que haríamos match. Los patos nunca mienten.",
-    "Busco relación seria. Mínimo tres partidas y conocer a tu mando.",
-    "Me salté el tutorial de la vida. Ahora hago «{etiqueta}» a tiempo completo.",
-    "Vivo en tu disco duro sin pagar alquiler. Ni en Cádiz ni en Madrid lo consigue nadie más.",
-    "Ocupo un hueco de tu SSD que en Madrid se alquilaría por 900 € al mes como «estudio con encanto».",
-    "Busco jugador solvente: nómina, aval de tus padres y tres meses de fianza. Lo de la fianza va en serio.",
-    "Me compraste en rebajas. Es lo más cerca que vas a estar de tener una propiedad.",
-    "Si no me juegas no es culpa tuya: es el capitalismo, que te tiene 40 h a la semana pagando un zulo.",
-    "Soy «{etiqueta}», no un piso turístico: puedes quedarte en mí más de tres noches.",
-    "Un fondo buitre compró la carpeta de al lado. Ahora el vecindario se llama «Gaming Living Premium».",
-    "El capitalismo me hizo pendiente. Tú puedes hacerme libre. Doble clic, camarada.",
+    "Hola, soy {nombre}. Busco player 2. Abstenerse campers.",
+    "Busco a alguien que me trate como Sam trata a Frodo.",
+    "Tu princesa no está en otro castillo. Está aquí, en tu biblioteca, criando polvo.",
+    "Antes era un aventurero como tú, hasta que me compraste y no me abriste.",
+    "¡Te elijo a ti! Bueno, elígeme tú a mí, que llevo años metido en la Pokéball.",
+    "Wololo. Ya eres de los míos, instálame.",
+    "Ah shit, here we go again. Otro día sin abrirme.",
+    "Press F por mí, que llevo años sin que me toques.",
+    "Llevo más tiempo esperando que tú un capítulo nuevo de Malviviendo.",
+    "Qué vida más triste la mía, aquí muerto de asco en tu biblioteca.",
+    "Estoy más abandonado que un Tamagotchi del 98.",
+    "Peso 80 GB y no me arrepiento de nada.",
+    "Instálame y te enseño mi barra de vida 😏",
+    "Me compraste en rebajas a las 3 de la mañana. Lo nuestro empezó mal, pero aquí sigo.",
+    "Busco algo serio. Nada de echar 10 minutos y si te he visto no me acuerdo.",
 ]
 BIOS_PRIMO = [
-    "{familiar} me dedicó {horas} h y aún así sigo pensando en ti.",
-    "{horas} h con {familiar}. Lo nuestro sería distinto, te lo juro.",
     "Pregúntale a {familiar} por mí. Mejor no, que se pone celoso.",
-    "{familiar} y yo tuvimos {horas} h de algo bonito. Ahora quiero conocer al resto de la familia.",
+    "{horas} h con {familiar} y todavía me sobra cariño pa ti.",
+    "{familiar} se ha pegado {horas} h conmigo. Tú no vas a ser menos, ¿no?",
 ]
 BIOS_PRESTAMO = [
     "Soy de {dueno}, pero mi corazón es tuyo. Que no se entere.",
-    "Técnicamente esto es infidelidad familiar. Técnicamente.",
-    "Vivo en casa de {dueno}, como todo el mundo a los 35 con estos alquileres.",
-    "Soy de {dueno}, pero lo compartimos como un piso de estudiantes: sin preguntar y sin fregar.",
+    "Soy de {dueno}, pero intercámbiame como un Pokémon. Prometo obedecer.",
+    "Soy de {dueno}, pero tranqui, que no se lo digo.",
 ]
 BIOS_JOYA = [
-    "Poca gente me conoce, como a un piso asequible en Cádiz.",
     "Me han descubierto tres personas y un bot. Sé la cuarta.",
     "Underground desde antes de que fuera guay.",
+    "Soy como el nivel secreto de Mario: casi nadie me encuentra.",
 ]
 BIOS_ACLAMADO = [
     "El {pct} % de la gente me quiere. El otro {resto} % no tiene corazón.",
@@ -704,14 +699,14 @@ def poner_bios(recomendados):
 
 
 BIOS_ATREVIDO = [  # "¿Te atreves?": {nueva} = la etiqueta que nunca has jugado; {nombre} = el juego
-    "«{nueva}» te da miedo. Normal. A mí me da miedo el Euríbor.",
-    "Soy {nombre}, tu primera vez en «{nueva}». Seré delicado. O no.",
-    "Sal de tu zona de confort. Total, tu zona de confort es un zulo de 25 m² en Madrid.",
-    "Dicen que «{nueva}» no es lo tuyo. También decían que en Cádiz no subirían los alquileres.",
-    "Un fondo buitre apostó a que nunca jugarías a «{nueva}». Hazle perder dinero.",
-    "Si me juegas, un cangrejo de Cádiz aplaudirá. No sé por qué. Pero lo hará.",
-    "Probar «{nueva}» es como mudarse de Madrid a Cádiz: vértigo al principio y luego no vuelves.",
-    "El pato dice que estás preparado para «{nueva}». El pato nunca se equivoca.",
+    "«{nueva}»? Tú? JAJAJA. Venga, demuéstrame que me equivoco, cagón.",
+    "No sea puto y juegue {nombre}, compa.",
+    "Abre {nombre} o te quito el carnet de gamer. Lo tengo aquí, plastificado.",
+    "It's dangerous to go alone! Toma, {nombre}.",
+    "Llevas toda la vida jugando a lo mismo como el yayte con el Candy Crush. Toca «{nueva}».",
+    "Menos llorar y más «{nueva}», que estás hecho un flan.",
+    "«{nueva}» be like: hola bb, ¿me instalas?",
+    "Ni Dios juega «{nueva}» y tú tampoco. Rompe el ciclo, campeón.",
 ]
 
 
@@ -724,15 +719,19 @@ def poner_retos(atrevidos):
     return atrevidos
 
 
-PLANTILLAS_RULETA = [  # ruleta del caos (provisionales): {nombre}, {etiqueta}, {horas}, {duenos}
-    "{nombre}. Una lagartija ha girado la ruleta por ti y ya no hay vuelta atrás.",
-    "{nombre}, porque anoche soñaste con un pulpo con gorra que susurraba «{etiqueta}».",
-    "Llevas {horas} con {nombre}. Un monje del Tíbet lleva lo mismo meditando sobre él.",
-    "{nombre} es de {duenos}. Lo mínimo es abrirlo antes de que acabe el siglo.",
-    "Juega a {nombre} con un calcetín en la mano. No ayuda, pero así puedes decir que lo hiciste.",
-    "Si hoy no juegas a {nombre}, mañana tus calcetines amanecerán ordenados por colores.",
-    "{nombre}: {horas} y un toque de «{etiqueta}», como un caracol en el microondas.",
-    "La ruleta ha caído en {nombre}. La ruleta está trucada, pero no sabemos a favor de quién.",
+PLANTILLAS_RULETA = [  # ruleta del caos (paso 4): {nombre}, {etiqueta}, {horas}, {duenos}
+    "Ni una, ni dos, ni tres, sino tres partidas a {nombre}. Hoy.",
+    "{nombre}. No preguntes. Tú juega.",
+    "La suerte nunca se olvida, y hoy dice {nombre}.",
+    "Llevas {horas} con {nombre}. Flipa, flipa.",
+    "Acepta tu mierda: te ha tocado {nombre}.",
+    "¿Que no te gusta {nombre}? Eso te pasa por zorra.",
+    "{nombre} es de {duenos}. Como no lo abras hoy se lía la liada padre.",
+    "Una gaviota es una gaviota, y {nombre} es {nombre}. Ábrelo y calla.",
+    "¿Dónde vas, Rantamplán? Siéntate, que te ha tocado {nombre}.",
+    "FINISH HIM. A ti no, a {nombre}, que lo tienes a medias.",
+    "Tarde o temprano te tenía que tocar {nombre}. Pues es temprano.",
+    "{nombre}, «{etiqueta}» del güeno. La ruleta ha hablado y la ruleta no se equivoca. Casi nunca.",
 ]
 SIN_ETIQUETA = "Misterio"  # para juegos sin etiquetas en Steam
 TOP_ETIQUETAS_RULETA = 3  # la etiqueta del hueco sale al azar de entre estas más votadas
@@ -934,14 +933,17 @@ MIN_RESENAS_AZAR = 10  # para que el juego exista para alguien más que su cread
 UMBRAL_JACKPOT = 95  # % de reseñas positivas: lluvia de monedas
 UMBRAL_GATILLAZO = 40  # por debajo de este %: trombón triste
 ANIO_ARQUEOLOGO = 2005  # juegos de antes de este año: logro Arqueólogo
-PLANTILLAS_TIENDA = [  # provisionales: {nombre}, {anio}, {estudio}, {precio}, {etiqueta}, {resenas}
-    "El algoritmo lanzó un dardo con los ojos cerrados y cayó en {nombre}. Ahora es tu problema.",
-    "{estudio} hizo {nombre} un martes. Se nota.",
-    "{resenas} personas han reseñado {nombre}. Una de ellas era un loro.",
-    "Por {precio} te llevas {nombre} y una mirada de desaprobación de tu gato.",
-    "{nombre}, «{etiqueta}» de {anio}. Huele a cajón de casa de tu abuela.",
-    "En {anio}, {estudio} soñó con {nombre}. Nadie le despertó a tiempo.",
-    "{nombre}: «{etiqueta}» por {precio}. Un percebe lo recomienda. Solo uno, pero con mucha convicción.",
+PLANTILLAS_TIENDA = [  # paso 4: {nombre}, {anio}, {estudio}, {precio}, {etiqueta}, {resenas}
+    "Insert coin: {precio}. Premio: {nombre}. Suerte, campeón.",
+    "Lo hizo {estudio} en {anio}. No preguntes.",
+    "{nombre}, de {anio}. Huele a cartucho soplado.",
+    "Por {precio} te llevas {nombre}. Flipa, flipa.",
+    "{nombre} te mira desde la tienda: «mentiras, tú me amas».",
+    "{resenas} reseñas y ni una tuya. Cómpralo a lo sopetón, como los valientes.",
+    "«{etiqueta}» por {precio}. Puede ser una joya o una marrona total. Solo hay una forma de saberlo.",
+    "{nombre} es más viejo que el Tamagotchi de la gótica Hello Kitty con familia desestructurada. Y sigue a la venta, ojo.",
+    "{estudio} sacó {nombre} y {resenas} pringaos picaron. ¿Vas a ser el siguiente?",
+    "Tarde o temprano te tenía que tocar {nombre}. Hoy es el día, asúmelo.",
 ]
 
 
