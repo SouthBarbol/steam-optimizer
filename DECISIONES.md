@@ -96,6 +96,13 @@ más que vigilar y no aporta nada.
   es justo lo que nos protege si alguien colara código en un nombre de juego.
 - Se cambia la imagen, no se borra el `<img>`: así la ruleta sigue funcionando.
 
+**Barra de carga: se llena ANTES de enviar el formulario.** Safari (iPhone) congela el JavaScript
+de la página en cuanto se envía un formulario, y la barra se quedaba vacía. Ahora `carga.js` detiene
+el envío (`preventDefault`), sube la barra al 99 % en ~1,5 s y entonces envía (`formulario.submit()`).
+Precio aceptado: ~1,5 s más de espera. Descartado: enviar con `fetch` y sustituir la página (complejo:
+los scripts se ejecutarían dos veces) o animar solo con CSS (no es seguro que Safari lo pinte).
+En el iPhone las excusas del 99 % pueden quedarse fijas en la primera.
+
 **Comparaciones de horas sin repetir en la página.** Un `set` por visita (`usadas`) que se pasa
 a cada persona; `comparaciones()` lo modifica (Python no copia un set al pasarlo a una función).
 Vive solo durante esa visita: no se guarda nada y no hay problemas con los hilos.

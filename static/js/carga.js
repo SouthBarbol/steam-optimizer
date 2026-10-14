@@ -37,27 +37,36 @@ function excusas() {  // fase 2: atascado en el 99 %, cambiando de excusa
     cargaReloj = setInterval(siguiente, 2200);  // y luego una cada 2,2 s
 }
 
+let analizando = false;  // evita que un doble toque en "Analizar" lance dos barras
+
 // "submit" se lanza al enviar el formulario (solo si pasa la validación del navegador)
-formulario.addEventListener("submit", () => {
+formulario.addEventListener("submit", (e) => {
+    // NO enviamos todavía: Safari (iPhone) congela el JavaScript de la página nada más enviar,
+    // y la barra se quedaba vacía. Primero la llenamos y luego enviamos (unos 1,5 s más de espera)
+    e.preventDefault();  // preventDefault: "no hagas lo que harías por defecto" (enviar)
+    if (analizando) return;
+    analizando = true;
     cajaCarga.hidden = false;  // quitamos "hidden": la caja aparece
     let pct = 0;  // porcentaje mostrado
     clearInterval(cargaReloj);  // por si quedaba uno de antes
-    // fase 1: sube un 3 % cada 60 ms hasta el 99 % (unos 2 s)
+    // fase 1: sube un 3 % cada 45 ms hasta el 99 % (~1,5 s), con la página aún "viva"
     cargaReloj = setInterval(() => {
         pct = Math.min(pct + 3, 99);  // Math.min: nunca pasa de 99
         cargaRelleno.style.width = pct + "%";
         cargaTexto.textContent = `Analizando tu librería... ${pct} %`;
         if (pct === 99) {  // llegó al 99: paramos esta fase y empiezan las excusas
             clearInterval(cargaReloj);
-            excusas();
+            excusas();  // la primera excusa ya se ve (en el iPhone puede quedarse fija en esa)...
+            formulario.submit();  // ...y AHORA sí enviamos (submit() no vuelve a lanzar este evento)
         }
-    }, 60);
+    }, 45);
 });
 
 // "pageshow" se lanza al mostrar la página, también al volver con el botón Atrás.
 // El navegador puede restaurar la página tal cual la dejamos (con la caja visible), así que la reiniciamos
 window.addEventListener("pageshow", () => {
     clearInterval(cargaReloj);  // para la barra o las excusas
+    analizando = false;  // se puede volver a analizar (p. ej. al volver con Atrás)
     cajaCarga.hidden = true;
     cargaRelleno.style.width = "0";
 });

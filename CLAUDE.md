@@ -213,6 +213,11 @@ Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; re
    HECHO tras el 5.4: la web se llama "¿Qué juego toca hoy?" (h1, `<title>`, imagen de compartir, logo DVD,
    README; siempre en minúsculas salvo la Q: la fuente no tiene la É). El repo sigue siendo `steam-optimizer`.
    Favicon: `static/img/favicon.svg`, piña pixel-art 16×16 con gafas de sol (el usuario se apellida Piña).
+   Retoques tras publicar: modo caos desde el s 1,4 del clip; quitado el aviso "tarda ~20 s"; `carga.js`
+   llena la barra ANTES de enviar (`preventDefault` + `formulario.submit()` al 99 %) porque Safari de iPhone
+   congela el JS al enviar. 5.5 HECHO: checklist "Antes de publicar" completo (nota `.nota-privacidad` bajo
+   el formulario); lo aplazado para amigos está en "Si algún día se abre al público".
+   FALTA: commit + push, probar en el iPhone (barra, sonidos de JoJo, 📸) y pasar el enlace a los amigos.
    Clips de JoJo: el usuario eligió SUBIRLOS al repo público (quitado `static/sonidos/` del .gitignore),
    informado de que sin ánimo de lucro también puede haber infracción (detalle en SECURITY_CHECKLIST.md).
    **HECHO: botón 📸 "Compartir"** (estilo Spotify Wrapped, solo el tuyo): `resumen_compartir()` en

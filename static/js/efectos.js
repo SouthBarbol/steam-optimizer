@@ -217,9 +217,9 @@ function caos() {
     if (calma || enCaos) return;
     enCaos = true;
     SFX.glitch();
-    // "ay ay ay" desde el segundo 0,9 (antes: 0,7 s de silencio y un fundido casi inaudible), cortado a 7 s;
+    // "ay ay ay" desde el segundo 1,4 (se salta el silencio y el fundido del principio), cortado a 7 s;
     // si falta el mp3, el trance (unos 7 s)
-    clip("ayayay", () => SFX.trance(4), 7, 0.9);
+    clip("ayayay", () => SFX.trance(4), 7, 1.4);
     const victimas = document.querySelectorAll("body > :not(.fijo)");  // todo menos lo fijo
     victimas.forEach(el => el.classList.add("caos"));
     setTimeout(() => {

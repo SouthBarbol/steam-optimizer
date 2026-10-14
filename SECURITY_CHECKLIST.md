@@ -101,6 +101,15 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   (el sonido encendido pasa a la siguiente página como `?sonido=1` en la URL; Flask lo ignora)
 
 ## Antes de publicar
+- [x] Personalización de frases: quitar las bios satíricas (vivienda, capitalismo, fondos buitre) y revisar
+  todas las frases de broma (paso 4 del roadmap; 2026-10-14 comprobado: no queda ninguna)
+- [x] `debug=False` en producción (gunicorn no usa `app.run`; `FLASK_DEBUG` no está puesta en Render)
+- [x] HTTPS activo en el hosting (Render pone el certificado solo; comprobado en https://que-juego-toca-hoy.onrender.com)
+- [x] Dependencias actualizadas (`pip list --outdated`, 2026-10-14: todas al día)
+- [x] Nota de privacidad visible: "No almacenamos ningún dato. Solo consultamos tu perfil público de Steam" (bajo el formulario, `.nota-privacidad`)
+- [x] Repaso del historial de Git: ninguna clave subida por error (si ocurre, regenerarla). 2026-10-14: `.env` nunca subido, ninguna cadena de 32 hex en el historial
+
+## Si algún día se abre al público (aplazado a propósito: de momento la web es solo para amigos)
 - [ ] Quitar o generalizar las comparaciones con bromas sobre personas reales (`analysis.py`)
 - [ ] Revisar el tono de las bromas de "tu mamá" (pensadas para amigos)
 - [ ] Clips ORIGINALES de JoJo en `static/sonidos/`: tienen derechos de autor. Decisión del usuario
@@ -112,13 +121,6 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor
   (una visita nueva puede costar ~70 consultas + 4 de la tienda, + 5 la primera del día); valorar acotar peticiones por
   visita/minuto o el tamaño de las cachés
-- [ ] Personalización de frases: quitar las bios satíricas (vivienda, capitalismo, fondos buitre) y revisar
-  todas las frases de broma (ver roadmap en `CLAUDE.md`)
-- [ ] `debug=False` en producción
-- [x] HTTPS activo en el hosting (Render pone el certificado solo; comprobado en https://que-juego-toca-hoy.onrender.com)
-- [ ] Dependencias actualizadas (`pip list --outdated`)
-- [ ] Nota de privacidad visible: "No almacenamos ningún dato. Solo consultamos tu perfil público de Steam"
-- [ ] Repaso del historial de Git: ninguna clave subida por error (si ocurre, regenerarla)
 
 ## Si en el futuro se añade login
 - [ ] Usar "Sign in through Steam" (OpenID); nunca gestionar contraseñas propias

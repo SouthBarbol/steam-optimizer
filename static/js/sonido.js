@@ -132,7 +132,7 @@ setTimeout(() => (avisoSonido.hidden = true), 8000);  // ...durante 8 s
 
 // ===================== Referencias a JoJo (paso 3.6f) =====================
 // Clips ORIGINALES de la serie: tienen derechos de autor, solo para uso privado (ver SECURITY_CHECKLIST.md).
-// Van en static/sonidos/ (en .gitignore: NO se suben a GitHub). Si falta un archivo, suena el respaldo.
+// Van en static/sonidos/ (subidos al repo desde 2026-10-14). Si falta un archivo, suena el respaldo.
 const CLIPS = {
     zawarudo: "za-warudo.mp3",  // Dio: "ZA WARUDO! Toki wo tomare!"
     tiempo: "tiempo-fluye.mp3",  // "Soshite toki wa ugokidasu" (y el tiempo vuelve a fluir)
