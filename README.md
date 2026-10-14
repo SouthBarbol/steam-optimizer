@@ -1,7 +1,10 @@
-# Steam Optimizer
+# ¿Qué juego toca hoy?
 
 Web app en Python (Flask) que analiza tu librería de Steam y recomienda
 a qué jugar y qué comprar según tus etiquetas, géneros y horas jugadas.
+
+**Pruébala:** https://que-juego-toca-hoy.onrender.com (si nadie la ha usado en un rato, tarda
+~1 minuto en despertar). El repositorio se sigue llamando `steam-optimizer`.
 
 > Proyecto de aprendizaje: Python, Flask y Claude Code.
 

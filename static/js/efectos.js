@@ -287,7 +287,7 @@ function salvapantallas() {
     fondo.className = "salvapantallas fijo";
     const logo = document.createElement("div");
     logo.className = "dvd fijo";
-    logo.textContent = "STEAM OPTIMIZER";
+    logo.textContent = "¿Qué juego toca hoy?";  // en minúsculas: la fuente no tiene la É
     document.body.append(fondo, logo);
     const colores = ["#00f0ff", "#ff2bd6", "#39ff14", "#ffe600", "#ff8c00", "#b388ff"];
     let x = 50, y = 50, vx = 2.2, vy = 1.8, ci = 0;  // posición, velocidad e índice de color

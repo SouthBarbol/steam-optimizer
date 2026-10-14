@@ -37,7 +37,8 @@ async function dibujarResumen(r) {  // async: puede "esperar" (await) a que carg
     ctx.textBaseline = "top";
 
     let y = 110;  // cursor vertical: baja tras cada texto
-    y = escribirEnLienzo(ctx, "STEAM OPTIMIZER", y, 52, COLOR.cian);
+    // en minúsculas: Press Start 2P no tiene la É mayúscula. 44 px: así cabe en una línea
+    y = escribirEnLienzo(ctx, "¿Qué juego toca hoy?", y, 44, COLOR.cian);
     y = escribirEnLienzo(ctx, r.nombre, y + 10, 36, COLOR.magenta);
     if (r.perfil) {  // perfil gamer (None si no hay datos de etiquetas)
         y = escribirEnLienzo(ctx, r.perfil.titulo, y + 60, 40, COLOR.cian);

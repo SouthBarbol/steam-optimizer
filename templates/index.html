@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">  <!-- codificación: permite tildes y ñ -->
     <meta name="viewport" content="width=device-width, initial-scale=1">  <!-- adaptado a móvil -->
-    <title>Steam Optimizer</title>  <!-- título de la pestaña -->
+    <title>¿Qué juego toca hoy?</title>  <!-- título de la pestaña -->
+    {# Icono de la pestaña: piña pixel-art con gafas de sol, dibujada por nosotros (SVG, sin derechos de nadie) #}
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     {# url_for genera la ruta correcta al archivo dentro de static/ #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -27,7 +29,7 @@
     </div>
     <canvas id="confeti" class="fijo" aria-hidden="true"></canvas>
     {# data-texto: copia del título que usa el CSS para el efecto glitch (efectos.js lo activa) #}
-    <h1 class="glitch" data-texto="Steam Optimizer">Steam Optimizer</h1>
+    <h1 class="glitch" data-texto="¿Qué juego toca hoy?">¿Qué juego toca hoy?</h1>
 
     {# Comentario de Jinja2: no llega al navegador. Formulario POST: los IDs viajan en el cuerpo, no en la URL.
        sonido.js cambia action a "/?sonido=1" si el sonido está encendido #}

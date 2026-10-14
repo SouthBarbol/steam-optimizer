@@ -37,6 +37,31 @@ juegos está en `ALGORITMO.md`; la seguridad, en `SECURITY_CHECKLIST.md`.
 - Futuro: si gusta, quizá app móvil o PWA. Flask haría de servidor: la API key nunca puede ir
   dentro de una app (cualquiera podría sacarla).
 
+**Publicada en https://que-juego-toca-hoy.onrender.com** (2026-10-14).
+- La API key y la versión de Python (`PYTHON_VERSION` = 3.14.8, la misma que en local) van en el
+  panel de variables de entorno de Render, que hace el papel del `.env`. Render las muestra ocultas.
+- Acceso de Render a GitHub solo para este repo (principio de mínimo privilegio).
+- Auto-Deploy: cada push a `main` se publica solo. Lo que se sube, lo ven los amigos.
+- Lección: el panel de Render mostraba un falso "Name in use" (una extensión del navegador cortaba
+  la comprobación) pero creaba el servicio igualmente: salieron 7 copias. En incógnito funcionó.
+  Si una web hace cosas raras, probar en incógnito antes de repetir la acción.
+
+**Nombre de la web: "¿Qué juego toca hoy?"** (antes Steam Optimizer), a juego con la dirección.
+El repo de GitHub no se renombra (Render está conectado a ese nombre). Se escribe en minúsculas
+salvo la Q porque la fuente Press Start 2P no tiene la "É" mayúscula.
+
+**Favicon: una piña pixel-art con gafas de sol** (`static/img/favicon.svg`). SVG: se escribe como
+código, pesa poco y se ve nítido a cualquier tamaño; dibujo propio, sin derechos de nadie.
+
+**Clips de JoJo subidos al repo público** (para que suenen en la web publicada).
+- Render solo tiene lo que hay en GitHub: con `static/sonidos/` en `.gitignore`, en la web solo
+  sonaban los sustitutos sintetizados.
+- Opciones valoradas: subirlos al repo público (elegida: la más simple), repo privado + subirlos
+  (los oculta en GitHub, pero la web los sirve igual), o dejar solo los sintetizados.
+- Ojo, lección legal: los derechos de autor se infringen al copiar o distribuir sin permiso, haya o
+  no ánimo de lucro. Riesgo aceptado por ser clips cortos en un proyecto personal. Si algún día se
+  comercializa o se abre al público, se quitan (también del historial de Git).
+
 **Borrada la ruta `/demo`.** Era de pruebas (datos inventados); en una web pública es una puerta
 más que vigilar y no aporta nada.
 

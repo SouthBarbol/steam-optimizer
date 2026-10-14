@@ -1,4 +1,4 @@
-# 🔐 Checklist de seguridad - Steam Optimizer
+# 🔐 Checklist de seguridad - ¿Qué juego toca hoy?
 
 Principio base: **los datos que no se guardan no se pueden filtrar.**
 La app solo consulta datos públicos de Steam y no almacena nada del usuario.
@@ -103,17 +103,19 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 ## Antes de publicar
 - [ ] Quitar o generalizar las comparaciones con bromas sobre personas reales (`analysis.py`)
 - [ ] Revisar el tono de las bromas de "tu mamá" (pensadas para amigos)
-- [ ] Clips ORIGINALES de JoJo en `static/sonidos/` (decisión del usuario, solo uso privado): tienen derechos
-  de autor. Si la web se publica para uso comercial (o se abre al público), quitarlos y sustituirlos por los
-  respaldos sintetizados o por sonidos con licencia libre. Están en `.gitignore`: no subirlos nunca a un repo
-  público. El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
+- [ ] Clips ORIGINALES de JoJo en `static/sonidos/`: tienen derechos de autor. Decisión del usuario
+  (2026-10-14): subirlos al repo público para que suenen en la web de los amigos, sabiendo que distribuirlos
+  sin permiso puede infringir derechos aunque no haya ánimo de lucro (riesgo bajo: clips cortos, proyecto
+  personal; lo habitual sería una petición de retirada). Si la web se comercializa o se abre al público,
+  quitarlos (y del historial de Git) y sustituirlos por los sintetizados o por sonidos con licencia libre.
+  El resto de efectos no usa imágenes, gifs ni música con derechos (el modo caos es un tema original)
 - [ ] Límite de la tienda con muchos visitantes: todas las consultas salen de la IP del servidor
   (una visita nueva puede costar ~70 consultas + 4 de la tienda, + 5 la primera del día); valorar acotar peticiones por
   visita/minuto o el tamaño de las cachés
 - [ ] Personalización de frases: quitar las bios satíricas (vivienda, capitalismo, fondos buitre) y revisar
   todas las frases de broma (ver roadmap en `CLAUDE.md`)
 - [ ] `debug=False` en producción
-- [ ] HTTPS activo en el hosting
+- [x] HTTPS activo en el hosting (Render pone el certificado solo; comprobado en https://que-juego-toca-hoy.onrender.com)
 - [ ] Dependencias actualizadas (`pip list --outdated`)
 - [ ] Nota de privacidad visible: "No almacenamos ningún dato. Solo consultamos tu perfil público de Steam"
 - [ ] Repaso del historial de Git: ninguna clave subida por error (si ocurre, regenerarla)

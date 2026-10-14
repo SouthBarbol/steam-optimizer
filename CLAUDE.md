@@ -1,4 +1,4 @@
-# Steam Optimizer
+# ¿Qué juego toca hoy? (antes Steam Optimizer)
 
 Web app en Python (Flask) que consulta la Steam Web API, analiza la librería
 pública de un usuario y recomienda qué jugar (de su librería) y qué comprar
@@ -35,7 +35,7 @@ steam-optimizer/
 ├── steam_client.py     # capa de integración: TODAS las llamadas a Steam y sus cachés en memoria
 ├── analysis.py         # capa de lógica: cálculos puros (estadísticas, qué jugar, qué comprar, frases)
 ├── templates/index.html
-├── static/css/style.css, static/fonts/ (Press Start 2P), static/sonidos/ (clips privados, en .gitignore)
+├── static/css/style.css, static/fonts/ (Press Start 2P), static/sonidos/ (clips de JoJo, subidos al repo público)
 ├── static/js/          # sonido, efectos, carga, logros, match, atreverse, ruleta (tragaperras),
 │                       # navegacion (menú y cohete), libreria (buscar/ordenar/HIGH SCORES), compartir (📸)
 ├── static/img/sin-caratula.svg  # sustituta de las carátulas que Steam no tiene
@@ -98,7 +98,7 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
   mantenerlo), `efectos.js` (pato, trombón, terremoto, caos manual/Konami, pantallazo azul, DVD,
   cascarrabias, glitch, 7 referencias a JoJo), `carga.js` (99 % con excusas de "tu mamá"), `logros.js`
   (`desbloquear(id)`; catálogo `LOGROS` en `analysis.py`, 24 logros). Clips de JoJo y `ay-ay-ay.mp3` en
-  `static/sonidos/` (en .gitignore; si faltan, suenan los sintetizados).
+  `static/sonidos/` (en el repo desde 2026-10-14; si faltan, suenan los sintetizados).
 * Paso 4, qué jugar (detalle en `ALGORITMO.md`): 💘 Steam Match (`match.js`, ❌/💚 con confeti y
   logros piedra/enamoradizo), 🧭 ¿Te atreves? (territorio inexplorado, logro sinmiedo), 🎰 ruleta del caos
   (toda la librería con frase; absorbió al "juego sorpresa": cascarrabias, Dio, ORA/MUDA y logro
@@ -162,7 +162,8 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
   USA en positivo; nada de animales random ni lógica "de IA". Detalle en la memoria "tono-frases-bizarras".
 * Público: de momento solo sus amigos (por eso se quedan las bromas de Calero, Mauri y Navarro en
   `COMPARACIONES`); quitarlas o generalizarlas si algún día se abre al público.
-* Sin imágenes, gifs ni música con derechos en el repo; sin `localStorage` ni cookies.
+* Sin imágenes, gifs ni música con derechos en el repo, SALVO los clips de JoJo (decisión del usuario,
+  2026-10-14); sin `localStorage` ni cookies.
 
 ## Cómo trabajar y probar
 
@@ -204,9 +205,16 @@ Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; re
    5.3 HECHO: `gunicorn==26.2.0` en `requirements.txt` (pasado de UTF-16 a UTF-8); arranque en Render:
    `gunicorn --workers 1 --threads 8 app:app`. Siguiente: 5.4 configurar Render (Python 3.14 local:
    fijar la versión en Render), 5.5 checklist + ver en el móvil, 5.6 opcionales.
-   PENDIENTE tras el 5.4: cambiar el NOMBRE de la web (título h1, `<title>`, imagen de compartir, README)
-   al que elija el usuario (idea: "¿Qué juego toca hoy?"; el servicio de Render se llamará parecido).
-   El repo de GitHub NO se renombra. Y hacer el favicon (hoy da 404).
+   5.4 HECHO (2026-10-14): **https://que-juego-toca-hoy.onrender.com** (servicio "Que Juego Toca Hoy" en
+   Render: Frankfurt, Free, `gunicorn --workers 1 --threads 8 app:app`), variables `STEAM_API_KEY` y
+   `PYTHON_VERSION`=3.14.8 en su panel, Auto-Deploy desde `main`. Probado: funciona; despertar ~22 s.
+   Ojo: el panel de Render daba un falso "Name in use" (alguna extensión del navegador) y aun así creaba el
+   servicio cada vez: salieron 7 copias; el usuario borró las otras 6. Usar el panel en incógnito.
+   HECHO tras el 5.4: la web se llama "¿Qué juego toca hoy?" (h1, `<title>`, imagen de compartir, logo DVD,
+   README; siempre en minúsculas salvo la Q: la fuente no tiene la É). El repo sigue siendo `steam-optimizer`.
+   Favicon: `static/img/favicon.svg`, piña pixel-art 16×16 con gafas de sol (el usuario se apellida Piña).
+   Clips de JoJo: el usuario eligió SUBIRLOS al repo público (quitado `static/sonidos/` del .gitignore),
+   informado de que sin ánimo de lucro también puede haber infracción (detalle en SECURITY_CHECKLIST.md).
    **HECHO: botón 📸 "Compartir"** (estilo Spotify Wrapped, solo el tuyo): `resumen_compartir()` en
    `analysis.py` -> `data-resumen` en tu tarjeta -> `static/js/compartir.js` dibuja 1080×1920 en `<canvas>`
    (perfil, horas, comparación, "TU VICIO" con carátula, Pile of Shame, Stand, Steam Match) y descarga PNG.
