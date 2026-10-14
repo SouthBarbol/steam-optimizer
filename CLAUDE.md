@@ -88,8 +88,8 @@ Evolución prevista:
 
 ## Estado actual
 
-Fases 1, 2 y 3 completadas (repo, venv, Steam Web API, librería, recomendaciones, optimización, frases).
-Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado, salvo lo que se indique.
+Fases 1, 2 y 3 completadas y web PUBLICADA (2026-10-14) en https://que-juego-toca-hoy.onrender.com.
+Siguiente: paso 6 del roadmap (opinión de los amigos + resumen y examen). Todo lo de abajo está HECHO y probado.
 
 * Biblioteca familiar (hasta 5 IDs, sin duplicados, dueños con nombre y color), estadísticas por persona
   (Pile of Shame, abandonados, horas en perspectiva, duelo familiar), carátulas, géneros con caché,
@@ -145,7 +145,7 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
   "referencias-webseries"): `BIOS_*`, `BIOS_ATREVIDO`, `PLANTILLAS_RULETA`, `PLANTILLAS_TIENDA`, frases de
   `PERFILES`, `LOGROS` y `penas` de la plantilla. Sin tocar a propósito: excusas de `carga.js` (son suyas),
   `PLANTILLAS_MALISIMO` y el pantallazo azul.
-* COMMITS PENDIENTES: lo de etiquetas, paralelo y frases puede no estar commiteado; preguntar al usuario.
+* Todo commiteado y subido a 2026-10-14 (salvo esta última actualización de CLAUDE.md).
 
 ## Decisiones y limitaciones vigentes
 
@@ -161,7 +161,8 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
   Vete a la Versh), juegos míticos y algo de ESDLA. NADA de alquileres, vivienda, Euríbor, capitalismo ni
   USA en positivo; nada de animales random ni lógica "de IA". Detalle en la memoria "tono-frases-bizarras".
 * Público: de momento solo sus amigos (por eso se quedan las bromas de Calero, Mauri y Navarro en
-  `COMPARACIONES`); quitarlas o generalizarlas si algún día se abre al público.
+  `COMPARACIONES`); quitarlas o generalizarlas si algún día se abre al público (ver "Futuro posible: app
+  móvil" en el roadmap).
 * Sin imágenes, gifs ni música con derechos en el repo, SALVO los clips de JoJo (decisión del usuario,
   2026-10-14); sin `localStorage` ni cookies.
 
@@ -184,55 +185,69 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
 
 ## Roadmap restante (en orden)
 
-Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; resumen en "Estado actual").
+Pasos 1-5 HECHOS. La web está PUBLICADA y funcionando (detalle de cada decisión en `DECISIONES.md`).
 
-5. **EMPEZAR AQUÍ: publicar** (de momento solo para que la prueben sus amigos; quizá al público más
-   adelante si les gusta). Tareas: elegir hosting y cómo guardar allí la API key, borrar `/demo`, formulario
-   con POST, HTTPS, repasar `SECURITY_CHECKLIST.md` ("Antes de publicar"). Opcional: formulario más cómodo
-   para los IDs familiares, favicon (hoy 404) y precalentar la caché al arrancar (hilo en segundo plano con
-   `mas_vendidos` y nombres de etiquetas).
-   **El usuario quiere DECIDIR él el hosting**: primero explicarle bien TODAS las opciones razonables con
-   sus pros y contras (precio, dificultad, si se duerme el servidor y tarda en despertar, límites, HTTPS,
-   dónde va la API key, que la caché en memoria se pierde al reiniciar, que los hilos y cerrojos del paso 3
-   necesitan UN solo proceso o se duplica la caché, etc.) y que elija. No elegir por él.
-   **ELEGIDO (2026-10-14): Render gratis**, región Frankfurt (que la prueben 3 amigos durante días; se
-   duerme a los 15 min y tarda ~1 min en despertar, aceptado). Descartados: GitHub Pages (solo estático),
-   PythonAnywhere (desactiva los hilos), Vercel/serverless. Si sale bien, quizá app móvil o PWA: Flask
-   haría de servidor (la API key nunca dentro de la app).
-   Hecho: 5.1 `/demo` borrada; 5.2 formulario POST (`request.form`; `sonido.js` pone `action="/?sonido=1"`).
-   Retoques hechos: `static/img/sin-caratula.svg` + vigilante de imágenes rotas al final de `efectos.js`;
-   comparaciones de horas sin repetir en la página (`usadas`, un `set` por visita que crea `app.py`).
-   5.3 HECHO: `gunicorn==26.2.0` en `requirements.txt` (pasado de UTF-16 a UTF-8); arranque en Render:
-   `gunicorn --workers 1 --threads 8 app:app`. Siguiente: 5.4 configurar Render (Python 3.14 local:
-   fijar la versión en Render), 5.5 checklist + ver en el móvil, 5.6 opcionales.
-   5.4 HECHO (2026-10-14): **https://que-juego-toca-hoy.onrender.com** (servicio "Que Juego Toca Hoy" en
-   Render: Frankfurt, Free, `gunicorn --workers 1 --threads 8 app:app`), variables `STEAM_API_KEY` y
-   `PYTHON_VERSION`=3.14.8 en su panel, Auto-Deploy desde `main`. Probado: funciona; despertar ~22 s.
-   Ojo: el panel de Render daba un falso "Name in use" (alguna extensión del navegador) y aun así creaba el
-   servicio cada vez: salieron 7 copias; el usuario borró las otras 6. Usar el panel en incógnito.
-   HECHO tras el 5.4: la web se llama "¿Qué juego toca hoy?" (h1, `<title>`, imagen de compartir, logo DVD,
-   README; siempre en minúsculas salvo la Q: la fuente no tiene la É). El repo sigue siendo `steam-optimizer`.
-   Favicon: `static/img/favicon.svg`, piña pixel-art 16×16 con gafas de sol (el usuario se apellida Piña).
-   Retoques tras publicar: modo caos desde el s 1,4 del clip; quitado el aviso "tarda ~20 s"; `carga.js`
-   llena la barra ANTES de enviar (`preventDefault` + `formulario.submit()` al 99 %) porque Safari de iPhone
-   congela el JS al enviar. 5.5 HECHO: checklist "Antes de publicar" completo (nota `.nota-privacidad` bajo
-   el formulario); lo aplazado para amigos está en "Si algún día se abre al público".
-   FALTA: commit + push, probar en el iPhone (barra, sonidos de JoJo, 📸) y pasar el enlace a los amigos.
-   Clips de JoJo: el usuario eligió SUBIRLOS al repo público (quitado `static/sonidos/` del .gitignore),
-   informado de que sin ánimo de lucro también puede haber infracción (detalle en SECURITY_CHECKLIST.md).
-   **HECHO: botón 📸 "Compartir"** (estilo Spotify Wrapped, solo el tuyo): `resumen_compartir()` en
-   `analysis.py` -> `data-resumen` en tu tarjeta -> `static/js/compartir.js` dibuja 1080×1920 en `<canvas>`
-   (perfil, horas, comparación, "TU VICIO" con carátula, Pile of Shame, Stand, Steam Match) y descarga PNG.
-   Carátulas con `crossOrigin="anonymous"` (el CDN de Steam manda `Access-Control-Allow-Origin: *`).
-   `textBaseline = "top"`. Press Start 2P no tiene mayúsculas con tilde (Ó): evitarlas en la imagen.
-   Ojo nombres globales entre scripts (`efectos.js` ya tenía `escribir`). Móvil: `navigator.share` con el
-   PNG; si falla (salvo cancelar, `AbortError`) descarga. Falta probarlo en un teléfono ya publicada.
+5. ~~Publicar~~ HECHO (2026-10-14). **https://que-juego-toca-hoy.onrender.com**
+   * Render gratis (elegido por el usuario tras comparar opciones): Frankfurt, servicio "Que Juego Toca Hoy",
+     `gunicorn --workers 1 --threads 8 app:app` (UN proceso: cachés y cerrojos), variables `STEAM_API_KEY` y
+     `PYTHON_VERSION`=3.14.8 en su panel, Auto-Deploy desde `main` (cada push se publica). Se duerme a los
+     15 min y tarda ~20-60 s en despertar (con la caché vacía). Usar su panel en incógnito: una extensión
+     del navegador daba un falso "Name in use" y creaba servicios duplicados.
+   * `/demo` borrada; formulario POST (`request.form`; `sonido.js` pone `action="/?sonido=1"`);
+     `requirements.txt` en UTF-8 con `gunicorn==26.2.0` (si se regenera desde PowerShell 5.1, sale UTF-16).
+   * Nombre "¿Qué juego toca hoy?" (minúsculas salvo la Q: Press Start 2P no tiene "É"/"Ó" mayúsculas);
+     el repo sigue siendo `steam-optimizer`. Favicon: piña pixel-art con gafas (`static/img/favicon.svg`).
+   * Botón 📸 Compartir: `resumen_compartir()` (analysis) -> `data-resumen` -> `compartir.js` (canvas
+     1080×1920, `textBaseline = "top"`, carátulas con `crossOrigin="anonymous"`; móvil `navigator.share`,
+     si falla descarga). Carátulas inexistentes -> `sin-caratula.svg` (vigilante al final de `efectos.js`).
+     Comparaciones de horas sin repetir (`usadas`). Barra de carga llenada ANTES de enviar (Safari de
+     iPhone congela el JS al enviar). Modo caos desde el s 1,4. Nota `.nota-privacidad` bajo el formulario.
+   * Clips de JoJo subidos al repo público (decisión del usuario, informado del riesgo legal).
+   * Checklist "Antes de publicar" completo; lo aplazado está en "Si algún día se abre al público".
+   * Ojo nombres globales entre scripts (comparten ámbito: `efectos.js` ya tenía `escribir`, `carga.js`
+     tiene `formulario`). Comprobar con grep antes de crear un nombre de nivel superior.
 
-6. **PASO FINAL (cuando el proyecto esté terminado): resumen + examen.** (a) Un resumen del proyecto para
-   que el usuario lo aprenda y sepa explicarlo: qué hace, arquitectura, lógica de las recomendaciones,
-   decisiones de programación (partir de `DECISIONES.md`, `ALGORITMO.md` y `SECURITY_CHECKLIST.md`).
-   (b) Un "examen" para comprobar que lo ha entendido, incluida la programación (Python, Flask, Jinja2,
-   JS, hilos, seguridad, Git).
+6. **EMPEZAR AQUÍ (siguiente sesión).** El usuario habrá enseñado la web a sus 3 amigos.
+   (a) Preguntarle qué opinaron y arreglar lo que salga (pasos pequeños, como siempre).
+   (b) **PASO FINAL: resumen + examen** (el proyecto se da por terminado "por ahora"):
+       - Resumen del proyecto para que lo aprenda y sepa explicarlo: qué hace, arquitectura por capas, flujo
+         de una petición, lógica de las recomendaciones, concurrencia, seguridad, publicación y decisiones
+         de programación. Partir de `DECISIONES.md`, `ALGORITMO.md` y `SECURITY_CHECKLIST.md`. Preguntarle
+         el formato (archivo .md en el repo, documento, etc.).
+       - "Examen" para comprobar que lo ha entendido, incluida la programación (Python, Flask, Jinja2, JS,
+         hilos y cerrojos, seguridad, Git, despliegue). Corregirlo y explicar los fallos.
+   Opcionales que siguen en el aire: formulario más cómodo para los IDs familiares; precalentar la caché al
+   arrancar (hilo en segundo plano con `mas_vendidos` y nombres de etiquetas: útil en Render, que despierta
+   con la caché vacía).
+
+## Futuro posible: app móvil (quizá con anuncios)
+
+Idea del usuario, SIN decidir: si gusta, sacarla como app (o web + app, al estilo de Fútbol Fantasy, donde la
+web invita a descargar la app), y quizá con anuncios. Cuando llegue, explicarle las opciones con pros y contras
+y que decida él (memoria "decisiones-grandes-usuario"). Lo ya sabido:
+
+* **Arquitectura:** Flask pasaría a ser el servidor (API) de la app: rutas que devuelven JSON en vez de HTML.
+  `analysis.py` y `steam_client.py` se reutilizan tal cual (por eso la lógica es pura y está separada).
+  La API key de Steam NUNCA va dentro de la app (cualquiera puede extraerla): siempre en el servidor.
+* **Tipo de app:** PWA (la web actual "instalable", sin tiendas: lo más barato para validar la idea) o app
+  nativa/multiplataforma (Flutter, React Native: otro lenguaje; tiendas: Google 25 $ una vez, Apple 99 $/año).
+* **Hosting:** con usuarios reales, plan de pago sin dormirse (Render Starter ~7 $/mes o similar). Si hiciera
+  falta más de un proceso, la caché en memoria ya no vale: caché compartida (p. ej. Redis).
+* **Límites de Steam:** las condiciones de la Steam Web API limitan a 100.000 llamadas al día por key y
+  prohíben usar sus datos para marketing no solicitado; Valve puede cortar el acceso. Una visita nueva gasta
+  ~70 llamadas: con muchos usuarios habría que cachear más y acotar peticiones (ver SECURITY_CHECKLIST).
+  Usamos además APIs no documentadas (`appdetails`, `IStoreQueryService/Query`) que pueden cambiar sin aviso.
+  Antes de comercializar: leer las condiciones completas (steamcommunity.com/dev/apiterms) y, si hace falta,
+  preguntar a Valve. No usar la marca "Steam" como si fuera oficial (el nombre nuevo ya no la lleva).
+* **Anuncios y privacidad:** los anuncios (p. ej. AdMob) suelen usar identificadores y cookies -> RGPD:
+  pedir consentimiento, política de privacidad (obligatoria en las tiendas) y revisar la regla actual de
+  "sin cookies ni localStorage" y la nota de privacidad. Contenido para toda la familia (los adultos ya se
+  excluyen de "qué comprar").
+* **Limpieza legal antes de abrir al público o cobrar:** quitar los clips de JoJo (también del historial de
+  Git), las bromas de Calero, Mauri y Navarro y revisar "tu mamá" (sección "Si algún día se abre al público"
+  de SECURITY_CHECKLIST). La fuente Press Start 2P es libre (licencia OFL: se puede usar en comercial).
+* **Coste de llegar ahí:** autenticación no hace falta mientras solo se lean perfiles públicos; si algún día
+  hay cuentas, "Sign in through Steam" (OpenID), nunca contraseñas propias.
 
 HISTÓRICO DE LOS PASOS 2-4 (detalle por si hace falta):
 
