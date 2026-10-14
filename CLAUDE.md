@@ -204,6 +204,9 @@ Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; re
    5.3 HECHO: `gunicorn==26.2.0` en `requirements.txt` (pasado de UTF-16 a UTF-8); arranque en Render:
    `gunicorn --workers 1 --threads 8 app:app`. Siguiente: 5.4 configurar Render (Python 3.14 local:
    fijar la versión en Render), 5.5 checklist + ver en el móvil, 5.6 opcionales.
+   PENDIENTE tras el 5.4: cambiar el NOMBRE de la web (título h1, `<title>`, imagen de compartir, README)
+   al que elija el usuario (idea: "¿Qué juego toca hoy?"; el servicio de Render se llamará parecido).
+   El repo de GitHub NO se renombra. Y hacer el favicon (hoy da 404).
    **HECHO: botón 📸 "Compartir"** (estilo Spotify Wrapped, solo el tuyo): `resumen_compartir()` en
    `analysis.py` -> `data-resumen` en tu tarjeta -> `static/js/compartir.js` dibuja 1080×1920 en `<canvas>`
    (perfil, horas, comparación, "TU VICIO" con carátula, Pile of Shame, Stand, Steam Match) y descarga PNG.
