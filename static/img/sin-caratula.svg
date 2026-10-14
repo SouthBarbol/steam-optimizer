@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="215" viewBox="0 0 460 215">
+  <!-- Sustituta de las carátulas que Steam no tiene (la pone efectos.js). Mismo tamaño que header.jpg -->
+  <!-- Fondo del color de los paneles, con borde magenta discontinuo (pinta de "aquí falta algo") -->
+  <rect x="4" y="4" width="452" height="207" rx="8" fill="#14142b" stroke="#ff2bd6" stroke-width="4" stroke-dasharray="14 8"/>
+  <!-- Textos centrados (text-anchor="middle" en x=230, la mitad del ancho) en letra monoespaciada -->
+  <g font-family="'Courier New', monospace" font-weight="bold" text-anchor="middle">
+    <text x="230" y="80" font-size="38" fill="#ff2bd6">UPS...</text>
+    <text x="230" y="130" font-size="20" fill="#00f0ff">NO ENCUENTRO LA CARÁTULA</text>
+    <text x="230" y="162" font-size="20" fill="#00f0ff">DE ESTE CHURUMBELITO :(</text>
+  </g>
+</svg>

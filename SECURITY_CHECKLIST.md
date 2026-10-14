@@ -20,7 +20,7 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
 - [x] Nunca se piden contraseñas de Steam
 - [x] Se mantiene el escapado automático de Jinja2 (no usar `|safe` con datos externos)
 - [x] Mensajes de error genéricos, sin detalles internos
-- [ ] Revisar la ruta temporal `/demo` y borrarla antes de publicar
+- [x] Revisar la ruta temporal `/demo` y borrarla antes de publicar
 - [x] Google Fonts: la fuente Press Start 2P se aloja en `static/fonts/` y se carga con
   `@font-face`; el navegador del visitante ya no contacta con Google
 - [x] Carátulas (decisión aceptada): el navegador las pide directamente al CDN público de
@@ -70,7 +70,7 @@ La app solo consulta datos públicos de Steam y no almacena nada del usuario.
   sin iframes), `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
   `style-src` permite `'unsafe-inline'` por los `style="--i: N"` (solo números nuestros). Regla para el
   futuro: nada de `<script>` ni `onclick=` dentro del HTML (la CSP los bloquearía); todo en `static/js/`
-- [ ] Antes de publicar: formulario con `method="post"` para que los IDs no queden en la URL
+- [x] Antes de publicar: formulario con `method="post"` para que los IDs no queden en la URL
   (historial del navegador y registros del hosting)
 
 ## Qué comprar (paso 5)

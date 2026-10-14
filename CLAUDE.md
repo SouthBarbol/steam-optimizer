@@ -37,8 +37,10 @@ steam-optimizer/
 ├── templates/index.html
 ├── static/css/style.css, static/fonts/ (Press Start 2P), static/sonidos/ (clips privados, en .gitignore)
 ├── static/js/          # sonido, efectos, carga, logros, match, atreverse, ruleta (tragaperras),
-│                       # navegacion (menú y cohete), libreria (buscar/ordenar/HIGH SCORES)
+│                       # navegacion (menú y cohete), libreria (buscar/ordenar/HIGH SCORES), compartir (📸)
+├── static/img/sin-caratula.svg  # sustituta de las carátulas que Steam no tiene
 ├── ALGORITMO.md        # cómo recomiendan "qué jugar" y "qué comprar" (mantenerlo al día)
+├── DECISIONES.md       # registro de decisiones: qué, por qué y qué se descartó (mantenerlo al día)
 ├── .env / .env.example, requirements.txt, README.md, SECURITY_CHECKLIST.md
 ```
 
@@ -164,6 +166,9 @@ Ahora toca PUBLICAR (paso 5 del roadmap). Todo lo de abajo está HECHO y probado
 
 ## Cómo trabajar y probar
 
+* Cada decisión importante (técnica o de diseño) se apunta en `DECISIONES.md` con su porqué y lo
+  descartado: el usuario lo usará para estudiar y explicar el proyecto.
+
 * Proponer el código de cada sub-paso antes de escribirlo; un paso cada vez.
 * Recordar reiniciar el servidor (Ctrl+C y `python app.py`) tras cambiar `.py` o plantillas (con
   `debug=False` no recarga solo); el CSS y el JS se ven con Ctrl+F5.
@@ -189,6 +194,29 @@ Pasos 1-4 HECHOS (efectos de compra y pesturria, etiquetas, paralelo, frases; re
    sus pros y contras (precio, dificultad, si se duerme el servidor y tarda en despertar, límites, HTTPS,
    dónde va la API key, que la caché en memoria se pierde al reiniciar, que los hilos y cerrojos del paso 3
    necesitan UN solo proceso o se duplica la caché, etc.) y que elija. No elegir por él.
+   **ELEGIDO (2026-10-14): Render gratis**, región Frankfurt (que la prueben 3 amigos durante días; se
+   duerme a los 15 min y tarda ~1 min en despertar, aceptado). Descartados: GitHub Pages (solo estático),
+   PythonAnywhere (desactiva los hilos), Vercel/serverless. Si sale bien, quizá app móvil o PWA: Flask
+   haría de servidor (la API key nunca dentro de la app).
+   Hecho: 5.1 `/demo` borrada; 5.2 formulario POST (`request.form`; `sonido.js` pone `action="/?sonido=1"`).
+   Retoques hechos: `static/img/sin-caratula.svg` + vigilante de imágenes rotas al final de `efectos.js`;
+   comparaciones de horas sin repetir en la página (`usadas`, un `set` por visita que crea `app.py`).
+   5.3 HECHO: `gunicorn==26.2.0` en `requirements.txt` (pasado de UTF-16 a UTF-8); arranque en Render:
+   `gunicorn --workers 1 --threads 8 app:app`. Siguiente: 5.4 configurar Render (Python 3.14 local:
+   fijar la versión en Render), 5.5 checklist + ver en el móvil, 5.6 opcionales.
+   **HECHO: botón 📸 "Compartir"** (estilo Spotify Wrapped, solo el tuyo): `resumen_compartir()` en
+   `analysis.py` -> `data-resumen` en tu tarjeta -> `static/js/compartir.js` dibuja 1080×1920 en `<canvas>`
+   (perfil, horas, comparación, "TU VICIO" con carátula, Pile of Shame, Stand, Steam Match) y descarga PNG.
+   Carátulas con `crossOrigin="anonymous"` (el CDN de Steam manda `Access-Control-Allow-Origin: *`).
+   `textBaseline = "top"`. Press Start 2P no tiene mayúsculas con tilde (Ó): evitarlas en la imagen.
+   Ojo nombres globales entre scripts (`efectos.js` ya tenía `escribir`). Móvil: `navigator.share` con el
+   PNG; si falla (salvo cancelar, `AbortError`) descarga. Falta probarlo en un teléfono ya publicada.
+
+6. **PASO FINAL (cuando el proyecto esté terminado): resumen + examen.** (a) Un resumen del proyecto para
+   que el usuario lo aprenda y sepa explicarlo: qué hace, arquitectura, lógica de las recomendaciones,
+   decisiones de programación (partir de `DECISIONES.md`, `ALGORITMO.md` y `SECURITY_CHECKLIST.md`).
+   (b) Un "examen" para comprobar que lo ha entendido, incluida la programación (Python, Flask, Jinja2,
+   JS, hilos, seguridad, Git).
 
 HISTÓRICO DE LOS PASOS 2-4 (detalle por si hace falta):
 

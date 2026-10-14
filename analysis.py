@@ -28,20 +28,27 @@ def formatear(numero):
     return f"{numero:.1f}".replace(".", ",")  # ":.1f" = un decimal; coma decimal
 
 
-def comparaciones(horas, cantidad=2):
-    """Elige al azar 'cantidad' comparaciones bizarras (con datos reales) para tus horas jugadas."""
+def comparaciones(horas, cantidad=2, usadas=None):
+    """Elige al azar 'cantidad' comparaciones bizarras (con datos reales) para tus horas jugadas.
+
+    usadas: conjunto con los textos que ya salieron en esta página (para no repetirlos entre personas).
+    OJO: la función lo MODIFICA (le añade las elegidas); Python no hace copia al pasar un set.
+    """
+    usadas = set() if usadas is None else usadas  # sin conjunto (p. ej. una prueba suelta): uno vacío
     segundos = horas * 3600  # pasamos tus horas a segundos
-    # Solo las que salen al menos 1 vez (evita cosas como "0,0 gestaciones de elefante")
-    validas = [c for c in COMPARACIONES if segundos / c[2] >= 1]
+    # Solo las que salen al menos 1 vez (evita "0,0 gestaciones de elefante") y que nadie de la página tenga ya
+    validas = [c for c in COMPARACIONES if segundos / c[2] >= 1 and c[0] not in usadas]
     elegidas = random.sample(validas, min(cantidad, len(validas)))  # sample: elementos distintos al azar
+    usadas.update(texto for texto, _, _ in elegidas)  # las apuntamos para las siguientes personas
     # Frase final, p. ej. "1.234 veces domando a Calero (5 s)"
     return [f"{formatear(segundos / seg)} {texto} ({dato})" for texto, dato, seg in elegidas]
 
 
-def estadisticas(juegos):
+def estadisticas(juegos, usadas=None):
     """Calcula Pile of Shame, abandonados y horas en perspectiva a partir de la lista de juegos.
 
     juegos: lista unida (unir_familia), con "propio" y "playtime_forever" en minutos (None = desconocido).
+    usadas: conjunto de comparaciones ya mostradas en la página (se lo pasamos tal cual a comparaciones).
     """
     # Solo tus juegos propios: en ellos las horas son seguras (en los prestados pueden faltar)
     propios = [j for j in juegos if j.get("propio")]
@@ -58,7 +65,9 @@ def estadisticas(juegos):
     jugados = [j for j in juegos if j.get("playtime_forever")]  # descarta 0 y None
     # max(..., key=...) devuelve el elemento con el valor más alto; default=None si la lista está vacía
     top = max(jugados, key=lambda j: j["playtime_forever"], default=None)
-    favorito = {"nombre": top.get("name", "?"), "horas": round(top["playtime_forever"] / 60)} if top else None
+    favorito = {  # appid: para dibujar su carátula en la imagen de compartir
+        "nombre": top.get("name", "?"), "horas": round(top["playtime_forever"] / 60), "appid": top.get("appid"),
+    } if top else None
 
     return {  # diccionario con todo lo que mostrará la plantilla
         "total_propios": total_propios,
@@ -69,8 +78,28 @@ def estadisticas(juegos):
         "horas": round(horas),  # horas enteras
         "dias": round(horas / 24, 1),  # días seguidos jugando
         "pct_anio": round(horas / (365 * 24) * 100, 1),  # porcentaje de un año entero
-        "comparaciones": comparaciones(horas),  # 2 frases bizarras elegidas al azar
-        "favorito": favorito,  # {"nombre", "horas"} del juego más jugado, o None
+        "comparaciones": comparaciones(horas, usadas=usadas),  # 2 frases bizarras al azar, sin repetir en la página
+        "favorito": favorito,  # {"nombre", "horas", "appid"} del juego más jugado, o None
+    }
+
+
+def resumen_compartir(tarjeta, recomendados):
+    """Datos de tu imagen para compartir (estilo Spotify Wrapped): solo lo que se dibuja, nunca el Steam ID.
+
+    tarjeta: tu tarjeta de estadísticas (la que monta app.py); recomendados: los de Steam Match.
+    """
+    s = tarjeta["stats"]  # tus estadísticas
+    top = recomendados[0] if recomendados else None  # el n.º 1 de Steam Match (puede no haber)
+    return {
+        "nombre": tarjeta["nombre"],  # tu nombre de Steam
+        "perfil": tarjeta["perfil"],  # {"titulo", "frase", ...} o None
+        "horas": s["horas"], "dias": s["dias"],
+        "comparacion": s["comparaciones"][0] if s["comparaciones"] else None,  # una frase bizarra
+        "pile_pct": s["pile_pct"], "sin_jugar": s["sin_jugar"],
+        "total": s["total_propios"], "abandonados": s["abandonados"],
+        "favorito": s["favorito"],  # {"nombre", "horas", "appid"} o None
+        "stand": tarjeta["stand"],  # {"nombre", "notas": [{"nombre", "nota"}...]}
+        "match": {"nombre": top["nombre"], "appid": top["appid"]} if top else None,  # tu próximo juego
     }
 
 

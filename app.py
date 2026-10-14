@@ -10,6 +10,7 @@ from analysis import (  # capa de lógica: cálculos sin red ni Flask (paréntes
     catalogo_logros, logros_datos, stand, que_jugar, ultimos_jugados, racha_actual, consejos_familia,
     abandonados, anti_gustos, poner_bios, territorio_inexplorado, poner_retos, que_cuentan,
     ruleta, tus_etiquetas, mezclas_raras, que_comprar, TOP_FAVORITAS, tragaperras_tienda, malisimos,
+    resumen_compartir,
 )
 from steam_client import (  # capa de integración: llamadas a Steam
     get_owned_games, get_recently_played_games, get_player_names, get_genres_varios, get_tags, en_paralelo, get_valoraciones,
@@ -36,16 +37,18 @@ def cabeceras_seguridad(respuesta):
         "form-action 'self'",  # el formulario solo puede enviarse a nuestro servidor
         "frame-ancestors 'none'",  # ninguna web puede meter la nuestra dentro de un <iframe>
     ])
-    respuesta.headers["Referrer-Policy"] = "no-referrer"  # no decir a otras webs de qué URL venimos (lleva los IDs)
+    respuesta.headers["Referrer-Policy"] = "no-referrer"  # no decir a otras webs de qué URL venimos (por si algún día lleva datos)
     respuesta.headers["X-Content-Type-Options"] = "nosniff"  # el navegador no "adivina" el tipo de un archivo
     respuesta.headers["X-Frame-Options"] = "DENY"  # anti-iframe para navegadores antiguos (como frame-ancestors)
     return respuesta  # after_request debe devolver la respuesta (modificada)
 
 
-@app.route("/")  # esta función responde cuando se visita la raíz: http://127.0.0.1:5000/
+# Responde en la raíz (http://127.0.0.1:5000/). GET: abrir la portada; POST: el formulario enviado
+@app.route("/", methods=["GET", "POST"])
 def index():
     inicio = time.perf_counter()  # "cronómetro": segundos con decimales desde un punto cualquiera
-    steam_id = request.args.get("steam_id", "")  # lee ?steam_id=... de la URL ("" si no viene)
+    # request.form: datos del CUERPO del POST (no van en la URL, ni en el historial ni en los registros)
+    steam_id = request.form.get("steam_id", "")  # "" si no viene (p. ej. al abrir la portada con GET)
 
     if not steam_id:  # si no se ha enviado ningún ID...
         return render_template("index.html")  # ...mostramos solo el formulario vacío
@@ -55,7 +58,7 @@ def index():
         return render_template("index.html", error="Steam ID no válido: deben ser 17 dígitos."), 400
 
     try:  # validamos los IDs de familiares (campo opcional)
-        familia = validar_familia(request.args.get("familia", ""), steam_id)  # lista de IDs limpios
+        familia = validar_familia(request.form.get("familia", ""), steam_id)  # lista de IDs limpios
     except ValueError as e:  # validar_familia lanza ValueError si algo no cuadra
         return render_template("index.html", error=str(e)), 400  # 400 = petición incorrecta
 
@@ -96,9 +99,10 @@ def index():
     etiquetas = get_tags([j["appid"] for _, _, lista in personas for j in lista])
 
     tarjetas = []  # una tarjeta de estadísticas por persona
+    usadas = set()  # comparaciones de horas ya repartidas: cada frase sale una sola vez en la página
     for nombre, color, lista in personas:  # cada tupla se "desempaqueta" en tres variables
         por_genero = horas_por_genero(lista, generos)  # horas y % por género de su top
-        stats = estadisticas(lista)  # Pile of Shame, horas, etc. (paso 1)
+        stats = estadisticas(lista, usadas)  # Pile of Shame, horas, etc. (paso 1); apunta sus comparaciones en usadas
         ficha = stand(stats, por_genero)  # estadísticas de Stand (notas A-E)
         tarjetas.append({
             "nombre": nombre,
@@ -137,6 +141,8 @@ def index():
         colores=colores,
         tarjetas=tarjetas,
         recomendacion=recomendacion,  # qué jugar (calculado arriba)
+        # datos de tu imagen para compartir (tarjetas[0] eres tú; el n.º 1 de Steam Match va incluido)
+        resumen=resumen_compartir(tarjetas[0], recomendacion["recomendados"]),
         ruleta=ruleta(juegos, etiquetas),  # ruleta del caos: todos los juegos con su frase absurda
         compra=pedir_compra(juegos, etiquetas),  # qué comprar (paso 5): mainstream y bizarras de la tienda
         # tragaperras de la tienda (5.4): juegos al azar de Steam ("or []": si Steam falla, no sale la tarjeta)
@@ -260,17 +266,17 @@ def hexagono(notas, radio=70):
     return {"marco": " ".join(marco), "forma": " ".join(forma), "etiquetas": etiquetas}
 
 
-def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto (la ruta /demo no lo pasa)
+def preparar_juegos(juegos, generos=None):  # generos=None: valor por defecto, por si no llegan géneros
     """Convierte los datos de Steam en una lista simple (appid, nombre, horas, dueños, indie) ordenada por horas."""
     generos = generos or {}  # None -> diccionario vacío, para poder usar .get() abajo
     # Ordenamos de más a menos minutos; "or 0" convierte None (desconocido) en 0 para poder comparar
     ordenados = sorted(juegos, key=lambda j: j.get("playtime_forever") or 0, reverse=True)
     return [  # un diccionario por juego, con solo lo que necesita la plantilla
         {
-            "appid": j.get("appid"),  # número del juego en Steam; sirve para la URL de la carátula (None en /demo)
+            "appid": j.get("appid"),  # número del juego en Steam; sirve para la URL de la carátula
             "nombre": j.get("name", "?"),
             "horas": horas_con_decimal(j.get("playtime_forever", 0)),  # p. ej. 126 min -> 2.1
-            "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto (la ruta /demo no trae este campo)
+            "duenos": j.get("duenos", ["Tú"]),  # ["Tú"] por defecto, si el juego no trae este campo
             # True si Steam dice que es Indie; solo sabemos los géneros del top de alguien (la etiqueta
             # "Indie" no es fiable: probado en el paso 2b, falla en 1 de cada 4 juegos)
             # ("or []": None, consulta fallida o juego no pedido, cuenta como lista vacía)
@@ -285,16 +291,6 @@ def horas_con_decimal(minutos):
     if minutos is None:  # Steam no nos dio el dato (juego prestado)
         return None
     return round(minutos / 60, 1)  # round(x, 1) redondea a un decimal
-
-
-@app.route("/demo")  # RUTA TEMPORAL: ver la página sin API key; borrar al terminar la fase 2
-def demo():
-    ejemplo = [  # juegos inventados con el mismo formato que devuelve Steam
-        {"name": "Hollow Knight", "playtime_forever": 3000},
-        {"name": "Hades", "playtime_forever": 1800},
-        {"name": "<b>Prueba de escapado</b>", "playtime_forever": 60},  # Jinja2 debe mostrarlo como texto
-    ]
-    return render_template("index.html", juegos=preparar_juegos(ejemplo))
 
 
 if __name__ == "__main__":  # solo si ejecutamos este archivo directamente (python app.py)

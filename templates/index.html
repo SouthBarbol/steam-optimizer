@@ -29,16 +29,15 @@
     {# data-texto: copia del título que usa el CSS para el efecto glitch (efectos.js lo activa) #}
     <h1 class="glitch" data-texto="Steam Optimizer">Steam Optimizer</h1>
 
-    {# Comentario de Jinja2: no llega al navegador. Formulario GET: añade ?steam_id=... a la URL #}
-    <form method="get" action="/">
+    {# Comentario de Jinja2: no llega al navegador. Formulario POST: los IDs viajan en el cuerpo, no en la URL.
+       sonido.js cambia action a "/?sonido=1" si el sonido está encendido #}
+    <form method="post" action="/">
         <label for="steam_id">Tu Steam ID (17 dígitos):</label>
         <!-- pattern y maxlength validan en el navegador, pero la validación real está en app.py -->
         <input type="text" id="steam_id" name="steam_id" pattern="\d{17}" maxlength="17" required>
         {# Campo opcional (sin required): IDs de familiares separados por comas; se valida en app.py #}
         <label for="familia">IDs de familiares (opcional, separados por comas, máx. 5):</label>
         <input type="text" id="familia" name="familia" maxlength="100">
-        {# Campo oculto: sonido.js lo pone a 1 si el sonido está encendido, para mantenerlo tras analizar #}
-        <input type="hidden" id="campo-sonido" name="sonido" value="0">
         <button type="submit" class="arcade">Analizar</button>  {# arcade: botón de recreativa (E3) #}
     </form>
     <p class="aviso-carga">Ojo: la primera vez tarda un poco (hasta ~20 s), que le estamos preguntando a Steam juego por juego. Las siguientes van volando.</p>
@@ -66,7 +65,7 @@
         </ul>
     {% endif %}
 
-    {# Rejilla con una tarjeta de estadísticas por persona (solo si app.py las envía; /demo no) #}
+    {# Rejilla con una tarjeta de estadísticas por persona (solo si app.py las envía) #}
     {% if tarjetas %}
     {# Lista de títulos para el Pile of Shame (uno por tarjeta, en este orden) #}
     {% set titulos_pile = [
@@ -98,6 +97,11 @@
         {# data-terremoto: la página tiembla al revelar su perfil si supera 1.000 h (= UMBRAL_CESPED de analysis.py) #}
         <section class="stats dueno-{{ t.color }}"{% if stats.horas > 1000 %} data-terremoto{% endif %}{% if t.nombre == lider and stats.horas %} data-menacing{% endif %}>
             <h2>{{ t.nombre }}</h2>
+            {# Solo en tu tarjeta (la primera): botón de compartir tu resumen como imagen. |tojson = datos seguros
+               para JS (comillas simples: el JSON lleva dobles). hidden: lo enseña compartir.js cuando está listo #}
+            {% if loop.first %}
+                <button type="button" id="btn-compartir" class="arcade" data-resumen='{{ resumen|tojson }}' hidden>📸 Compartir</button>
+            {% endif %}
             <ul>
                 {# |string|replace(".", ",") muestra los decimales con coma #}
                 {# Pile of Shame: % de juegos sin estrenar. Título distinto por tarjeta;
@@ -215,7 +219,7 @@
 
     {# ===== Qué jugar (paso 4): Steam Match. TODO lo pinta Jinja2 (escapado automático: los nombres
          vienen de Steam); match.js (4.3c) solo mostrará u ocultará fichas, sin escribir HTML ===== #}
-    {% if recomendacion %}  {# /demo no la trae: allí no se muestra la sección #}
+    {% if recomendacion %}  {# si no llega, no se muestra la sección #}
         {% set recos = recomendacion.recomendados %}
         {# Pegatinas de una recomendación (todas con datos reales de Steam o de la familia) #}
         {% macro pegatinas(r) %}
@@ -480,7 +484,7 @@
                         {# data-pena: el CSS lo muestra al pasar el ratón con content: attr() (siempre como texto) #}
                         <td{% if olvidado %} data-pena="{{ penas|random }}"{% endif %}>
                             {% if olvidado %}<span class="lagrima" aria-hidden="true">💧</span>{% endif %}
-                            {# Carátula desde el CDN público de Steam (sin API key). Solo si hay appid (en /demo no hay) #}
+                            {# Carátula desde el CDN público de Steam (sin API key). Solo si hay appid #}
                             {# loading="lazy": el navegador la descarga solo cuando va a verse; alt: texto si no carga #}
                             {% if juego.appid %}<img class="caratula" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ juego.appid }}/header.jpg" alt="Carátula de {{ juego.nombre }}" loading="lazy">{% endif %}
                             {% if medalla %}<span class="medalla">{{ medalla }}</span>{% endif %}
@@ -495,7 +499,7 @@
                         {% else %}
                             <td>{% if juego.horas is none %}—{% else %}{{ juego.horas|string|replace(".", ",") }}{% endif %}</td>
                         {% endif %}
-                        {# Una etiqueta por dueño; la clase dueno-N le da su color (colores viene de app.py; 0 si no está, p. ej. en /demo) #}
+                        {# Una etiqueta por dueño; la clase dueno-N le da su color (colores viene de app.py; 0 si no está) #}
                         <td>{% for dueno in juego.duenos %}<span class="etiqueta dueno-{{ colores.get(dueno, 0) if colores else 0 }}">{{ dueno }}</span> {% endfor %}</td>
                     </tr>
                 {% endfor %}
@@ -525,6 +529,7 @@
     <script src="{{ url_for('static', filename='js/carga.js') }}"></script>
     {# sonido.js antes que efectos.js: efectos.js usa SFX, que se define en sonido.js #}
     <script src="{{ url_for('static', filename='js/sonido.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/compartir.js') }}"></script>  {# botón 📸: tu resumen como imagen #}
     <script src="{{ url_for('static', filename='js/efectos.js') }}"></script>
     {# logros.js usa SFX (sonido.js) y espera (efectos.js): va el último #}
     <script src="{{ url_for('static', filename='js/logros.js') }}"></script>

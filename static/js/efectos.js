@@ -535,3 +535,21 @@ if (btnCrt) btnCrt.addEventListener("click", () => {
     const encendido = document.documentElement.classList.toggle("crt");  // toggle devuelve si quedó puesta
     btnCrt.setAttribute("aria-pressed", encendido);  // lectores de pantalla: activado o no
 });
+
+// --- Carátulas que no existen: en vez del texto "Carátula de X", nuestra imagen de "ups" ---
+const SIN_CARATULA = "/static/img/sin-caratula.svg";  // imagen propia (la CSP permite 'self')
+function ponerSinCaratula(img) {
+    if (img.src.endsWith(SIN_CARATULA)) return;  // si fallara también la nuestra, no entrar en bucle
+    img.src = SIN_CARATULA;  // cambiamos la imagen rota por la nuestra
+    img.alt = "Carátula no encontrada";  // texto alternativo corto
+}
+// El evento "error" de una imagen no "sube" por la página, pero con true (fase de captura) lo vemos igualmente
+document.addEventListener("error", (e) => {
+    if (e.target.tagName === "IMG") ponerSinCaratula(e.target);  // solo nos interesan las imágenes
+}, true);
+// Las que fallaron antes de que se cargara este script (terminadas pero sin ancho): las volvemos a pedir.
+// Si están rotas, fallarán otra vez y ahora el vigilante de arriba sí se entera. No ponemos el "ups"
+// directamente porque una carátula "lazy" aún sin descargar puede parecer rota en algunos navegadores
+document.querySelectorAll("img").forEach((img) => {
+    if (img.complete && img.naturalWidth === 0 && img.src) img.src = img.src;  // reasignar = volver a pedirla
+});

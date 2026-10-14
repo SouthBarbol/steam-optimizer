@@ -3,7 +3,7 @@
 // formulario). Aun así, el navegador no deja sonar nada hasta el primer clic o tecla en cada página.
 // Expone SFX (sonidos con nombre) para los demás scripts. No llama a ninguna web.
 
-// ¿Está el sonido encendido? URLSearchParams lee los parámetros de la URL (?steam_id=...&sonido=1)
+// ¿Está el sonido encendido? URLSearchParams lee los parámetros de la URL (?sonido=1)
 let sonidoActivo = new URLSearchParams(location.search).get("sonido") === "1";
 let ctxAudio = null;  // "contexto de audio": la mesa de mezclas del navegador; se crea al primer uso
 let audioListo = false;  // ¿ha habido ya un clic o tecla? Sin eso el navegador no deja sonar
@@ -109,13 +109,14 @@ const SFX = {
 
 // Botón 🔇/🔊: enciende o apaga el sonido
 const btnSonido = document.getElementById("btn-sonido");
-const campoSonido = document.getElementById("campo-sonido");  // campo oculto del formulario
+// El formulario de "Analizar" (solo hay uno). No se llama "formulario" porque carga.js ya usa ese nombre
+const formAnalizar = document.querySelector("form");
 const avisoSonido = document.getElementById("aviso-sonido");  // bocadillo "el sonidito está apagao"
 
 function pintarSonido() {  // pone el botón, el campo del formulario y el aviso según sonidoActivo
     btnSonido.textContent = sonidoActivo ? "🔊 SONIDO" : "🔇 SONIDO";
     btnSonido.setAttribute("aria-pressed", sonidoActivo);  // lectores de pantalla: botón pulsado o no
-    campoSonido.value = sonidoActivo ? "1" : "0";  // viajará en la URL al pulsar "Analizar"
+    formAnalizar.action = sonidoActivo ? "/?sonido=1" : "/";  // el sonido viaja en la URL; los IDs, en el cuerpo (POST)
     if (sonidoActivo) avisoSonido.hidden = true;  // encendido: el aviso sobra
 }
 
